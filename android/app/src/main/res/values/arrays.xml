@@ -1,0 +1,14 @@
+<resources>
+    <string-array name="language_options">
+        <item>@string/settings_language_english</item>
+        <item>@string/settings_language_romanian</item>
+    </string-array>
+
+    <string-array name="confetti_colors">
+        <item>#FFF78FB3</item>
+        <item>#FFFFEB8A</item>
+        <item>#FF9AD7FF</item>
+        <item>#FF96F7C5</item>
+        <item>#FFD7C6FF</item>
+    </string-array>
+</resources>

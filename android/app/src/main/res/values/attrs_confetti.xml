@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="ConfettiView">
+        <attr name="confettiCount" format="integer" />
+        <attr name="confettiColors" format="reference" />
+    </declare-styleable>
+</resources>

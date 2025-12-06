@@ -1,0 +1,8 @@
+<resources>
+
+    <style name="Widget.Theme.StudentApp.MyView" parent="">
+        <item name="android:background">@color/background_surface</item>
+        <item name="exampleColor">@color/light_blue_600</item>
+        <item name="android:fontFamily">@font/segoebold</item>
+    </style>
+</resources>

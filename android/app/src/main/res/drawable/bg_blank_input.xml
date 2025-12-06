@@ -1,0 +1,12 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/transparent" />
+    <stroke
+        android:width="2dp"
+        android:color="@color/auth_text_secondary" />
+    <corners android:radius="@dimen/studentapp_corner_radius" />
+    <padding
+        android:left="16dp"
+        android:top="12dp"
+        android:right="16dp"
+        android:bottom="12dp" />
+</shape>

@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="fab_margin">48dp</dimen>
+    <dimen name="activity_horizontal_margin">48dp</dimen>
+    <dimen name="recommendations_scroll_max_height">480dp</dimen>
+    <dimen name="recommendation_preview_height">220dp</dimen>
+    <dimen name="recommendation_item_spacing">16dp</dimen>
+</resources>

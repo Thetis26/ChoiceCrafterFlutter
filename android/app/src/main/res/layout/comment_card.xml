@@ -1,0 +1,66 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/background_surface"
+    android:padding="@dimen/_15sdp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/icon_colleague"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignTop="@+id/comment_author"
+        android:layout_marginRight="@dimen/_5sdp"
+        android:layout_marginTop="@dimen/_2sdp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/avatar2"
+        app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
+    <TextView
+        android:id="@+id/comment_author"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="@string/comment_author_placeholder"
+        android:fontFamily="@font/segoebold"
+        android:textSize="@dimen/_12sdp"
+        android:textColor="@color/text_primary"
+        android:layout_toEndOf="@id/icon_colleague"
+        android:layout_toRightOf="@id/icon_colleague"
+        android:layout_alignParentTop="true"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/comment_author"
+        android:layout_toEndOf="@id/icon_colleague"
+        android:layout_toRightOf="@id/icon_colleague"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false">
+
+        <TextView
+            android:id="@+id/comment_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/segoe"
+            android:text="@string/comment_content_placeholder"
+            android:textSize="@dimen/_11sdp"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:layout_marginVertical="@dimen/_5sdp"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/comment_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/segoe"
+            android:text="@string/comment_date_placeholder"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/_10sdp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

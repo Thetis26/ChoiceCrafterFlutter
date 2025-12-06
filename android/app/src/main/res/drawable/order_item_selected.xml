@@ -1,0 +1,15 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="0"
+        android:startColor="@color/gamified_gold"
+        android:endColor="@color/gamified_green" />
+    <corners android:radius="@dimen/studentapp_corner_radius" />
+    <stroke
+        android:width="2dp"
+        android:color="@color/gamified_text_primary" />
+    <padding
+        android:left="18dp"
+        android:top="16dp"
+        android:right="18dp"
+        android:bottom="16dp" />
+</shape>

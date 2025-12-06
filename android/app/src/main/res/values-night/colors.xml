@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FF8A94FF</color>
+    <color name="colorPrimaryDark">#FF646EE3</color>
+    <color name="colorAccent">#FF74D4DE</color>
+    <color name="colorButtonNormal">#FF8A94FF</color>
+    <color name="lavender">#FF8A94FF</color>
+    <color name="scorpion">#FFD7DEEB</color>
+    <color name="gray_600">#FFBAC3E0</color>
+    <color name="gray_400">#FF4A5568</color>
+    <color name="chat_bubble_sent">#FF4C6EF5</color>
+    <color name="chat_bubble_received">#FF273248</color>
+    <color name="gamified_text_primary">#FFEAF1FF</color>
+    <color name="gamified_text_secondary">#FFBAC3E0</color>
+    <color name="ai_suggestion_background">#FF1C2F2D</color>
+    <color name="ai_suggestion_text">#FF7AE3D6</color>
+    <color name="conversation_unread_background">#FF232F45</color>
+    <color name="background_primary">#FF121826</color>
+    <color name="background_surface">#FF1B2433</color>
+    <color name="statistics_chip_background">#FF232F45</color>
+    <color name="text_primary">#FFEAF1FF</color>
+    <color name="text_secondary">#FFBAC3E0</color>
+    <color name="text_inverse">#FFEAF1FF</color>
+    <color name="icon_on_surface">#FFD1D7EC</color>
+    <color name="divider_default">#FF2A3142</color>
+
+    <!-- Auth specific colors (kept consistent across themes) -->
+    <color name="auth_accent">#FF7886FF</color>
+    <color name="auth_text_primary">#FF1F2735</color>
+    <color name="auth_text_secondary">#FF556074</color>
+</resources>

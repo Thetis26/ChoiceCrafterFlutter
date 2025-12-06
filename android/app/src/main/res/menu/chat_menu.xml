@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_view_participants"
+        android:title="@string/chat_menu_view_participants"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_add_participant"
+        android:title="@string/chat_menu_add_participant"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_edit_chat_name"
+        android:title="@string/chat_menu_rename"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_leave_chat"
+        android:title="@string/chat_menu_leave"
+        app:showAsAction="never" />
+
+</menu>
