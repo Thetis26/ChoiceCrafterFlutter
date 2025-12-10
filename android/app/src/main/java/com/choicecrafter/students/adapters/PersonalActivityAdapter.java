@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.os.Build;
 import android.view.LayoutInflater;
@@ -11,9 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.PersonalActivity;
-import com.choicecrafter.studentapp.utils.TimeAgoUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.PersonalActivity;
+import com.choicecrafter.students.utils.TimeAgoUtil;
 
 import java.util.List;
 

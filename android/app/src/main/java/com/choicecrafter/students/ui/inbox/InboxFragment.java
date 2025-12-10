@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.inbox;
+package com.choicecrafter.students.ui.inbox;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,10 +12,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.NotificationAdapter;
-import com.choicecrafter.studentapp.models.Notification;
-import com.choicecrafter.studentapp.repositories.NotificationRepository;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.NotificationAdapter;
+import com.choicecrafter.students.models.Notification;
+import com.choicecrafter.students.repositories.NotificationRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;

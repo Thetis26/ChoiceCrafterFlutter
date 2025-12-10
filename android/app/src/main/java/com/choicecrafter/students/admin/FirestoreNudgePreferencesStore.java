@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.admin;
+package com.choicecrafter.students.admin;
 
 import androidx.annotation.NonNull;
 
-import com.choicecrafter.studentapp.models.NudgePreferences;
+import com.choicecrafter.students.models.NudgePreferences;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.FirebaseFirestore;
 

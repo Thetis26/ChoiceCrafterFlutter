@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.course_activities;
+package com.choicecrafter.students.ui.course_activities;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,17 +15,17 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.ActivityAdapter;
-import com.choicecrafter.studentapp.adapters.ModuleAdapter;
-import com.choicecrafter.studentapp.databinding.FragmentCourseActivitiesBinding;
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.CourseEnrollment;
-import com.choicecrafter.studentapp.models.CourseProgress;
-import com.choicecrafter.studentapp.models.Module;
-import com.choicecrafter.studentapp.models.ModuleProgress;
-import com.choicecrafter.studentapp.repositories.CourseEnrollmentRepository;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.ActivityAdapter;
+import com.choicecrafter.students.adapters.ModuleAdapter;
+import com.choicecrafter.students.databinding.FragmentCourseActivitiesBinding;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.CourseEnrollment;
+import com.choicecrafter.students.models.CourseProgress;
+import com.choicecrafter.students.models.Module;
+import com.choicecrafter.students.models.ModuleProgress;
+import com.choicecrafter.students.repositories.CourseEnrollmentRepository;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentTransaction;

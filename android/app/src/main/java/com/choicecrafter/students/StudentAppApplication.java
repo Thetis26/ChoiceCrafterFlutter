@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp;
+package com.choicecrafter.students;
 
 import android.app.Activity;
 import android.app.Application;
@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 
-import com.choicecrafter.studentapp.notifications.MessagingTokenManager;
+import com.choicecrafter.students.notifications.MessagingTokenManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;

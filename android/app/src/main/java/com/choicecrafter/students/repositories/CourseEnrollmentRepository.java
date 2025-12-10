@@ -1,17 +1,17 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
 import android.util.Log;
 
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.CourseEnrollment;
-import com.choicecrafter.studentapp.models.CourseProgress;
-import com.choicecrafter.studentapp.models.Module;
-import com.choicecrafter.studentapp.models.ModuleProgress;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.tasks.Task;
-import com.choicecrafter.studentapp.utils.ActivityScoreCalculator;
-import com.choicecrafter.studentapp.utils.TaskStatsKeyUtils;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.CourseEnrollment;
+import com.choicecrafter.students.models.CourseProgress;
+import com.choicecrafter.students.models.Module;
+import com.choicecrafter.students.models.ModuleProgress;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.tasks.Task;
+import com.choicecrafter.students.utils.ActivityScoreCalculator;
+import com.choicecrafter.students.utils.TaskStatsKeyUtils;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;

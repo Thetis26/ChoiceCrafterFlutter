@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.utils.Avatar;
+import com.choicecrafter.students.utils.Avatar;
 
 public class ColleagueActivity {
     private final String colleagueName;

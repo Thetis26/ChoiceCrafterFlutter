@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.TaskStats;
+import com.choicecrafter.students.models.TaskStats;
 
 /**
  * Detects low-effort responses by looking at the recorded time on task.

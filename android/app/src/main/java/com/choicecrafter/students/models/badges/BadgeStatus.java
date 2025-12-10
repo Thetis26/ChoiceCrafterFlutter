@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models.badges;
+package com.choicecrafter.students.models.badges;
 
 import androidx.annotation.NonNull;
 

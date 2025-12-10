@@ -1,6 +1,6 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
-import com.choicecrafter.studentapp.models.Course;
+import com.choicecrafter.students.models.Course;
 
 import java.util.ArrayList;
 import java.util.List;

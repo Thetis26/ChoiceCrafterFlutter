@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,13 +15,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.repositories.CourseEnrollmentRepository;
-import com.choicecrafter.studentapp.repositories.NudgePreferencesRepository;
-import com.choicecrafter.studentapp.repositories.UserCourseAvailabilityRepository;
-import com.choicecrafter.studentapp.utils.AnonymousAvatars;
-import com.choicecrafter.studentapp.utils.Avatar;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.repositories.CourseEnrollmentRepository;
+import com.choicecrafter.students.repositories.NudgePreferencesRepository;
+import com.choicecrafter.students.repositories.UserCourseAvailabilityRepository;
+import com.choicecrafter.students.utils.AnonymousAvatars;
+import com.choicecrafter.students.utils.Avatar;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.android.material.textfield.TextInputEditText;

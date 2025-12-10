@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.feedback;
+package com.choicecrafter.students.ui.feedback;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,9 +13,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.User;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.User;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;

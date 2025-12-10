@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -9,10 +9,10 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.NewsCourseCardBinding;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.Module;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.NewsCourseCardBinding;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.Module;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.HashSet;

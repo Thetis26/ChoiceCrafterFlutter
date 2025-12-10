@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.home;
+package com.choicecrafter.students.ui.home;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,9 +12,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.User;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.User;
 
 public class HomeFragment extends Fragment {
 

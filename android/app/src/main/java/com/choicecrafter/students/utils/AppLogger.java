@@ -1,9 +1,9 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.os.SystemClock;
 import android.util.Log;
 
-import com.choicecrafter.studentapp.BuildConfig;
+import com.choicecrafter.students.BuildConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;

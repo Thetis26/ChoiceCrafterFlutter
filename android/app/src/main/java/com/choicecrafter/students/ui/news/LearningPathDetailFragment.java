@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.news;
+package com.choicecrafter.students.ui.news;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -10,11 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import com.choicecrafter.studentapp.databinding.FragmentLearningPathDetailBinding;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.ModuleAdapter;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.Module;
+import com.choicecrafter.students.databinding.FragmentLearningPathDetailBinding;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.ModuleAdapter;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.Module;
 
 
 public class LearningPathDetailFragment extends Fragment {

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -17,13 +17,13 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.CourseCardBinding;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.CourseEnrollment;
-import com.choicecrafter.studentapp.models.CourseProgress;
-import com.choicecrafter.studentapp.models.Module;
-import com.choicecrafter.studentapp.models.ModuleProgress;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.CourseCardBinding;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.CourseEnrollment;
+import com.choicecrafter.students.models.CourseProgress;
+import com.choicecrafter.students.models.Module;
+import com.choicecrafter.students.models.ModuleProgress;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;

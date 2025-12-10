@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -10,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.ChatMessage;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.ChatMessage;
 
 import java.util.ArrayList;
 import java.util.Date;

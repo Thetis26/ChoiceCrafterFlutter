@@ -1,6 +1,6 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
-import com.choicecrafter.studentapp.models.Activity;
+import com.choicecrafter.students.models.Activity;
 
 import java.util.ArrayList;
 import java.util.List;

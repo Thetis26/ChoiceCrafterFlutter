@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.badges;
+package com.choicecrafter.students.badges;
 
 import java.util.Collections;
 import java.util.HashSet;

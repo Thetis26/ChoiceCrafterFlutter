@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.badges;
+package com.choicecrafter.students.badges;
 
 import androidx.annotation.Nullable;
 

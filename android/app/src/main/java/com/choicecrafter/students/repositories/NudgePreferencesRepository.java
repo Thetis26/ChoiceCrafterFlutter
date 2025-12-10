@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.NudgePreferences;
-import com.choicecrafter.studentapp.utils.AppLogger;
+import com.choicecrafter.students.models.NudgePreferences;
+import com.choicecrafter.students.utils.AppLogger;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;

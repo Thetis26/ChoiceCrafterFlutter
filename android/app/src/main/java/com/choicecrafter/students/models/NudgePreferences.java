@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -13,8 +13,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Conversation;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Conversation;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -43,7 +43,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         this.listener = listener;
     }
 
-    public void setUserAvatars(Collection<? extends com.choicecrafter.studentapp.models.User> users) {
+    public void setUserAvatars(Collection<? extends com.choicecrafter.students.models.User> users) {
         userAvatarMap.clear();
         if (users == null || users.isEmpty()) {
             notifyDataSetChanged();
@@ -52,16 +52,16 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         addOrUpdateUserAvatars(users, false);
     }
 
-    public void addOrUpdateUserAvatars(Collection<? extends com.choicecrafter.studentapp.models.User> users) {
+    public void addOrUpdateUserAvatars(Collection<? extends com.choicecrafter.students.models.User> users) {
         addOrUpdateUserAvatars(users, true);
     }
 
-    private void addOrUpdateUserAvatars(Collection<? extends com.choicecrafter.studentapp.models.User> users, boolean notifyOnChange) {
+    private void addOrUpdateUserAvatars(Collection<? extends com.choicecrafter.students.models.User> users, boolean notifyOnChange) {
         if (users == null) {
             return;
         }
         boolean changed = false;
-        for (com.choicecrafter.studentapp.models.User user : users) {
+        for (com.choicecrafter.students.models.User user : users) {
             if (user == null || TextUtils.isEmpty(user.getEmail())) {
                 continue;
             }

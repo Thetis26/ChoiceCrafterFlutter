@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -11,7 +11,7 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**

@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.Recommendation;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.Recommendation;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

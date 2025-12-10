@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
 import android.util.Log;
 
-import com.choicecrafter.studentapp.models.User;
+import com.choicecrafter.students.models.User;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 

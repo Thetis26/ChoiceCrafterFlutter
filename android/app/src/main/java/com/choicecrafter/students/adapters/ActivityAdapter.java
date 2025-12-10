@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -17,15 +17,15 @@ import androidx.core.content.ContextCompat;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.ActivityCardBinding;
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.tasks.Task;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.ui.activity.ActivityFragment;
-import com.choicecrafter.studentapp.utils.ActivityScoreCalculator;
-import com.choicecrafter.studentapp.utils.ActivityVisibilityFilter;
-import com.choicecrafter.studentapp.utils.TaskStatsKeyUtils;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.ActivityCardBinding;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.tasks.Task;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.ui.activity.ActivityFragment;
+import com.choicecrafter.students.utils.ActivityScoreCalculator;
+import com.choicecrafter.students.utils.ActivityVisibilityFilter;
+import com.choicecrafter.students.utils.TaskStatsKeyUtils;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;

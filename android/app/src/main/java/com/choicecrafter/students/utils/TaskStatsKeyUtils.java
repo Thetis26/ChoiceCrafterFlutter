@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.tasks.Task;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.tasks.Task;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

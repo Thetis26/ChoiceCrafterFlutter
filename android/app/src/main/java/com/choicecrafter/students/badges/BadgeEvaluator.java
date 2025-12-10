@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.badges;
+package com.choicecrafter.students.badges;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.badges.BadgeDefinition;
-import com.choicecrafter.studentapp.models.badges.BadgeStatus;
+import com.choicecrafter.students.models.badges.BadgeDefinition;
+import com.choicecrafter.students.models.badges.BadgeStatus;
 
 import java.util.ArrayList;
 import java.util.Collections;

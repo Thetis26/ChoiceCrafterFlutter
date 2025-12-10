@@ -4,7 +4,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.choicecrafter.studentapp.ui.activity.ActivityViewModel" />
+            type="com.choicecrafter.students.ui.activity.ActivityViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

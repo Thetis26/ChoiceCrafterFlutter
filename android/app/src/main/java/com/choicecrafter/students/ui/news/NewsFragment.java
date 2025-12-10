@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.news;
+package com.choicecrafter.students.ui.news;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,15 +16,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.NewsCourseAdapter;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.CourseEnrollment;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.repositories.CourseEnrollmentRepository;
-import com.choicecrafter.studentapp.repositories.CourseRepository;
-import com.choicecrafter.studentapp.repositories.UserCourseAvailabilityRepository;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.NewsCourseAdapter;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.CourseEnrollment;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.repositories.CourseEnrollmentRepository;
+import com.choicecrafter.students.repositories.CourseRepository;
+import com.choicecrafter.students.repositories.UserCourseAvailabilityRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 

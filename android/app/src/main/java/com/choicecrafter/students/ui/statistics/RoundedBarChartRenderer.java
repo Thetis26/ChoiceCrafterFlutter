@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.statistics;
+package com.choicecrafter.students.ui.statistics;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;

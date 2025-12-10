@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.colleagues_activity;
+package com.choicecrafter.students.ui.colleagues_activity;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -16,16 +16,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.adapters.ColleaguesActivityAdapter;
-import com.choicecrafter.studentapp.models.ColleagueActivity;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.models.EnrollmentActivityProgress;
-import com.choicecrafter.studentapp.models.NudgePreferences;
-import com.choicecrafter.studentapp.utils.MotivationalPromptType;
-import com.choicecrafter.studentapp.utils.MotivationalPrompts;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.adapters.ColleaguesActivityAdapter;
+import com.choicecrafter.students.models.ColleagueActivity;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.models.EnrollmentActivityProgress;
+import com.choicecrafter.students.models.NudgePreferences;
+import com.choicecrafter.students.utils.MotivationalPromptType;
+import com.choicecrafter.students.utils.MotivationalPrompts;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -155,9 +155,9 @@ public class ColleaguesActivityFragment extends Fragment {
         motivationalPromptCard = rootView.findViewById(R.id.motivationalPromptCard);
         motivationalPromptTextView = rootView.findViewById(R.id.motivationalPrompt);
         if (motivationalPromptTextView != null) {
-            motivationalPromptTextView.setText(com.choicecrafter.studentapp.utils.MotivationalPrompts.getRandomPrompt(
+            motivationalPromptTextView.setText(com.choicecrafter.students.utils.MotivationalPrompts.getRandomPrompt(
                     requireContext(),
-                    com.choicecrafter.studentapp.utils.MotivationalPromptType.COLLEAGUE_PERFORMANCE));
+                    com.choicecrafter.students.utils.MotivationalPromptType.COLLEAGUE_PERFORMANCE));
         }
         applyNudgePreferences();
         motivationalPromptView = rootView.findViewById(R.id.motivationalPrompt);
@@ -350,9 +350,9 @@ public class ColleaguesActivityFragment extends Fragment {
                 || currentNudgePreferences.isColleaguesPromptEnabled();
         motivationalPromptCard.setVisibility(showPrompt ? View.VISIBLE : View.GONE);
         if (showPrompt && motivationalPromptTextView != null) {
-            motivationalPromptTextView.setText(com.choicecrafter.studentapp.utils.MotivationalPrompts.getRandomPrompt(
+            motivationalPromptTextView.setText(com.choicecrafter.students.utils.MotivationalPrompts.getRandomPrompt(
                     requireContext(),
-                    com.choicecrafter.studentapp.utils.MotivationalPromptType.COLLEAGUE_PERFORMANCE));
+                    com.choicecrafter.students.utils.MotivationalPromptType.COLLEAGUE_PERFORMANCE));
         }
     }
 

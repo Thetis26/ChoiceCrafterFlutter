@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp;
+package com.choicecrafter.students;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel;
 
 import java.util.List;
 
-import com.choicecrafter.studentapp.models.NudgePreferences;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.models.badges.BadgeStatus;
-import com.choicecrafter.studentapp.utils.AppLogger;
+import com.choicecrafter.students.models.NudgePreferences;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.models.badges.BadgeStatus;
+import com.choicecrafter.students.utils.AppLogger;
 
 public class MainViewModel extends ViewModel {
 

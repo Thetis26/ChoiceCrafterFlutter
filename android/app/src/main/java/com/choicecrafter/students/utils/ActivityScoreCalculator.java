@@ -1,21 +1,21 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.BuildConfig;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.tasks.CodingChallengeTask;
-import com.choicecrafter.studentapp.models.tasks.FillInTheBlank;
-import com.choicecrafter.studentapp.models.tasks.InfoCardTask;
-import com.choicecrafter.studentapp.models.tasks.MatchingPairTask;
-import com.choicecrafter.studentapp.models.tasks.MultipleChoiceQuestion;
-import com.choicecrafter.studentapp.models.tasks.OrderingTask;
-import com.choicecrafter.studentapp.models.tasks.SpotTheErrorTask;
-import com.choicecrafter.studentapp.models.tasks.Task;
-import com.choicecrafter.studentapp.models.tasks.TrueFalseTask;
+import com.choicecrafter.students.BuildConfig;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.tasks.CodingChallengeTask;
+import com.choicecrafter.students.models.tasks.FillInTheBlank;
+import com.choicecrafter.students.models.tasks.InfoCardTask;
+import com.choicecrafter.students.models.tasks.MatchingPairTask;
+import com.choicecrafter.students.models.tasks.MultipleChoiceQuestion;
+import com.choicecrafter.students.models.tasks.OrderingTask;
+import com.choicecrafter.students.models.tasks.SpotTheErrorTask;
+import com.choicecrafter.students.models.tasks.Task;
+import com.choicecrafter.students.models.tasks.TrueFalseTask;
 
-import static com.choicecrafter.studentapp.utils.TaskStatsKeyUtils.findStatsForTask;
+import static com.choicecrafter.students.utils.TaskStatsKeyUtils.findStatsForTask;
 
 import java.util.ArrayList;
 import java.util.List;

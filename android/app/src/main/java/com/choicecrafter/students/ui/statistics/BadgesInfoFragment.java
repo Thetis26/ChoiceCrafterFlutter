@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.statistics;
+package com.choicecrafter.students.ui.statistics;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,10 +13,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.badges.BadgeEvaluator;
-import com.choicecrafter.studentapp.models.badges.BadgeStatus;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.badges.BadgeEvaluator;
+import com.choicecrafter.students.models.badges.BadgeStatus;
 
 import java.util.List;
 

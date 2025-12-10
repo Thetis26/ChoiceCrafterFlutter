@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui;
+package com.choicecrafter.students.ui;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -13,7 +13,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 
 import java.util.ArrayList;
 import java.util.List;

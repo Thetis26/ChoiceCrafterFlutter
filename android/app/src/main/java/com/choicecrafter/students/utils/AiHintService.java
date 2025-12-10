@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 
-import com.choicecrafter.studentapp.BuildConfig;
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.BuildConfig;
+import com.choicecrafter.students.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;

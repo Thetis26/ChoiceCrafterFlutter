@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.repositories;
-import static com.choicecrafter.studentapp.models.NotificationType.ACTIVITY_STARTED;
-import static com.choicecrafter.studentapp.models.NotificationType.COLLEAGUE_ACTIVITY_STARTED;
-import static com.choicecrafter.studentapp.models.NotificationType.COMMENT_ADDED;
-import static com.choicecrafter.studentapp.models.NotificationType.POINTS_THRESHOLD_REACHED;
+package com.choicecrafter.students.repositories;
+import static com.choicecrafter.students.models.NotificationType.ACTIVITY_STARTED;
+import static com.choicecrafter.students.models.NotificationType.COLLEAGUE_ACTIVITY_STARTED;
+import static com.choicecrafter.students.models.NotificationType.COMMENT_ADDED;
+import static com.choicecrafter.students.models.NotificationType.POINTS_THRESHOLD_REACHED;
 
 import android.util.Log;
 
-import com.choicecrafter.studentapp.models.Notification;
+import com.choicecrafter.students.models.Notification;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;

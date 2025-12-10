@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;

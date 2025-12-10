@@ -1,7 +1,7 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
-import com.choicecrafter.studentapp.models.EnrollmentActivityProgress;
-import com.choicecrafter.studentapp.models.TaskStats;
+import com.choicecrafter.students.models.EnrollmentActivityProgress;
+import com.choicecrafter.students.models.TaskStats;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;

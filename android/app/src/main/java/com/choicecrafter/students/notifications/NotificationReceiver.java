@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.notifications;
+package com.choicecrafter.students.notifications;
 
 import android.app.AlarmManager;
 import android.app.NotificationManager;

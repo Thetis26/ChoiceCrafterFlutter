@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.res.ColorStateList;
 import android.text.TextUtils;
@@ -11,10 +11,10 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.SpotTheErrorTask;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.HintDialogUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.SpotTheErrorTask;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.HintDialogUtil;
 
 public class SpotTheErrorViewHolder extends RecyclerView.ViewHolder {
 

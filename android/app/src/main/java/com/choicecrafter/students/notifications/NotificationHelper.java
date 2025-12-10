@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.notifications;
+package com.choicecrafter.students.notifications;
 
 import android.Manifest;
 import android.app.NotificationChannel;
@@ -15,12 +15,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.NotificationType;
-import com.choicecrafter.studentapp.ui.messages.ChatActivity;
-import com.choicecrafter.studentapp.MainActivity;
-import com.choicecrafter.studentapp.utils.AppLogger;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.NotificationType;
+import com.choicecrafter.students.ui.messages.ChatActivity;
+import com.choicecrafter.students.MainActivity;
+import com.choicecrafter.students.utils.AppLogger;
 
 public class NotificationHelper {
     private static final String CHANNEL_ACTIVITY_UPDATES = "activity_updates";
@@ -283,7 +283,7 @@ public class NotificationHelper {
                                                                   String activityId,
                                                                   String activityTitle,
                                                                   int requestCode) {
-        Intent openCourseIntent = new Intent(context, com.choicecrafter.studentapp.MainActivity.class);
+        Intent openCourseIntent = new Intent(context, com.choicecrafter.students.MainActivity.class);
         openCourseIntent.putExtra("openCourseActivities", true);
         openCourseIntent.putExtra("courseId", courseId);
         if (activityId != null && !activityId.trim().isEmpty()) {
@@ -302,7 +302,7 @@ public class NotificationHelper {
     }
 
     private PendingIntent createOpenActivityPendingIntent(String courseId, Activity activity, int requestCode) {
-        Intent openActivityIntent = new Intent(context, com.choicecrafter.studentapp.MainActivity.class);
+        Intent openActivityIntent = new Intent(context, com.choicecrafter.students.MainActivity.class);
         openActivityIntent.putExtra("openActivityFragment", true);
         openActivityIntent.putExtra("activity", activity);
         openActivityIntent.putExtra("courseId", courseId);

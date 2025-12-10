@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,8 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.User;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.User;
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;

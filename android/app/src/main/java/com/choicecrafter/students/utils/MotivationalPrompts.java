@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.content.Context;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 
 import java.util.ArrayList;
 import java.util.EnumMap;

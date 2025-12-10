@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.home;
+package com.choicecrafter.students.ui.home;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,12 +16,12 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.CourseAdapter;
-import com.choicecrafter.studentapp.databinding.FragmentCoursesBinding;
-import com.choicecrafter.studentapp.models.CourseEnrollment;
-import com.choicecrafter.studentapp.repositories.CourseEnrollmentRepository;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.CourseAdapter;
+import com.choicecrafter.students.databinding.FragmentCoursesBinding;
+import com.choicecrafter.students.models.CourseEnrollment;
+import com.choicecrafter.students.repositories.CourseEnrollmentRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;

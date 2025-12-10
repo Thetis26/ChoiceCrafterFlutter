@@ -1,9 +1,9 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.choicecrafter.studentapp.models.tasks.Task;
+import com.choicecrafter.students.models.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;

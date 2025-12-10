@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.activity;
+package com.choicecrafter.students.ui.activity;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -28,11 +28,11 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.Recommendation;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.BadgePreferences;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.Recommendation;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.BadgePreferences;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;

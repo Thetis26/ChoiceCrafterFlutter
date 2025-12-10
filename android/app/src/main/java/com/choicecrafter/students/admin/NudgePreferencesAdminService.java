@@ -1,8 +1,8 @@
-package com.choicecrafter.studentapp.admin;
+package com.choicecrafter.students.admin;
 
 import androidx.annotation.NonNull;
 
-import com.choicecrafter.studentapp.models.NudgePreferences;
+import com.choicecrafter.students.models.NudgePreferences;
 
 import org.json.JSONArray;
 import org.json.JSONException;

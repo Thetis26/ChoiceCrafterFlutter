@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -6,7 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.choicecrafter.studentapp.utils.Avatar;
+import com.choicecrafter.students.utils.Avatar;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;

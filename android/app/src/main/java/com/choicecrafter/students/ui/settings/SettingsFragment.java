@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.settings;
+package com.choicecrafter.students.ui.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,9 +16,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.FragmentSettingsBinding;
-import com.choicecrafter.studentapp.models.NotificationType;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.FragmentSettingsBinding;
+import com.choicecrafter.students.models.NotificationType;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.EnumMap;

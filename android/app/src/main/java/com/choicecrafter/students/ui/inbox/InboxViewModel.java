@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.inbox;
+package com.choicecrafter.students.ui.inbox;
 
 import androidx.lifecycle.ViewModel;
 

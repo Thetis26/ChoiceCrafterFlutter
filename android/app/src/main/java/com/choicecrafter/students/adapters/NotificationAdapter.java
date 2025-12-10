@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.os.Build;
 import android.text.TextUtils;
@@ -12,10 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Notification;
-import com.choicecrafter.studentapp.repositories.CourseRepository;
-import com.choicecrafter.studentapp.utils.TimeAgoUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Notification;
+import com.choicecrafter.students.repositories.CourseRepository;
+import com.choicecrafter.students.utils.TimeAgoUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;

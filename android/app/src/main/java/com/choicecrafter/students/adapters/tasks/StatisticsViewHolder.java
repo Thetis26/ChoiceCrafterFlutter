@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -13,21 +13,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.EnrollmentActivityProgress;
-import com.choicecrafter.studentapp.models.tasks.FillInTheBlank;
-import com.choicecrafter.studentapp.models.tasks.MatchingPairTask;
-import com.choicecrafter.studentapp.models.tasks.MultipleChoiceQuestion;
-import com.choicecrafter.studentapp.models.tasks.OrderingTask;
-import com.choicecrafter.studentapp.models.tasks.SpotTheErrorTask;
-import com.choicecrafter.studentapp.models.tasks.Task;
-import com.choicecrafter.studentapp.models.tasks.TrueFalseTask;
-import com.choicecrafter.studentapp.utils.ActivityScoreCalculator;
-import com.choicecrafter.studentapp.utils.ActivityScoreCalculator.LossReason;
-import com.choicecrafter.studentapp.utils.ActivityScoreCalculator.TaskScoreBreakdown;
-import com.choicecrafter.studentapp.utils.MotivationalPromptType;
-import com.choicecrafter.studentapp.utils.MotivationalPrompts;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.EnrollmentActivityProgress;
+import com.choicecrafter.students.models.tasks.FillInTheBlank;
+import com.choicecrafter.students.models.tasks.MatchingPairTask;
+import com.choicecrafter.students.models.tasks.MultipleChoiceQuestion;
+import com.choicecrafter.students.models.tasks.OrderingTask;
+import com.choicecrafter.students.models.tasks.SpotTheErrorTask;
+import com.choicecrafter.students.models.tasks.Task;
+import com.choicecrafter.students.models.tasks.TrueFalseTask;
+import com.choicecrafter.students.utils.ActivityScoreCalculator;
+import com.choicecrafter.students.utils.ActivityScoreCalculator.LossReason;
+import com.choicecrafter.students.utils.ActivityScoreCalculator.TaskScoreBreakdown;
+import com.choicecrafter.students.utils.MotivationalPromptType;
+import com.choicecrafter.students.utils.MotivationalPrompts;
 
 import java.util.ArrayList;
 import java.util.List;

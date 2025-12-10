@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.graphics.Typeface;
 import android.os.Handler;
@@ -15,10 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import com.choicecrafter.studentapp.models.tasks.MatchingPairTask;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.HintDialogUtil;
+import com.choicecrafter.students.models.tasks.MatchingPairTask;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.HintDialogUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,8 +40,8 @@ public class MatchingPairViewHolder extends RecyclerView.ViewHolder {
 
     public MatchingPairViewHolder(View itemView) {
         super(itemView);
-        leftColumn = itemView.findViewById(com.choicecrafter.studentapp.R.id.left_column);
-        rightColumn = itemView.findViewById(com.choicecrafter.studentapp.R.id.right_column);
+        leftColumn = itemView.findViewById(com.choicecrafter.students.R.id.left_column);
+        rightColumn = itemView.findViewById(com.choicecrafter.students.R.id.right_column);
         descriptionView = itemView.findViewById(R.id.task_description);
         aiHintService = AiHintService.getInstance(itemView.getContext());
     }

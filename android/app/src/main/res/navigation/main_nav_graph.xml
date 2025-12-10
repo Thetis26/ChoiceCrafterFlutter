@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/home">
+
+    <fragment
+        android:id="@+id/home"
+        android:name="com.choicecrafter.students.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/shorts"
+        android:name="com.choicecrafter.students.ui.colleagues_activity.ColleaguesActivityFragment"
+        android:label="@string/title_colleagues_activity"
+        tools:layout="@layout/fragment_colleagues_activity" />
+
+    <fragment
+        android:id="@+id/subscriptions"
+        android:name="com.choicecrafter.students.ui.news.NewsFragment"
+        android:label="@string/title_news"
+        tools:layout="@layout/fragment_news" />
+
+    <fragment
+        android:id="@+id/library"
+        android:name="com.choicecrafter.students.ui.statistics.StatisticsFragment"
+        android:label="@string/title_statistics"
+        tools:layout="@layout/fragment_personal_statistics">
+        <action
+            android:id="@+id/action_library_to_badgesInfoFragment"
+            app:destination="@id/badgesInfoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/inboxFragment"
+        android:name="com.choicecrafter.students.ui.inbox.InboxFragment"
+        android:label="@string/title_inbox"
+        tools:layout="@layout/fragment_inbox" />
+
+    <fragment
+        android:id="@+id/messagesFragment"
+        android:name="com.choicecrafter.students.ui.messages.MessagesFragment"
+        android:label="@string/title_messages"
+        tools:layout="@layout/fragment_messages" />
+
+    <fragment
+        android:id="@+id/feedbackFragment"
+        android:name="com.choicecrafter.students.ui.feedback.FeedbackFragment"
+        android:label="@string/send_feedback"
+        tools:layout="@layout/fragment_feedback" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.choicecrafter.students.ui.settings.SettingsFragment"
+        android:label="@string/title_settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/courseActivities"
+        android:name="com.choicecrafter.students.ui.course_activities.CourseActivities"
+        android:label="@string/title_course_activities"
+        tools:layout="@layout/fragment_course_activities" />
+
+    <fragment
+        android:id="@+id/activityFragment"
+        android:name="com.choicecrafter.students.ui.activity.ActivityFragment"
+        android:label="@string/title_activity"
+        tools:layout="@layout/fragment_activity" />
+
+    <fragment
+        android:id="@+id/moduleFragment"
+        android:name="com.choicecrafter.students.ui.news.ModuleFragment"
+        android:label="@string/title_module"
+        tools:layout="@layout/fragment_module" />
+
+    <fragment
+        android:id="@+id/learningPathDetailFragment"
+        android:name="com.choicecrafter.students.ui.news.LearningPathDetailFragment"
+        android:label="@string/title_learning_path"
+        tools:layout="@layout/fragment_learning_path_detail" />
+
+    <fragment
+        android:id="@+id/recommendationWebViewFragment"
+        android:name="com.choicecrafter.students.ui.activity.RecommendationWebViewFragment"
+        android:label="@string/title_recommendation"
+        tools:layout="@layout/fragment_recommendation_web_view" />
+
+    <fragment
+        android:id="@+id/badgesInfoFragment"
+        android:name="com.choicecrafter.students.ui.statistics.BadgesInfoFragment"
+        android:label="@string/title_badges"
+        tools:layout="@layout/fragment_badges_info" />
+</navigation>

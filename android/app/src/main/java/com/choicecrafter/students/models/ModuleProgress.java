@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 public class ModuleProgress {
     private int completedTasks;

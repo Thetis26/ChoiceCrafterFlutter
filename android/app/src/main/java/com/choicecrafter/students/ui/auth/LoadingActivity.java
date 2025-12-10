@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,10 +7,10 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.choicecrafter.studentapp.MainActivity;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.repositories.CourseRepository;
+import com.choicecrafter.students.MainActivity;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.repositories.CourseRepository;
 
 import java.util.List;
 

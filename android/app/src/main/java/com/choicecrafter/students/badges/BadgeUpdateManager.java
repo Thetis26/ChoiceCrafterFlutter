@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.badges;
+package com.choicecrafter.students.badges;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -7,11 +7,11 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.models.badges.BadgeStatus;
-import com.choicecrafter.studentapp.repositories.UserRepository;
-import com.choicecrafter.studentapp.utils.BadgePreferences;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.models.badges.BadgeStatus;
+import com.choicecrafter.students.repositories.UserRepository;
+import com.choicecrafter.students.utils.BadgePreferences;
 
 import java.util.ArrayList;
 import java.util.HashSet;

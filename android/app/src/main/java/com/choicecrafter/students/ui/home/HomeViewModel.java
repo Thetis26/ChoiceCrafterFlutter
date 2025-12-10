@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.home;
+package com.choicecrafter.students.ui.home;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

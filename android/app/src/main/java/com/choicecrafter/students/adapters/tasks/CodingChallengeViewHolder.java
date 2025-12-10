@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.Context;
 import android.text.Editable;
@@ -19,13 +19,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.CodingChallengeExample;
-import com.choicecrafter.studentapp.models.tasks.CodingChallengeTask;
-import com.choicecrafter.studentapp.ui.activity.TaskSessionState;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.CodeExecutionService;
-import com.choicecrafter.studentapp.utils.HintDialogUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.CodingChallengeExample;
+import com.choicecrafter.students.models.tasks.CodingChallengeTask;
+import com.choicecrafter.students.ui.activity.TaskSessionState;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.CodeExecutionService;
+import com.choicecrafter.students.utils.HintDialogUtil;
 
 import java.util.List;
 import java.util.Locale;

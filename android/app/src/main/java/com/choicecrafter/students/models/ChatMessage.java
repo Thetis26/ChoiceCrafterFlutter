@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models;
+package com.choicecrafter.students.models;
 
 public class ChatMessage {
     private String senderId;

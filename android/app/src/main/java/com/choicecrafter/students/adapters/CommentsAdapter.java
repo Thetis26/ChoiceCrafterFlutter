@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.content.Context;
 import android.os.Build;
@@ -14,10 +14,10 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Comment;
-import com.choicecrafter.studentapp.utils.Avatar;
-import com.choicecrafter.studentapp.utils.TimeAgoUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Comment;
+import com.choicecrafter.students.utils.Avatar;
+import com.choicecrafter.students.utils.TimeAgoUtil;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;

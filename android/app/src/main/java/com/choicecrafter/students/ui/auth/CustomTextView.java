@@ -1,11 +1,11 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 
 public class CustomTextView extends androidx.appcompat.widget.AppCompatTextView {
 

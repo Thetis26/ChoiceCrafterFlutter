@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.os.Build;
 import android.util.Log;
@@ -14,9 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.ColleagueActivity;
-import com.choicecrafter.studentapp.utils.TimeAgoUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.ColleagueActivity;
+import com.choicecrafter.students.utils.TimeAgoUtil;
 
 import java.util.List;
 

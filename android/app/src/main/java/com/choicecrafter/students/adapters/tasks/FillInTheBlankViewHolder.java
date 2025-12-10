@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -21,12 +21,12 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.FillInTheBlank;
-import com.choicecrafter.studentapp.models.tasks.SupportingContent;
-import com.choicecrafter.studentapp.utils.AiAnswerValidationService;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.HintDialogUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.FillInTheBlank;
+import com.choicecrafter.students.models.tasks.SupportingContent;
+import com.choicecrafter.students.utils.AiAnswerValidationService;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.HintDialogUtil;
 
 import java.util.ArrayList;
 import java.util.List;

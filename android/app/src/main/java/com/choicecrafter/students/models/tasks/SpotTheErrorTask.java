@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.models.tasks;
+package com.choicecrafter.students.models.tasks;
 
 import android.os.Parcel;
 import android.os.Parcelable;

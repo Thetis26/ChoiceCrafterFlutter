@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.text.method.PasswordTransformationMethod;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.animation.ObjectAnimator;
 import android.os.Bundle;
@@ -12,12 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.LearningPathCardBinding;
-import com.choicecrafter.studentapp.models.Course;
-import com.choicecrafter.studentapp.models.Module;
-import com.choicecrafter.studentapp.models.ModuleProgress;
-import com.choicecrafter.studentapp.ui.news.LearningPathDetailFragment;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.LearningPathCardBinding;
+import com.choicecrafter.students.models.Course;
+import com.choicecrafter.students.models.Module;
+import com.choicecrafter.students.models.ModuleProgress;
+import com.choicecrafter.students.ui.news.LearningPathDetailFragment;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -125,7 +125,7 @@ public class LearningPathCardAdapter extends RecyclerView.Adapter<LearningPathCa
             for (Module module : learningPath.getModules()) {
                 int moduleTaskCount = 0;
                 if (module.getActivities() != null) {
-                    for (com.choicecrafter.studentapp.models.Activity activity : module.getActivities()) {
+                    for (com.choicecrafter.students.models.Activity activity : module.getActivities()) {
                         if (activity.getTasks() != null) {
                             moduleTaskCount += activity.getTasks().size();
                         }

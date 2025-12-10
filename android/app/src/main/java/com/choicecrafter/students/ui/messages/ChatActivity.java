@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.messages;
+package com.choicecrafter.students.ui.messages;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -26,13 +26,13 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.adapters.ChatMessageAdapter;
-import com.choicecrafter.studentapp.adapters.UserSelectionAdapter;
-import com.choicecrafter.studentapp.models.ChatMessage;
-import com.choicecrafter.studentapp.models.Conversation;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.utils.ConversationTitleHelper;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.adapters.ChatMessageAdapter;
+import com.choicecrafter.students.adapters.UserSelectionAdapter;
+import com.choicecrafter.students.models.ChatMessage;
+import com.choicecrafter.students.models.Conversation;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.utils.ConversationTitleHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;

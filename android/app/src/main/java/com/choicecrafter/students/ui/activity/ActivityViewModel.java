@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.ui.activity;
+package com.choicecrafter.students.ui.activity;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.choicecrafter.studentapp.models.Activity;
+import com.choicecrafter.students.models.Activity;
 
 import java.util.HashMap;
 import java.util.Map;

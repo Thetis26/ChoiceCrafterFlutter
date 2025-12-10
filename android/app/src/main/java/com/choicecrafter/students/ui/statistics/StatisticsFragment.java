@@ -1,7 +1,7 @@
-package com.choicecrafter.studentapp.ui.statistics;
+package com.choicecrafter.students.ui.statistics;
 
-import static com.choicecrafter.studentapp.repositories.UserRepository.buildDailyScores;
-import static com.choicecrafter.studentapp.utils.TimeAgoUtil.toIsoMillis;
+import static com.choicecrafter.students.repositories.UserRepository.buildDailyScores;
+import static com.choicecrafter.students.utils.TimeAgoUtil.toIsoMillis;
 
 import android.graphics.Color;
 import android.os.Build;
@@ -21,20 +21,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.MainViewModel;
-import com.choicecrafter.studentapp.adapters.PersonalActivityAdapter;
-import com.choicecrafter.studentapp.models.PersonalActivity;
-import com.choicecrafter.studentapp.models.User;
-import com.choicecrafter.studentapp.models.EnrollmentActivityProgress;
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.NudgePreferences;
-import com.choicecrafter.studentapp.models.badges.BadgeStatus;
-import com.choicecrafter.studentapp.badges.BadgeUpdateManager;
-import com.choicecrafter.studentapp.badges.ModuleCompletionAggregator;
-import com.choicecrafter.studentapp.repositories.UserRepository;
-import com.choicecrafter.studentapp.utils.MotivationalPromptType;
-import com.choicecrafter.studentapp.utils.MotivationalPrompts;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.MainViewModel;
+import com.choicecrafter.students.adapters.PersonalActivityAdapter;
+import com.choicecrafter.students.models.PersonalActivity;
+import com.choicecrafter.students.models.User;
+import com.choicecrafter.students.models.EnrollmentActivityProgress;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.NudgePreferences;
+import com.choicecrafter.students.models.badges.BadgeStatus;
+import com.choicecrafter.students.badges.BadgeUpdateManager;
+import com.choicecrafter.students.badges.ModuleCompletionAggregator;
+import com.choicecrafter.students.repositories.UserRepository;
+import com.choicecrafter.students.utils.MotivationalPromptType;
+import com.choicecrafter.students.utils.MotivationalPrompts;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;

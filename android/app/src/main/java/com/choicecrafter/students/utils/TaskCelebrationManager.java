@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -14,18 +14,18 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.CodingChallengeExample;
-import com.choicecrafter.studentapp.models.tasks.CodingChallengeTask;
-import com.choicecrafter.studentapp.models.tasks.FillInTheBlank;
-import com.choicecrafter.studentapp.models.tasks.InfoCardTask;
-import com.choicecrafter.studentapp.models.tasks.MatchingPairTask;
-import com.choicecrafter.studentapp.models.tasks.MultipleChoiceQuestion;
-import com.choicecrafter.studentapp.models.tasks.OrderingTask;
-import com.choicecrafter.studentapp.models.tasks.SpotTheErrorTask;
-import com.choicecrafter.studentapp.models.tasks.Task;
-import com.choicecrafter.studentapp.models.tasks.TrueFalseTask;
-import com.choicecrafter.studentapp.ui.ConfettiView;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.CodingChallengeExample;
+import com.choicecrafter.students.models.tasks.CodingChallengeTask;
+import com.choicecrafter.students.models.tasks.FillInTheBlank;
+import com.choicecrafter.students.models.tasks.InfoCardTask;
+import com.choicecrafter.students.models.tasks.MatchingPairTask;
+import com.choicecrafter.students.models.tasks.MultipleChoiceQuestion;
+import com.choicecrafter.students.models.tasks.OrderingTask;
+import com.choicecrafter.students.models.tasks.SpotTheErrorTask;
+import com.choicecrafter.students.models.tasks.Task;
+import com.choicecrafter.students.models.tasks.TrueFalseTask;
+import com.choicecrafter.students.ui.ConfettiView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 

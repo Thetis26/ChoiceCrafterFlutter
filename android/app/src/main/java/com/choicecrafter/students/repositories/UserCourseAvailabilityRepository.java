@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.repositories;
+package com.choicecrafter.students.repositories;
 
 import android.text.TextUtils;
 import android.util.Log;

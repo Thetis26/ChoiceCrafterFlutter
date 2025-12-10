@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.utils;
+package com.choicecrafter.students.utils;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.models.TaskStats;
-import com.choicecrafter.studentapp.models.tasks.MultipleChoiceQuestion;
-import com.choicecrafter.studentapp.models.tasks.Task;
+import com.choicecrafter.students.models.TaskStats;
+import com.choicecrafter.students.models.tasks.MultipleChoiceQuestion;
+import com.choicecrafter.students.models.tasks.Task;
 
-import static com.choicecrafter.studentapp.utils.TaskStatsKeyUtils.findStatsForTask;
+import static com.choicecrafter.students.utils.TaskStatsKeyUtils.findStatsForTask;
 
 import java.util.ArrayList;
 import java.util.List;

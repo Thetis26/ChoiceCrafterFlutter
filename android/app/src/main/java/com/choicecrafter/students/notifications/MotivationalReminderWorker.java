@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.notifications;
+package com.choicecrafter.students.notifications;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -12,12 +12,12 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Notification;
-import com.choicecrafter.studentapp.models.NotificationType;
-import com.choicecrafter.studentapp.models.NudgePreferences;
-import com.choicecrafter.studentapp.repositories.NotificationRepository;
-import com.choicecrafter.studentapp.repositories.NudgePreferencesRepository;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Notification;
+import com.choicecrafter.students.models.NotificationType;
+import com.choicecrafter.students.models.NudgePreferences;
+import com.choicecrafter.students.repositories.NotificationRepository;
+import com.choicecrafter.students.repositories.NudgePreferencesRepository;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

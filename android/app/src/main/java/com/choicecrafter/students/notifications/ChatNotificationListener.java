@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.notifications;
+package com.choicecrafter.students.notifications;
 
 import android.content.Context;
 import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.Conversation;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.Conversation;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;

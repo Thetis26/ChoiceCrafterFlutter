@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.activity;
+package com.choicecrafter.students.ui.activity;
 
 import android.net.Uri;
 import android.os.Build;
@@ -20,7 +20,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 
-import com.choicecrafter.studentapp.R;
+import com.choicecrafter.students.R;
 
 public class RecommendationWebViewFragment extends Fragment {
 

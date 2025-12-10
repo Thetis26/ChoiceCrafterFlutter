@@ -1,6 +1,6 @@
-package com.choicecrafter.studentapp.badges;
+package com.choicecrafter.students.badges;
 
-import com.choicecrafter.studentapp.models.badges.BadgeDefinition;
+import com.choicecrafter.students.models.badges.BadgeDefinition;
 
 import java.util.ArrayList;
 import java.util.Collections;

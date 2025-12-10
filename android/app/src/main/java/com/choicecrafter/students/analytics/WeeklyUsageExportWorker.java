@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.analytics;
+package com.choicecrafter.students.analytics;
 
 import android.content.Context;
 import android.os.Build;

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.auth;
+package com.choicecrafter.students.ui.auth;
 
 import android.view.animation.Animation;
 import android.view.animation.Transformation;

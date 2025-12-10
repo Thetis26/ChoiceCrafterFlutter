@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 
 import android.content.res.ColorStateList;
@@ -15,11 +15,11 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.MultipleChoiceQuestion;
-import com.choicecrafter.studentapp.models.tasks.SupportingContent;
-import com.choicecrafter.studentapp.utils.AiHintService;
-import com.choicecrafter.studentapp.utils.HintDialogUtil;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.MultipleChoiceQuestion;
+import com.choicecrafter.students.models.tasks.SupportingContent;
+import com.choicecrafter.students.utils.AiHintService;
+import com.choicecrafter.students.utils.HintDialogUtil;
 
 public class MultipleChoiceViewHolder extends RecyclerView.ViewHolder {
 

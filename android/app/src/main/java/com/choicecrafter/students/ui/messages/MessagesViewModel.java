@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.ui.messages;
+package com.choicecrafter.students.ui.messages;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

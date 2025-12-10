@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -9,10 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.databinding.ModuleCardBinding;
-import com.choicecrafter.studentapp.models.Module;
-import com.choicecrafter.studentapp.models.ModuleProgress;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.databinding.ModuleCardBinding;
+import com.choicecrafter.students.models.Module;
+import com.choicecrafter.students.models.ModuleProgress;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -162,7 +162,7 @@ public class ModuleAdapter extends RecyclerView.Adapter<ModuleAdapter.ModuleView
             return 0;
         }
         int count = 0;
-        for (com.choicecrafter.studentapp.models.Activity activity : module.getActivities()) {
+        for (com.choicecrafter.students.models.Activity activity : module.getActivities()) {
             if (activity != null && activity.getTasks() != null) {
                 count += activity.getTasks().size();
             }

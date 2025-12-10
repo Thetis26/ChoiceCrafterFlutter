@@ -1,12 +1,12 @@
-package com.choicecrafter.studentapp.notifications;
+package com.choicecrafter.students.notifications;
 
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.choicecrafter.studentapp.models.Activity;
-import com.choicecrafter.studentapp.models.NotificationType;
+import com.choicecrafter.students.models.Activity;
+import com.choicecrafter.students.models.NotificationType;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;

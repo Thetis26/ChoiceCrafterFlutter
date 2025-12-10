@@ -85,7 +85,7 @@
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
-    <com.choicecrafter.studentapp.ui.auth.CustomTextView
+    <com.choicecrafter.students.ui.auth.CustomTextView
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:padding="8dp"

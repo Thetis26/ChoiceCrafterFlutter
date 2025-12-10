@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters;
+package com.choicecrafter.students.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,8 +7,8 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.EnrollmentActivityProgress;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.EnrollmentActivityProgress;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.choicecrafter.studentapp.adapters.tasks;
+package com.choicecrafter.students.adapters.tasks;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -15,8 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.choicecrafter.studentapp.R;
-import com.choicecrafter.studentapp.models.tasks.InfoCardTask;
+import com.choicecrafter.students.R;
+import com.choicecrafter.students.models.tasks.InfoCardTask;
 
 public class InfoCardViewHolder extends RecyclerView.ViewHolder {
 

@@ -1,10 +1,10 @@
-package com.choicecrafter.studentapp.ui.course_activities;
+package com.choicecrafter.students.ui.course_activities;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.choicecrafter.studentapp.models.Course;
+import com.choicecrafter.students.models.Course;
 
 public class CourseActivitiesViewModel extends ViewModel {
 
