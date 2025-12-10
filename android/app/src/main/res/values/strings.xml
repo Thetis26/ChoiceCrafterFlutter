@@ -448,6 +448,7 @@
     <string name="course_teacher_label">Profesor: %1$s</string>
     <string name="action_view">Vezi</string>
     <string name="course_view_details">Vezi detalii</string>
+    <string name="course_view_modules">Vezi modulele</string>
     <string name="course_summary_modules_format">Module: %1$d</string>
     <string name="course_summary_activities_format">Activități: %1$d</string>
     <string name="course_enrolled_label">Înscris</string>

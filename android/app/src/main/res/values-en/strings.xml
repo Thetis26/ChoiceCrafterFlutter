@@ -382,6 +382,7 @@
     <string name="course_teacher_label">Teacher: %1$s</string>
     <string name="course_summary_modules_format">Modules: %1$d</string>
     <string name="course_summary_activities_format">Activities: %1$d</string>
+    <string name="course_view_modules">View modules</string>
     <string name="course_view_details">View details</string>
     <string name="course_enrolled_label">Enrolled</string>
     <string name="learning_path_enroll_button">Enroll</string>
