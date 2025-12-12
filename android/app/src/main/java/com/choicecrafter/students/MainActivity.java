@@ -1,9 +1,5 @@
 package com.choicecrafter.students;
 
-import io.flutter.embedding.android.FlutterActivity;
-import io.flutter.embedding.engine.FlutterEngine;
-import io.flutter.plugin.common.MethodChannel;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,7 +17,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -75,7 +71,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-public class MainActivity extends FlutterActivity {
+public class MainActivity extends FragmentActivity {
     private static final String KEY_LOGGED_IN_USER = "key_logged_in_user";
     private static final String TAG = "MainActivity";
     private static final int REQUEST_CODE_POST_NOTIFICATIONS = 1001;
@@ -102,8 +98,6 @@ public class MainActivity extends FlutterActivity {
     private boolean isResolvingCourseNavigation;
     private ChatNotificationListener chatNotificationListener;
 
-    private static final String NAVIGATION_CHANNEL = "com.choicecrafter.students/navigation";
-    private MethodChannel navigationChannel;
     private final Set<Integer> topLevelDestinations = new HashSet<>();
     private final Set<Integer> destinationsWithoutBottomBar = new HashSet<>(Arrays.asList(
             R.id.courseActivities,
@@ -114,11 +108,6 @@ public class MainActivity extends FlutterActivity {
             R.id.feedbackFragment
     ));
 
-    @Override
-    public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
-        super.configureFlutterEngine(flutterEngine);
-        navigationChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), NAVIGATION_CHANNEL);
-    }
     private void handleIntent(Intent intent) {
         if (intent == null) return;
         AppLogger.d(TAG, "Processing incoming intent", "extras", intent.getExtras());
@@ -128,25 +117,16 @@ public class MainActivity extends FlutterActivity {
             String highlightActivityId = intent.getStringExtra("highlightActivityId");
             intent.removeExtra("openCourseActivities");
 
-            if (navigationChannel != null) {
-                Map<String, String> args = new HashMap<>();
-                args.put("route", "/courseActivities");
-                args.put("courseId", courseId);
-                args.put("highlightActivityId", highlightActivityId);
-                navigationChannel.invokeMethod("navigateTo", args);
-            }
+            setPendingCourseNavigation(courseId, highlightActivityId, null);
+            resolvePendingCourseNavigation();
         }
 
         if (intent.getBooleanExtra("openActivityFragment", false)) {
             Activity activity = intent.getParcelableExtra("activity");
             String courseId = intent.getStringExtra("courseId");
-            if (activity != null && navigationChannel != null) {
-                Map<String, Object> args = new HashMap<>();
-                args.put("route", "/activity");
-                args.put("courseId", courseId);
-                // You will need to convert your Activity object to a Map
-                args.put("activity", activity); // Assuming you create a toMap() method
-                navigationChannel.invokeMethod("navigateTo", args);
+            if (activity != null) {
+                setPendingCourseNavigation(courseId, activity.getId(), activity.getTitle());
+                resolvePendingCourseNavigation();
             }
         }
     }
@@ -226,18 +206,84 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Do not call setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(this);
 
         try (AppLogger.TraceSession ignored = AppLogger.trace(TAG, "onCreate", "hasSavedState", savedInstanceState != null)) {
             applySavedLocale();
             FirebaseApp.initializeApp(this);
+            initializeFirebaseAppCheck();
             // It's safe to schedule workers here
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WeeklyUsageExportWorker.schedule(getApplicationContext());
                 MotivationalReminderWorker.schedule(getApplicationContext());
             }
             requestNotificationPermissionIfNeeded();
+
+            setContentView(R.layout.activity_main);
+            toolbar = findViewById(R.id.toolbar);
+            drawerLayout = findViewById(R.id.drawer_layout);
+            bottomBarContainer = findViewById(R.id.app_bar_main);
+            bottomNavigationView = findViewById(R.id.bottomNavigationView);
+            navigationView = findViewById(R.id.nav_view);
+            mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+
+            NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (navHostFragment != null) {
+                navController = navHostFragment.getNavController();
+            }
+
+            topLevelDestinations.addAll(Arrays.asList(
+                    R.id.home,
+                    R.id.subscriptions,
+                    R.id.library,
+                    R.id.inboxFragment,
+                    R.id.messagesFragment,
+                    R.id.shorts
+            ));
+
+            appBarConfiguration = new AppBarConfiguration.Builder(topLevelDestinations)
+                    .setOpenableLayout(drawerLayout)
+                    .build();
+
+            if (toolbar != null && navController != null) {
+                NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration);
+            }
+            if (bottomNavigationView != null && navController != null) {
+                NavigationUI.setupWithNavController(bottomNavigationView, navController);
+            }
+            if (navigationView != null && navController != null) {
+                NavigationUI.setupWithNavController(navigationView, navController);
+            }
+
+            if (drawerLayout != null && toolbar != null) {
+                toggle = new ActionBarDrawerToggle(
+                        this,
+                        drawerLayout,
+                        toolbar,
+                        R.string.navigation_drawer_open,
+                        R.string.navigation_drawer_close
+                );
+                drawerLayout.addDrawerListener(toggle);
+                toggle.syncState();
+            }
+
+            if (navController != null) {
+                navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                    boolean showBottomBar = !destinationsWithoutBottomBar.contains(destination.getId());
+                    if (bottomBarContainer != null) {
+                        bottomBarContainer.setVisibility(showBottomBar ? View.VISIBLE : View.GONE);
+                    }
+                    if (topLevelDestinations.contains(destination.getId())) {
+                        showHamburger();
+                    } else {
+                        hideHamburger();
+                    }
+                });
+            }
+
+            if (navigationView != null) {
+                findLoggedInUserData(navigationView);
+            }
 
             if (savedInstanceState != null) {
                 loggedInUser = savedInstanceState.getParcelable(KEY_LOGGED_IN_USER);
