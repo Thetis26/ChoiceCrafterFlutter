@@ -209,6 +209,12 @@ public class MainActivity extends FragmentActivity {
         FirebaseApp.initializeApp(this);
 
         try (AppLogger.TraceSession ignored = AppLogger.trace(TAG, "onCreate", "hasSavedState", savedInstanceState != null)) {
+            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (firebaseUser == null || TextUtils.isEmpty(firebaseUser.getEmail())) {
+                startActivity(new Intent(this, LoginActivity.class));
+                finish();
+                return;
+            }
             applySavedLocale();
             FirebaseApp.initializeApp(this);
             initializeFirebaseAppCheck();
