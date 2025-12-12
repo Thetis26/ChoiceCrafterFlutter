@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../sample_data.dart';
+import '../models/module.dart';
+import '../repositories/course_repository.dart';
 
 class ModuleScreen extends StatelessWidget {
-  const ModuleScreen({super.key});
+  const ModuleScreen({
+    super.key,
+    required this.courseRepository,
+  });
+
+  final CourseRepository courseRepository;
 
   @override
   Widget build(BuildContext context) {
     final arguments = ModalRoute.of(context)?.settings.arguments;
-    ModuleData? module;
+    Module? module;
     if (arguments is Map) {
       final moduleId = arguments['moduleId'] as String?;
-      module = SampleData.courses
-          .expand((course) => course.modules)
-          .firstWhere((item) => item.id == moduleId, orElse: () => SampleData.courses.first.modules.first);
+      module = courseRepository.getModuleById(moduleId ?? '');
     }
-    module ??= SampleData.courses.first.modules.first;
+    module ??= courseRepository.getAllCourses().first.modules.first;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,13 +39,7 @@ class ModuleScreen extends StatelessWidget {
               onTap: () => Navigator.of(context).pushNamed(
                 '/activity',
                 arguments: {
-                  'activity': {
-                    'id': activity.id,
-                    'name': activity.name,
-                    'description': activity.description,
-                    'type': activity.type,
-                    'content': activity.content,
-                  },
+                  'activity': activity,
                 },
               ),
             ),
