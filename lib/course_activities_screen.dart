@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'sample_data.dart';
+
 class CourseActivitiesScreen extends StatefulWidget {
   const CourseActivitiesScreen({super.key});
 
@@ -10,42 +12,83 @@ class CourseActivitiesScreen extends StatefulWidget {
 }
 
 class _CourseActivitiesScreenState extends State<CourseActivitiesScreen> {
-  String? courseId;
+  CourseData? course;
   String? highlightActivityId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Safely extract navigation arguments here.
     final arguments = ModalRoute.of(context)?.settings.arguments;
     if (arguments is Map) {
-      setState(() {
-        courseId = arguments['courseId'];
-        highlightActivityId = arguments['highlightActivityId'];
-      });
+      final courseId = arguments['courseId'] as String?;
+      highlightActivityId = arguments['highlightActivityId'] as String?;
+      course = SampleData.courses.firstWhere(
+        (element) => element.id == courseId,
+        orElse: () => SampleData.courses.first,
+      );
     }
+    course ??= SampleData.courses.first;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(courseId != null ? 'Course: $courseId' : 'Course Activities'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Displaying activities for course: ${courseId ?? "Unknown"}'),
-            if (highlightActivityId != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Text('Highlighting activity: $highlightActivityId'),
+            Text(course?.title ?? 'Course Activities'),
+            if (course?.instructor != null)
+              Text(
+                course!.instructor,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(color: Colors.white70),
               ),
-            // TODO: Fetch and display the list of activities for the courseId.
-            // You would typically use a ListView.builder here.
           ],
         ),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: course?.modules.length ?? 0,
+        itemBuilder: (context, index) {
+          final module = course!.modules[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ExpansionTile(
+              title: Text(module.name),
+              subtitle: Text(module.summary),
+              children: module.activities.map((activity) {
+                final isHighlighted = activity.id == highlightActivityId;
+                return ListTile(
+                  leading: Icon(
+                    isHighlighted ? Icons.star : Icons.play_circle,
+                    color: isHighlighted ? Colors.deepPurple : null,
+                  ),
+                  title: Text(activity.name),
+                  subtitle: Text(activity.description),
+                  trailing: Text('${activity.estimatedMinutes} min'),
+                  onTap: () {
+                    Navigator.of(context).pushNamed(
+                      '/activity',
+                      arguments: {
+                        'activity': {
+                          'id': activity.id,
+                          'name': activity.name,
+                          'description': activity.description,
+                          'type': activity.type,
+                          'content': activity.content,
+                        },
+                        'courseId': course?.id,
+                      },
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+          );
+        },
       ),
     );
   }

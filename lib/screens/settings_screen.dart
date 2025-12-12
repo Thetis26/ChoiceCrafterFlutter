@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool notificationsEnabled = true;
+  bool analyticsSharing = false;
+  String language = 'English';
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        SwitchListTile(
+          title: const Text('Push notifications'),
+          subtitle: const Text('Match the Android notification behavior'),
+          value: notificationsEnabled,
+          onChanged: (value) => setState(() => notificationsEnabled = value),
+        ),
+        SwitchListTile(
+          title: const Text('Share anonymous analytics'),
+          subtitle: const Text('Use the same metrics as the Android build'),
+          value: analyticsSharing,
+          onChanged: (value) => setState(() => analyticsSharing = value),
+        ),
+        ListTile(
+          title: const Text('Language'),
+          subtitle: Text(language),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            final selected = await showDialog<String>(
+              context: context,
+              builder: (context) => SimpleDialog(
+                title: const Text('Choose language'),
+                children: [
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.of(context).pop('English'),
+                    child: const Text('English'),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.of(context).pop('Romanian'),
+                    child: const Text('Romanian'),
+                  ),
+                ],
+              ),
+            );
+            if (selected != null) {
+              setState(() => language = selected);
+            }
+          },
+        ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.logout),
+          title: const Text('Logout'),
+          subtitle: const Text('Mimics the Android navigation drawer action'),
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logout tapped (demo only)')),
+          ),
+        ),
+      ],
+    );
+  }
+}
