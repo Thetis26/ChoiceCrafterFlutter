@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 
-class ActivityScreen extends StatefulWidget {const ActivityScreen({super.key});
+class ActivityScreen extends StatefulWidget {
+  const ActivityScreen({super.key});
 
-@override
-State<ActivityScreen> createState() => _ActivityScreenState();
+  @override
+  State<ActivityScreen> createState() => _ActivityScreenState();
 }
 
 class _ActivityScreenState extends State<ActivityScreen> {
@@ -18,35 +19,71 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final arguments = ModalRoute.of(context)?.settings.arguments;
     if (arguments is Map) {
       setState(() {
-        // The 'activity' argument will be a Map<Object?, Object?>
-        // so we cast it to the expected type.
         activityData = Map<String, dynamic>.from(arguments['activity'] as Map);
-        courseId = arguments['courseId'];
+        courseId = arguments['courseId'] as String?;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // You can access activity properties like this:
     final String activityName = activityData?['name'] ?? 'Unknown Activity';
+    final String description = activityData?['description'] ?? '';
+    final String type = activityData?['type'] ?? 'activity';
+    final String content = activityData?['content'] ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(activityName),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Details for activity: $activityName'),
+            Text(activityName),
             if (courseId != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Text('From course: $courseId'),
+              Text(
+                'Course: $courseId',
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(color: Colors.white70),
               ),
-            // TODO: Display all other details from the 'activityData' map.
-            // e.g., Text(activityData?['description'] ?? ''),
+          ],
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Chip(label: Text(type)),
+                if (courseId != null) ...[
+                  const SizedBox(width: 8),
+                  Chip(label: Text('Course $courseId')),
+                ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(description, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 16),
+            Text(content),
+            const Spacer(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed(
+                    '/courseActivities',
+                    arguments: {
+                      'courseId': courseId,
+                      'highlightActivityId': activityData?['id'],
+                    },
+                  );
+                },
+                icon: const Icon(Icons.list),
+                label: const Text('Back to activities'),
+              ),
+            ),
           ],
         ),
       ),
