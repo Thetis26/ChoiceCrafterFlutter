@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,6 +25,7 @@ import com.choicecrafter.students.databinding.FragmentCoursesBinding;
 import com.choicecrafter.students.models.CourseEnrollment;
 import com.choicecrafter.students.repositories.CourseEnrollmentRepository;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +37,7 @@ public class CoursesFragment extends Fragment {
     private final CourseEnrollmentRepository enrollmentRepository = new CourseEnrollmentRepository();
 
     private final List<CourseEnrollment> enrollments = new ArrayList<>();
-    private String userId = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+    private String userId;
 
     private FragmentCoursesBinding binding;
     private MainViewModel mainViewModel;
@@ -46,6 +49,10 @@ public class CoursesFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            userId = firebaseUser.getEmail();
+        }
     }
 
     @Nullable
@@ -57,7 +64,7 @@ public class CoursesFragment extends Fragment {
         progressBar = binding.progressBar;
 
         Log.i("In Home Screen", "User ID: " + userId);
-        adapter = new CourseAdapter(enrollments, userId, this.getContext());
+        adapter = new CourseAdapter(enrollments, userId != null ? userId : "", this.getContext());
         adapter.updateEnrollments(enrollments);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);
@@ -69,6 +76,11 @@ public class CoursesFragment extends Fragment {
 
     private void fetchEnrollments() {
         Log.i("In Home Screen", "Fetching enrollments...");
+        if (TextUtils.isEmpty(userId)) {
+            Log.w("In Home Screen", "Cannot load enrollments without a signed-in user");
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
         progressBar.setVisibility(View.VISIBLE);
         enrollmentRepository.fetchEnrollmentsForUser(userId, new CourseEnrollmentRepository.Callback<>() {
             @Override
