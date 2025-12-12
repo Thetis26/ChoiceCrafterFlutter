@@ -227,6 +227,7 @@ public class MainActivity extends FlutterActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Do not call setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);
 
         try (AppLogger.TraceSession ignored = AppLogger.trace(TAG, "onCreate", "hasSavedState", savedInstanceState != null)) {
             applySavedLocale();

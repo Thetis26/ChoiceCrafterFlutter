@@ -58,8 +58,21 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Text("Flutter UI"),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
-          // ... Your bottom navigation items
+        items: const <BottomNavigationBarItem>[
+          // FIX: Ensure you have at least two items here
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          // You can add more items if needed
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.person),
+          //   label: 'Profile',
+          // ),
         ],
       ),
     );

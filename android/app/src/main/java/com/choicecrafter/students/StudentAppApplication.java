@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import com.choicecrafter.students.notifications.MessagingTokenManager;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -178,6 +179,8 @@ public class StudentAppApplication extends Application implements Application.Ac
     }
 
     private void initializeMessagingToken() {
+        Log.d(TAG, "Initializing firebase messaging token");
+        FirebaseApp.initializeApp(this);
         FirebaseMessaging.getInstance().getToken()
                 .addOnSuccessListener(token -> {
                     MessagingTokenManager.storeToken(getApplicationContext(), token);

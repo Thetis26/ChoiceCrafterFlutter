@@ -1,0 +1,207 @@
+{
+  "project_info": {
+    "project_number": "1051357763141",
+    "firebase_url": "https://fir-64cfc.firebaseio.com",
+    "project_id": "fir-64cfc",
+    "storage_bucket": "fir-64cfc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051357763141:android:fc5fd4078dd38deaf9752c",
+        "android_client_info": {
+          "package_name": "com.choicecrafter.studentapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051357763141-l5j091g79bmmcncm7lt18sd6jb76o0nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxREdInA6jWAv4XoBofdj-T6joDe3AMZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051357763141-k0esv3pvemu2nljuuq23c65jo2o9hhdl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1051357763141-8djop2sq3li4lvb2p671qi5ib67llg6d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.choicecrafter.students"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051357763141:android:743a1a11ad9c9142f9752c",
+        "android_client_info": {
+          "package_name": "com.choicecrafter.students"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051357763141-l5j091g79bmmcncm7lt18sd6jb76o0nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxREdInA6jWAv4XoBofdj-T6joDe3AMZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051357763141-k0esv3pvemu2nljuuq23c65jo2o9hhdl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1051357763141-8djop2sq3li4lvb2p671qi5ib67llg6d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.choicecrafter.students"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051357763141:android:c007a0a93271929ef9752c",
+        "android_client_info": {
+          "package_name": "com.example.microlearningapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051357763141-87prb3ggtnmvk8ckpqfoncrucp9fur53.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.microlearningapp",
+            "certificate_hash": "f56cefa6b879a7d8eb6ba6845c758418e72d881f"
+          }
+        },
+        {
+          "client_id": "1051357763141-l5j091g79bmmcncm7lt18sd6jb76o0nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxREdInA6jWAv4XoBofdj-T6joDe3AMZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051357763141-k0esv3pvemu2nljuuq23c65jo2o9hhdl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1051357763141-8djop2sq3li4lvb2p671qi5ib67llg6d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.choicecrafter.students"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051357763141:android:480a77f2ba48f1a2f9752c",
+        "android_client_info": {
+          "package_name": "com.example.teacherapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051357763141-6agfs69l9gq9esecfla1ibgr9j13rv7d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.teacherapp",
+            "certificate_hash": "8aa7cf6f6a5cef076a9cd96fdcf15848d3c4fb1c"
+          }
+        },
+        {
+          "client_id": "1051357763141-l5j091g79bmmcncm7lt18sd6jb76o0nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxREdInA6jWAv4XoBofdj-T6joDe3AMZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051357763141-k0esv3pvemu2nljuuq23c65jo2o9hhdl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1051357763141-8djop2sq3li4lvb2p671qi5ib67llg6d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.choicecrafter.students"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051357763141:android:2a8b8d7aea60af41f9752c",
+        "android_client_info": {
+          "package_name": "org.choicecrafter.students"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1051357763141-l5j091g79bmmcncm7lt18sd6jb76o0nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxREdInA6jWAv4XoBofdj-T6joDe3AMZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1051357763141-k0esv3pvemu2nljuuq23c65jo2o9hhdl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1051357763141-8djop2sq3li4lvb2p671qi5ib67llg6d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.choicecrafter.students"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
