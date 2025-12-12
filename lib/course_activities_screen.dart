@@ -2,33 +2,18 @@
 
 import 'package:flutter/material.dart';
 
-import 'sample_data.dart';
+import 'models/course.dart';
+import 'models/module.dart';
 
-class CourseActivitiesScreen extends StatefulWidget {
-  const CourseActivitiesScreen({super.key});
+class CourseActivitiesScreen extends StatelessWidget {
+  const CourseActivitiesScreen({
+    super.key,
+    required this.course,
+    this.highlightActivityId,
+  });
 
-  @override
-  State<CourseActivitiesScreen> createState() => _CourseActivitiesScreenState();
-}
-
-class _CourseActivitiesScreenState extends State<CourseActivitiesScreen> {
-  CourseData? course;
-  String? highlightActivityId;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is Map) {
-      final courseId = arguments['courseId'] as String?;
-      highlightActivityId = arguments['highlightActivityId'] as String?;
-      course = SampleData.courses.firstWhere(
-        (element) => element.id == courseId,
-        orElse: () => SampleData.courses.first,
-      );
-    }
-    course ??= SampleData.courses.first;
-  }
+  final Course course;
+  final String? highlightActivityId;
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +22,22 @@ class _CourseActivitiesScreenState extends State<CourseActivitiesScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(course?.title ?? 'Course Activities'),
-            if (course?.instructor != null)
-              Text(
-                course!.instructor,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: Colors.white70),
-              ),
+            Text(course.title),
+            Text(
+              course.instructor,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(color: Colors.white70),
+            ),
           ],
         ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: course?.modules.length ?? 0,
+        itemCount: course.modules.length,
         itemBuilder: (context, index) {
-          final module = course!.modules[index];
+          final Module module = course.modules[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ExpansionTile(
@@ -73,14 +57,8 @@ class _CourseActivitiesScreenState extends State<CourseActivitiesScreen> {
                     Navigator.of(context).pushNamed(
                       '/activity',
                       arguments: {
-                        'activity': {
-                          'id': activity.id,
-                          'name': activity.name,
-                          'description': activity.description,
-                          'type': activity.type,
-                          'content': activity.content,
-                        },
-                        'courseId': course?.id,
+                        'activity': activity,
+                        'courseId': course.id,
                       },
                     );
                   },

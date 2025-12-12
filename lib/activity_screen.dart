@@ -2,42 +2,27 @@
 
 import 'package:flutter/material.dart';
 
-class ActivityScreen extends StatefulWidget {
+import 'models/activity.dart';
+
+class ActivityScreen extends StatelessWidget {
   const ActivityScreen({super.key});
 
   @override
-  State<ActivityScreen> createState() => _ActivityScreenState();
-}
-
-class _ActivityScreenState extends State<ActivityScreen> {
-  Map<String, dynamic>? activityData;
-  String? courseId;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is Map) {
-      setState(() {
-        activityData = Map<String, dynamic>.from(arguments['activity'] as Map);
-        courseId = arguments['courseId'] as String?;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final String activityName = activityData?['name'] ?? 'Unknown Activity';
-    final String description = activityData?['description'] ?? '';
-    final String type = activityData?['type'] ?? 'activity';
-    final String content = activityData?['content'] ?? '';
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is! Map || arguments['activity'] is! Activity) {
+      return const Scaffold(body: Center(child: Text('No activity data provided.')));
+    }
+
+    final Activity activity = arguments['activity'] as Activity;
+    final String? courseId = arguments['courseId'] as String?;
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(activityName),
+            Text(activity.name),
             if (courseId != null)
               Text(
                 'Course: $courseId',
@@ -56,7 +41,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           children: [
             Row(
               children: [
-                Chip(label: Text(type)),
+                Chip(label: Text(activity.type)),
                 if (courseId != null) ...[
                   const SizedBox(width: 8),
                   Chip(label: Text('Course $courseId')),
@@ -64,9 +49,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(description, style: Theme.of(context).textTheme.bodyLarge),
+            Text(activity.description, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 16),
-            Text(content),
+            Text(activity.content),
             const Spacer(),
             Align(
               alignment: Alignment.centerRight,
@@ -76,7 +61,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     '/courseActivities',
                     arguments: {
                       'courseId': courseId,
-                      'highlightActivityId': activityData?['id'],
+                      'highlightActivityId': activity.id,
                     },
                   );
                 },

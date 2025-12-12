@@ -1,9 +1,14 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'activity_screen.dart';
 import 'course_activities_screen.dart';
-import 'sample_data.dart';
+import 'models/course.dart';
+import 'models/user.dart';
+import 'repositories/auth_repository.dart';
+import 'repositories/course_repository.dart';
+import 'repositories/user_activity_repository.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/colleagues_activity_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/home_screen.dart';
@@ -12,16 +17,61 @@ import 'screens/learning_path_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/module_screen.dart';
 import 'screens/news_screen.dart';
+import 'screens/personal_activity_screen.dart';
 import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/statistics_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final AuthRepository _authRepository = AuthRepository();
+  final CourseRepository _courseRepository = CourseRepository();
+  final UserActivityRepository _userActivityRepository = UserActivityRepository();
+  User? _currentUser;
+
+  void _handleAuthenticated(User user) {
+    setState(() => _currentUser = user);
+  }
+
+  void _handleLogout() {
+    setState(() => _currentUser = null);
+  }
+
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/courseActivities':
+        final args = settings.arguments as Map?;
+        final courseId = args?['courseId'] as String?;
+        final highlightActivityId = args?['highlightActivityId'] as String?;
+        final course = _courseRepository.getCourseById(courseId ?? '') ??
+            _courseRepository.getAllCourses().first;
+        return MaterialPageRoute(
+          builder: (_) => CourseActivitiesScreen(
+            course: course,
+            highlightActivityId: highlightActivityId,
+          ),
+        );
+      case '/activity':
+        return MaterialPageRoute(builder: (_) => const ActivityScreen());
+      case '/module':
+        return MaterialPageRoute(
+          builder: (_) => ModuleScreen(courseRepository: _courseRepository),
+        );
+      default:
+        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +81,18 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: _currentUser == null
+          ? LoginScreen(
+              authRepository: _authRepository,
+              onAuthenticated: _handleAuthenticated,
+            )
+          : AuthenticatedShell(
+              user: _currentUser!,
+              courseRepository: _courseRepository,
+              userActivityRepository: _userActivityRepository,
+              onLogout: _handleLogout,
+            ),
       routes: {
-        '/courseActivities': (context) => const CourseActivitiesScreen(),
-        '/activity': (context) => const ActivityScreen(),
-        '/module': (context) => const ModuleScreen(),
         '/learningPath': (context) => const LearningPathScreen(),
         '/recommendation': (context) => const RecommendationWebViewScreen(),
         '/inbox': (context) => const InboxScreen(),
@@ -43,107 +100,117 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsScreen(),
         '/feedback': (context) => const FeedbackScreen(),
       },
+      onGenerateRoute: _onGenerateRoute,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class AuthenticatedShell extends StatefulWidget {
+  const AuthenticatedShell({
+    super.key,
+    required this.user,
+    required this.courseRepository,
+    required this.userActivityRepository,
+    required this.onLogout,
+  });
+
+  final User user;
+  final CourseRepository courseRepository;
+  final UserActivityRepository userActivityRepository;
+  final VoidCallback onLogout;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<AuthenticatedShell> createState() => _AuthenticatedShellState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  static const _navigationChannel =
-      MethodChannel('com.choicecrafter.students/navigation');
+class _AuthenticatedShellState extends State<AuthenticatedShell> {
   int _selectedIndex = 0;
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ColleaguesActivityScreen(),
-    NewsScreen(),
-    StatisticsScreen(),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _navigationChannel.setMethodCallHandler(_handleNavigationCall);
-  }
-
-  Future<void> _handleNavigationCall(MethodCall call) async {
-    if (call.method == 'navigateTo') {
-      final args = call.arguments as Map;
-      final route = args['route'] as String;
-      Navigator.of(context).pushNamed(route, arguments: args);
-    }
-  }
 
   void _onBottomNavTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
-  void _openDrawerDestination(String route) {
-    Navigator.of(context).pop();
-    if (route == '/home') {
-      setState(() => _selectedIndex = 0);
-      return;
+  void _openCourse(Course course) {
+    Navigator.of(context).pushNamed(
+      '/courseActivities',
+      arguments: {
+        'courseId': course.id,
+        'highlightActivityId': course.modules.first.activities.first.id,
+      },
+    );
+  }
+
+  Widget _buildBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return HomeScreen(
+          user: widget.user,
+          courseRepository: widget.courseRepository,
+          onCourseSelected: _openCourse,
+        );
+      case 1:
+        return ColleaguesActivityScreen(courseRepository: widget.courseRepository);
+      case 2:
+        return NewsScreen(
+          courseRepository: widget.courseRepository,
+          onCourseSelected: _openCourse,
+        );
+      case 3:
+        return PersonalActivityScreen(
+          user: widget.user,
+          userActivityRepository: widget.userActivityRepository,
+        );
+      default:
+        return const SizedBox.shrink();
     }
-    Navigator.of(context).pushNamed(route);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ChoiceCrafter')),
+      appBar: AppBar(
+        title: const Text('ChoiceCrafter'),
+        actions: [
+          IconButton(
+            onPressed: widget.onLogout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+          ),
+        ],
+      ),
       drawer: Drawer(
         child: SafeArea(
           child: ListView(
             children: [
-              const DrawerHeader(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('ChoiceCrafter'),
-                    SizedBox(height: 8),
-                    Text('Matches the Android navigation drawer.'),
-                  ],
-                ),
+              UserAccountsDrawerHeader(
+                accountName: Text(widget.user.fullName),
+                accountEmail: Text(widget.user.email),
               ),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home'),
-                onTap: () => _openDrawerDestination('/home'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications),
+                leading: const Icon(Icons.inbox),
                 title: const Text('Inbox'),
-                onTap: () => _openDrawerDestination('/inbox'),
+                onTap: () => Navigator.of(context).pushNamed('/inbox'),
               ),
               ListTile(
                 leading: const Icon(Icons.chat),
                 title: const Text('Messages'),
-                onTap: () => _openDrawerDestination('/messages'),
+                onTap: () => Navigator.of(context).pushNamed('/messages'),
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('Settings'),
-                onTap: () => _openDrawerDestination('/settings'),
+                onTap: () => Navigator.of(context).pushNamed('/settings'),
               ),
               ListTile(
                 leading: const Icon(Icons.feedback),
                 title: const Text('Feedback'),
-                onTap: () => _openDrawerDestination('/feedback'),
+                onTap: () => Navigator.of(context).pushNamed('/feedback'),
               ),
             ],
           ),
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onBottomNavTapped,
@@ -161,18 +228,19 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'News',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Statistics',
+            icon: Icon(Icons.person),
+            label: 'Personal',
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
+          final course = widget.courseRepository.getEnrolledCourses(widget.user).first;
           Navigator.of(context).pushNamed(
             '/courseActivities',
             arguments: {
-              'courseId': SampleData.courses.first.id,
-              'highlightActivityId': SampleData.courses.first.modules.first.activities.first.id,
+              'courseId': course.id,
+              'highlightActivityId': course.modules.first.activities.first.id,
             },
           );
         },
