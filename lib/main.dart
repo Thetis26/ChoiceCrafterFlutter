@@ -22,6 +22,7 @@ import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -34,9 +35,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final AuthRepository _authRepository = AuthRepository();
-  final CourseRepository _courseRepository = CourseRepository();
-  final UserActivityRepository _userActivityRepository = UserActivityRepository();
+  late final Future<FirebaseApp> _firebaseInit = Firebase.initializeApp();
+  CourseRepository? _courseRepository;
+  UserActivityRepository? _userActivityRepository;
   User? _currentUser;
+
+  void _ensureRepositories() {
+    _courseRepository ??= CourseRepository();
+    _userActivityRepository ??= UserActivityRepository();
+  }
 
   void _handleAuthenticated(User user) {
     setState(() => _currentUser = user);
@@ -46,7 +53,10 @@ class _MyAppState extends State<MyApp> {
     setState(() => _currentUser = null);
   }
 
-  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+  Route<dynamic>? _onGenerateRoute(
+      RouteSettings settings, {
+        required CourseRepository courseRepository,
+      }) {
     switch (settings.name) {
       case '/courseActivities':
         final args = settings.arguments as Map?;
@@ -55,7 +65,7 @@ class _MyAppState extends State<MyApp> {
         final highlightActivityId = args?['highlightActivityId'] as String?;
         return MaterialPageRoute(
           builder: (_) => CourseActivitiesLoader(
-            courseRepository: _courseRepository,
+            courseRepository: courseRepository,
             course: course,
             courseId: courseId,
             highlightActivityId: highlightActivityId,
@@ -65,7 +75,7 @@ class _MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const ActivityScreen());
       case '/module':
         return MaterialPageRoute(
-          builder: (_) => ModuleScreen(courseRepository: _courseRepository),
+          builder: (_) => ModuleScreen(courseRepository: courseRepository),
         );
       default:
         return null;
@@ -74,32 +84,72 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ChoiceCrafter Students',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: _currentUser == null
-          ? LoginScreen(
-              authRepository: _authRepository,
-              onAuthenticated: _handleAuthenticated,
-            )
-          : AuthenticatedShell(
-              user: _currentUser!,
-              courseRepository: _courseRepository,
-              userActivityRepository: _userActivityRepository,
-              onLogout: _handleLogout,
+    return FutureBuilder<FirebaseApp>(
+      future: _firebaseInit,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return MaterialApp(
+            title: 'ChoiceCrafter Students',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
             ),
-      routes: {
-        '/learningPath': (context) => const LearningPathScreen(),
-        '/recommendation': (context) => const RecommendationWebViewScreen(),
-        '/inbox': (context) => const InboxScreen(),
-        '/messages': (context) => const MessagesScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/feedback': (context) => const FeedbackScreen(),
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return MaterialApp(
+            title: 'ChoiceCrafter Students',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+            home: const Scaffold(
+              body: Center(
+                child: Text(
+                  'Firebase failed to initialize. Check your configuration and try again.',
+                ),
+              ),
+            ),
+          );
+        }
+
+        _ensureRepositories();
+        final courseRepository = _courseRepository!;
+        final userActivityRepository = _userActivityRepository!;
+
+        return MaterialApp(
+          title: 'ChoiceCrafter Students',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          home: _currentUser == null
+              ? LoginScreen(
+            authRepository: _authRepository,
+            onAuthenticated: _handleAuthenticated,
+          )
+              : AuthenticatedShell(
+            user: _currentUser!,
+            courseRepository: courseRepository,
+            userActivityRepository: userActivityRepository,
+            onLogout: _handleLogout,
+          ),
+          routes: {
+            '/learningPath': (context) => const LearningPathScreen(),
+            '/recommendation': (context) => const RecommendationWebViewScreen(),
+            '/inbox': (context) => const InboxScreen(),
+            '/messages': (context) => const MessagesScreen(),
+            '/settings': (context) => const SettingsScreen(),
+            '/feedback': (context) => const FeedbackScreen(),
+          },
+          onGenerateRoute: (settings) =>
+              _onGenerateRoute(settings, courseRepository: courseRepository),
+        );
       },
-      onGenerateRoute: _onGenerateRoute,
     );
   }
 }
