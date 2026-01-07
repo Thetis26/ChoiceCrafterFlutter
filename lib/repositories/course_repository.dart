@@ -1,93 +1,60 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/activity.dart';
 import '../models/course.dart';
 import '../models/module.dart';
 import '../models/user.dart';
 
 class CourseRepository {
-  CourseRepository();
+  CourseRepository({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final List<Activity> _activities = const [
-    Activity(
-      id: 'activity-1',
-      name: 'Getting started with Kotlin',
-      description: 'A quick primer that mirrors the onboarding flow from Android.',
-      type: 'article',
-      content: 'Review nullable types, collections, and coroutines basics.',
-      estimatedMinutes: 20,
-    ),
-    Activity(
-      id: 'activity-2',
-      name: 'Build your first API client',
-      description: 'Hands-on exercise that matches the Android coding lab.',
-      type: 'exercise',
-      content: 'Use the provided REST endpoint and render results in the UI.',
-      estimatedMinutes: 35,
-    ),
-    Activity(
-      id: 'activity-3',
-      name: 'Weekly reflection',
-      description: 'Short journaling task that mirrors the reflection cards.',
-      type: 'reflection',
-      content: 'Capture blockers, wins, and the next action you will take.',
-      estimatedMinutes: 10,
-    ),
-  ];
+  final FirebaseFirestore _firestore;
+  List<Course> _courses = [];
 
-  late final List<Course> _courses = [
-    Course(
-      id: 'course-mobile',
-      title: 'Mobile Development Foundations',
-      instructor: 'Dr. C. Crafter',
-      summary: 'Match the Android track with identical iOS milestones.',
-      modules: [
-        Module(
-          id: 'module-1',
-          name: 'Productivity basics',
-          summary: 'Short lessons and practice prompts from the Android release.',
-          activities: _activities,
-        ),
-        Module(
-          id: 'module-2',
-          name: 'User engagement',
-          summary: 'Mirrors the colleagues activity and inbox experiences.',
-          activities: [_activities[1], _activities[2]],
-        ),
-      ],
-    ),
-    Course(
-      id: 'course-ai',
-      title: 'AI Assisted Learning',
-      instructor: 'Prof. A. Mentor',
-      summary: 'Keep parity with the recommendation and statistics screens.',
-      modules: [
-        Module(
-          id: 'module-3',
-          name: 'Guided learning path',
-          summary: 'Practice lessons that surface recommendations on demand.',
-          activities: [_activities[0], _activities[2]],
-        ),
-      ],
-    ),
-  ];
+  Future<List<Course>> getAllCourses() async {
+    if (_courses.isNotEmpty) {
+      return _courses;
+    }
+    return _loadCourses();
+  }
 
-  List<Course> getAllCourses() => _courses;
+  Future<List<Course>> refreshCourses() async {
+    return _loadCourses();
+  }
 
-  List<Course> getEnrolledCourses(User user) {
-    return _courses
+  Future<List<Course>> _loadCourses() async {
+    final snapshot = await _firestore.collection('courses').get();
+    _courses = snapshot.docs.map(_courseFromDoc).toList();
+    return _courses;
+  }
+
+  Future<List<Course>> getEnrolledCourses(User user) async {
+    final courses = await getAllCourses();
+    return courses
         .where((course) => user.enrolledCourseIds.contains(course.id))
         .toList();
   }
 
-  Course? getCourseById(String id) {
-    try {
-      return _courses.firstWhere((course) => course.id == id);
-    } catch (_) {
+  Future<Course?> getCourseById(String id) async {
+    if (_courses.isNotEmpty) {
+      try {
+        return _courses.firstWhere((course) => course.id == id);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final doc = await _firestore.collection('courses').doc(id).get();
+    if (!doc.exists) {
       return null;
     }
+    return _courseFromDoc(doc);
   }
 
-  Module? getModuleById(String moduleId) {
-    for (final course in _courses) {
+  Future<Module?> getModuleById(String moduleId) async {
+    final courses = await getAllCourses();
+    for (final course in courses) {
       for (final module in course.modules) {
         if (module.id == moduleId) {
           return module;
@@ -97,10 +64,61 @@ class CourseRepository {
     return null;
   }
 
-  List<Activity> getAllActivities() {
-    return _courses
+  Future<List<Activity>> getAllActivities() async {
+    final courses = await getAllCourses();
+    return courses
         .expand((course) => course.modules)
         .expand((module) => module.activities)
         .toList();
+  }
+
+  Course _courseFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? <String, dynamic>{};
+    return Course(
+      id: (data['id'] as String?) ?? doc.id,
+      title: (data['title'] as String?) ?? 'Untitled course',
+      instructor: (data['instructor'] as String?) ?? 'Unknown instructor',
+      summary: (data['summary'] as String?) ?? '',
+      modules: _modulesFromData(data['modules']),
+    );
+  }
+
+  List<Module> _modulesFromData(dynamic modulesData) {
+    if (modulesData is! List) {
+      return [];
+    }
+
+    return modulesData.map((moduleData) {
+      final moduleMap = moduleData is Map
+          ? Map<String, dynamic>.from(moduleData as Map)
+          : <String, dynamic>{};
+      return Module(
+        id: (moduleMap['id'] as String?) ?? '',
+        name: (moduleMap['name'] as String?) ?? 'Untitled module',
+        summary: (moduleMap['summary'] as String?) ?? '',
+        activities: _activitiesFromData(moduleMap['activities']),
+      );
+    }).toList();
+  }
+
+  List<Activity> _activitiesFromData(dynamic activitiesData) {
+    if (activitiesData is! List) {
+      return [];
+    }
+
+    return activitiesData.map((activityData) {
+      final activityMap = activityData is Map
+          ? Map<String, dynamic>.from(activityData as Map)
+          : <String, dynamic>{};
+      final estimatedMinutes = activityMap['estimatedMinutes'];
+      return Activity(
+        id: (activityMap['id'] as String?) ?? '',
+        name: (activityMap['name'] as String?) ?? 'Untitled activity',
+        description: (activityMap['description'] as String?) ?? '',
+        type: (activityMap['type'] as String?) ?? 'activity',
+        content: (activityMap['content'] as String?) ?? '',
+        estimatedMinutes: estimatedMinutes is num ? estimatedMinutes.round() : 15,
+      );
+    }).toList();
   }
 }
