@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'activity_screen.dart';
@@ -21,9 +20,7 @@ import 'screens/personal_activity_screen.dart';
 import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+void main() {
   runApp(const MyApp());
 }
 
