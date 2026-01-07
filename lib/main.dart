@@ -53,12 +53,13 @@ class _MyAppState extends State<MyApp> {
       case '/courseActivities':
         final args = settings.arguments as Map?;
         final courseId = args?['courseId'] as String?;
+        final course = args?['course'] as Course?;
         final highlightActivityId = args?['highlightActivityId'] as String?;
-        final course = _courseRepository.getCourseById(courseId ?? '') ??
-            _courseRepository.getAllCourses().first;
         return MaterialPageRoute(
-          builder: (_) => CourseActivitiesScreen(
+          builder: (_) => CourseActivitiesLoader(
+            courseRepository: _courseRepository,
             course: course,
+            courseId: courseId,
             highlightActivityId: highlightActivityId,
           ),
         );
@@ -131,11 +132,16 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
   }
 
   void _openCourse(Course course) {
+    final highlightActivityId = course.modules.isNotEmpty &&
+            course.modules.first.activities.isNotEmpty
+        ? course.modules.first.activities.first.id
+        : null;
     Navigator.of(context).pushNamed(
       '/courseActivities',
       arguments: {
+        'course': course,
         'courseId': course.id,
-        'highlightActivityId': course.modules.first.activities.first.id,
+        'highlightActivityId': highlightActivityId,
       },
     );
   }
@@ -233,19 +239,39 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          final course = widget.courseRepository.getEnrolledCourses(widget.user).first;
-          Navigator.of(context).pushNamed(
-            '/courseActivities',
-            arguments: {
-              'courseId': course.id,
-              'highlightActivityId': course.modules.first.activities.first.id,
+      floatingActionButton: FutureBuilder<List<Course>>(
+        future: widget.courseRepository.getEnrolledCourses(widget.user),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox.shrink();
+          }
+          if (snapshot.hasError) {
+            return const SizedBox.shrink();
+          }
+          final courses = snapshot.data ?? [];
+          if (courses.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final course = courses.first;
+          final highlightActivityId = course.modules.isNotEmpty &&
+                  course.modules.first.activities.isNotEmpty
+              ? course.modules.first.activities.first.id
+              : null;
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                '/courseActivities',
+                arguments: {
+                  'course': course,
+                  'courseId': course.id,
+                  'highlightActivityId': highlightActivityId,
+                },
+              );
             },
+            icon: const Icon(Icons.list),
+            label: const Text('Activities'),
           );
         },
-        icon: const Icon(Icons.list),
-        label: const Text('Activities'),
       ),
     );
   }

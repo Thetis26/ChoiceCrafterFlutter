@@ -4,6 +4,59 @@ import 'package:flutter/material.dart';
 
 import 'models/course.dart';
 import 'models/module.dart';
+import 'repositories/course_repository.dart';
+
+class CourseActivitiesLoader extends StatelessWidget {
+  const CourseActivitiesLoader({
+    super.key,
+    required this.courseRepository,
+    this.course,
+    this.courseId,
+    this.highlightActivityId,
+  });
+
+  final CourseRepository courseRepository;
+  final Course? course;
+  final String? courseId;
+  final String? highlightActivityId;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedCourse = course;
+    if (resolvedCourse != null) {
+      return CourseActivitiesScreen(
+        course: resolvedCourse,
+        highlightActivityId: highlightActivityId,
+      );
+    }
+
+    if (courseId == null) {
+      return const Scaffold(
+        body: Center(child: Text('No course data available.')),
+      );
+    }
+
+    return FutureBuilder<Course?>(
+      future: courseRepository.getCourseById(courseId!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasError) {
+          return const Scaffold(body: Center(child: Text('Unable to load course.')));
+        }
+        final course = snapshot.data;
+        if (course == null) {
+          return const Scaffold(body: Center(child: Text('Course not found.')));
+        }
+        return CourseActivitiesScreen(
+          course: course,
+          highlightActivityId: highlightActivityId,
+        );
+      },
+    );
+  }
+}
 
 class CourseActivitiesScreen extends StatelessWidget {
   const CourseActivitiesScreen({

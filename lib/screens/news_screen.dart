@@ -15,21 +15,36 @@ class NewsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courses = courseRepository.getAllCourses();
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: courses.length,
-      itemBuilder: (context, index) {
-        final course = courses[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: const Icon(Icons.campaign),
-            title: Text(course.title),
-            subtitle: Text(course.summary),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => onCourseSelected(course),
-          ),
+    return FutureBuilder<List<Course>>(
+      future: courseRepository.getAllCourses(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Unable to load news right now.'));
+        }
+        final courses = snapshot.data ?? [];
+        if (courses.isEmpty) {
+          return const Center(child: Text('No course updates yet.'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: courses.length,
+          itemBuilder: (context, index) {
+            final course = courses[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: const Icon(Icons.campaign),
+                title: Text(course.title),
+                subtitle: Text(course.summary),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => onCourseSelected(course),
+              ),
+            );
+          },
         );
       },
     );
