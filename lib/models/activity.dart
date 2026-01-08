@@ -1,3 +1,5 @@
+import 'task.dart';
+
 class Activity {
   const Activity({
     required this.id,
@@ -6,6 +8,7 @@ class Activity {
     required this.type,
     required this.content,
     this.estimatedMinutes = 15,
+    this.tasks = const [],
   });
 
   final String id;
@@ -14,4 +17,5 @@ class Activity {
   final String type;
   final String content;
   final int estimatedMinutes;
+  final List<Task> tasks;
 }

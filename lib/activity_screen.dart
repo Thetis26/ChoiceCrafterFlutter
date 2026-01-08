@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'models/activity.dart';
+import 'models/task.dart';
 
 class ActivityScreen extends StatelessWidget {
   const ActivityScreen({super.key});
@@ -16,6 +17,8 @@ class ActivityScreen extends StatelessWidget {
 
     final Activity activity = arguments['activity'] as Activity;
     final String? courseId = arguments['courseId'] as String?;
+
+    final List<Task> tasks = activity.tasks;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,44 +37,170 @@ class ActivityScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16.0),
+        children: [
+          Row(
+            children: [
+              Chip(label: Text(activity.type)),
+              if (courseId != null) ...[
+                const SizedBox(width: 8),
+                Chip(label: Text('Course $courseId')),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(activity.description, style: Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: 16),
+          if (activity.content.isNotEmpty) Text(activity.content),
+          const SizedBox(height: 24),
+          Text('Tasks', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          if (tasks.isEmpty)
+            const Text('No tasks available for this activity yet.')
+          else
+            ...tasks.map((task) => _buildTaskCard(context, task)),
+          const SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed(
+                  '/courseActivities',
+                  arguments: {
+                    'courseId': courseId,
+                    'highlightActivityId': activity.id,
+                  },
+                );
+              },
+              icon: const Icon(Icons.list),
+              label: const Text('Back to activities'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskCard(BuildContext context, Task task) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Text(task.title.isEmpty ? 'Untitled task' : task.title,
+                style: Theme.of(context).textTheme.titleMedium),
+            if (task.description.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(task.description),
+            ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                Chip(label: Text(activity.type)),
-                if (courseId != null) ...[
-                  const SizedBox(width: 8),
-                  Chip(label: Text('Course $courseId')),
-                ],
+                Chip(label: Text(task.type)),
+                if (task.status.isNotEmpty) Chip(label: Text(task.status)),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(activity.description, style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
-            Text(activity.content),
-            const Spacer(),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pushNamed(
-                    '/courseActivities',
-                    arguments: {
-                      'courseId': courseId,
-                      'highlightActivityId': activity.id,
-                    },
-                  );
-                },
-                icon: const Icon(Icons.list),
-                label: const Text('Back to activities'),
-              ),
-            ),
+            const SizedBox(height: 8),
+            ..._buildTaskDetails(task),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildTaskDetails(Task task) {
+    if (task is MultipleChoiceTask) {
+      return _detailLines([
+        'Question: ${task.question}',
+        if (task.options.isNotEmpty) 'Options: ${task.options.join(', ')}',
+        if (task.supportingContent?.text != null)
+          'Supporting text: ${task.supportingContent?.text}',
+        if (task.supportingContent?.imageUrl != null)
+          'Supporting image: ${task.supportingContent?.imageUrl}',
+      ]);
+    }
+    if (task is FillInTheBlankTask) {
+      return _detailLines([
+        'Text: ${task.text}',
+        if (task.missingSegments.isNotEmpty)
+          'Missing segments: ${task.missingSegments.join(', ')}',
+        if (task.supportingContent?.text != null)
+          'Supporting text: ${task.supportingContent?.text}',
+        if (task.supportingContent?.imageUrl != null)
+          'Supporting image: ${task.supportingContent?.imageUrl}',
+      ]);
+    }
+    if (task is MatchingPairTask) {
+      return _detailLines([
+        if (task.leftItems.isNotEmpty)
+          'Left items: ${task.leftItems.join(', ')}',
+        if (task.rightItems.isNotEmpty)
+          'Right items: ${task.rightItems.join(', ')}',
+        if (task.correctMatches.isNotEmpty)
+          'Matches: ${task.correctMatches.entries.map((entry) => '${entry.key} → ${entry.value}').join(', ')}',
+      ]);
+    }
+    if (task is OrderingTask) {
+      return _detailLines([
+        if (task.items.isNotEmpty) 'Items: ${task.items.join(', ')}',
+        if (task.correctOrder.isNotEmpty)
+          'Correct order: ${task.correctOrder.join(', ')}',
+      ]);
+    }
+    if (task is TrueFalseTask) {
+      return _detailLines([
+        'Statement: ${task.statement}',
+        if (task.correctAnswer != null)
+          'Answer: ${task.correctAnswer == true ? 'True' : 'False'}',
+      ]);
+    }
+    if (task is SpotTheErrorTask) {
+      return _detailLines([
+        'Prompt: ${task.prompt}',
+        if (task.codeSnippet.isNotEmpty) 'Snippet: ${task.codeSnippet}',
+        if (task.options.isNotEmpty) 'Options: ${task.options.join(', ')}',
+      ]);
+    }
+    if (task is CodingChallengeTask) {
+      return _detailLines([
+        'Problem: ${task.problemDescription}',
+        if (task.expectedOutputDescription.isNotEmpty)
+          'Expected output: ${task.expectedOutputDescription}',
+        if (task.examples.isNotEmpty)
+          'Examples: ${task.examples.length}',
+        if (task.starterCodeByLanguage.isNotEmpty)
+          'Starter code: ${task.starterCodeByLanguage.keys.join(', ')}',
+        if (task.solutionCodeByLanguage.isNotEmpty)
+          'Solutions: ${task.solutionCodeByLanguage.keys.join(', ')}',
+        if (task.defaultLanguage.isNotEmpty)
+          'Default language: ${task.defaultLanguage}',
+      ]);
+    }
+    if (task is InfoCardTask) {
+      return _detailLines([
+        if (task.contentType.isNotEmpty) 'Content type: ${task.contentType}',
+        if (task.contentText.isNotEmpty) 'Content: ${task.contentText}',
+        if (task.mediaUrl.isNotEmpty) 'Media: ${task.mediaUrl}',
+        if (task.interactiveUrl.isNotEmpty)
+          'Interactive: ${task.interactiveUrl}',
+        if (task.actionText.isNotEmpty) 'Action text: ${task.actionText}',
+      ]);
+    }
+    return const [];
+  }
+
+  List<Widget> _detailLines(List<String> lines) {
+    return lines
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(line),
+            ))
+        .toList();
   }
 }
