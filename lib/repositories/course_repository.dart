@@ -191,10 +191,19 @@ class CourseRepository {
       return [];
     }
 
-    return tasksData
-        .whereType<Map>()
-        .map((taskData) => Task.fromMap(Map<String, dynamic>.from(taskData)))
-        .whereType<Task>()
-        .toList();
+    return tasksData.map(_taskFromData).whereType<Task>().toList();
+  }
+
+  Task? _taskFromData(dynamic taskData) {
+    if (taskData is Map) {
+      return Task.fromMap(Map<String, dynamic>.from(taskData));
+    }
+    if (taskData is DocumentSnapshot) {
+      final data = taskData.data();
+      if (data is Map) {
+        return Task.fromMap(Map<String, dynamic>.from(data));
+      }
+    }
+    return null;
   }
 }
