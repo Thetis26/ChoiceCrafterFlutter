@@ -37,65 +37,61 @@ class ActivityScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: ListView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        children: [
-          Row(
-            children: [
-              Chip(label: Text(activity.type)),
-              if (courseId != null) ...[
-                const SizedBox(width: 8),
-                Chip(label: Text('Course $courseId')),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Chip(label: Text(activity.type)),
+                if (courseId != null) ...[
+                  const SizedBox(width: 8),
+                  Chip(label: Text('Course $courseId')),
+                ],
               ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(activity.description, style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(height: 16),
-          if (activity.content.isNotEmpty) Text(activity.content),
-          const SizedBox(height: 24),
-          Text('Tasks', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          if (tasks.isEmpty)
-            const Text('No tasks available for this activity yet.')
-          else
-            _buildTaskCarousel(context, tasks),
-          const SizedBox(height: 24),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pushNamed(
-                  '/courseActivities',
-                  arguments: {
-                    'courseId': courseId,
-                    'highlightActivityId': activity.id,
-                  },
-                );
-              },
-              icon: const Icon(Icons.list),
-              label: const Text('Back to activities'),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(activity.description,
+                style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 16),
+            if (activity.content.isNotEmpty) Text(activity.content),
+            const SizedBox(height: 24),
+            Text('Tasks', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Expanded(
+              child: tasks.isEmpty
+                  ? const Center(
+                      child: Text('No tasks available for this activity yet.'),
+                    )
+                  : _buildTaskCarousel(context, tasks),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTaskCarousel(BuildContext context, List<Task> tasks) {
     final controller = PageController(viewportFraction: 0.92);
-    return SizedBox(
-      height: 320,
-      child: PageView.builder(
-        controller: controller,
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _buildTaskCard(context, tasks[index]),
-          );
-        },
-      ),
+    return PageView.builder(
+      controller: controller,
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: _buildTaskCard(context, tasks[index]),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -105,7 +101,7 @@ class ActivityScreen extends StatelessWidget {
       return _buildTrueFalseTaskCard(context, task, style);
     }
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -183,7 +179,7 @@ class ActivityScreen extends StatelessWidget {
     final String rewardText = task.status.isNotEmpty ? task.status : '+25 XP';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.zero,
       color: const Color(0xFFE9EDFF),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
