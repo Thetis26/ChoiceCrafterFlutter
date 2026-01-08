@@ -59,7 +59,7 @@ class ActivityScreen extends StatelessWidget {
           if (tasks.isEmpty)
             const Text('No tasks available for this activity yet.')
           else
-            ...tasks.map((task) => _buildTaskCard(context, task)),
+            _buildTaskCarousel(context, tasks),
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerRight,
@@ -82,7 +82,25 @@ class ActivityScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildTaskCarousel(BuildContext context, List<Task> tasks) {
+    final controller = PageController(viewportFraction: 0.92);
+    return SizedBox(
+      height: 320,
+      child: PageView.builder(
+        controller: controller,
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _buildTaskCard(context, tasks[index]),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildTaskCard(BuildContext context, Task task) {
+    final style = _taskTypeStyle(task, context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -90,8 +108,35 @@ class ActivityScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(task.title.isEmpty ? 'Untitled task' : task.title,
-                style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: style.color.withOpacity(0.15),
+                  child: Icon(style.icon, color: style.color, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        style.label,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: style.color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        task.title.isEmpty ? 'Untitled task' : task.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             if (task.description.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(task.description),
@@ -203,4 +248,80 @@ class ActivityScreen extends StatelessWidget {
             ))
         .toList();
   }
+}
+
+class _TaskTypeStyle {
+  const _TaskTypeStyle({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+}
+
+_TaskTypeStyle _taskTypeStyle(Task task, BuildContext context) {
+  if (task is MultipleChoiceTask) {
+    return const _TaskTypeStyle(
+      label: 'Multiple Choice',
+      icon: Icons.list_alt,
+      color: Colors.indigo,
+    );
+  }
+  if (task is FillInTheBlankTask) {
+    return const _TaskTypeStyle(
+      label: 'Fill in the Blank',
+      icon: Icons.edit_note,
+      color: Colors.orange,
+    );
+  }
+  if (task is MatchingPairTask) {
+    return const _TaskTypeStyle(
+      label: 'Matching Pairs',
+      icon: Icons.compare_arrows,
+      color: Colors.green,
+    );
+  }
+  if (task is OrderingTask) {
+    return const _TaskTypeStyle(
+      label: 'Ordering',
+      icon: Icons.format_list_numbered,
+      color: Colors.purple,
+    );
+  }
+  if (task is TrueFalseTask) {
+    return const _TaskTypeStyle(
+      label: 'True / False',
+      icon: Icons.rule,
+      color: Colors.blueGrey,
+    );
+  }
+  if (task is SpotTheErrorTask) {
+    return const _TaskTypeStyle(
+      label: 'Spot the Error',
+      icon: Icons.bug_report,
+      color: Colors.redAccent,
+    );
+  }
+  if (task is CodingChallengeTask) {
+    return const _TaskTypeStyle(
+      label: 'Coding Challenge',
+      icon: Icons.code,
+      color: Colors.teal,
+    );
+  }
+  if (task is InfoCardTask) {
+    return const _TaskTypeStyle(
+      label: 'Info Card',
+      icon: Icons.info_outline,
+      color: Colors.blue,
+    );
+  }
+  return _TaskTypeStyle(
+    label: task.type,
+    icon: Icons.assignment,
+    color: Theme.of(context).colorScheme.primary,
+  );
 }
