@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'models/activity.dart';
 import 'models/task.dart';
+import 'widgets/activity/task_cards/coding_challenge_task_card.dart';
 import 'widgets/activity/task_cards/fill_in_the_blank_task_card.dart';
 import 'widgets/activity/task_cards/generic_task_card.dart';
 import 'widgets/activity/task_cards/info_card_task_card.dart';
+import 'widgets/activity/task_cards/matching_pair_task_card.dart';
 import 'widgets/activity/task_cards/multiple_choice_task_card.dart';
 import 'widgets/activity/task_cards/ordering_task_card.dart';
 import 'widgets/activity/task_cards/spot_the_error_task_card.dart';
@@ -107,6 +109,12 @@ class ActivityScreen extends StatelessWidget {
     }
     if (task is TrueFalseTask) {
       return TrueFalseTaskCard(task: task, style: style);
+    }
+    if (task is MatchingPairTask) {
+      return MatchingPairTaskCard(task: task, style: style);
+    }
+    if (task is CodingChallengeTask) {
+      return CodingChallengeTaskCard(task: task, style: style);
     }
     return GenericTaskCard(
       task: task,
