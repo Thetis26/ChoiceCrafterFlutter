@@ -34,16 +34,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final AuthRepository _authRepository = AuthRepository();
-  late final Future<FirebaseApp> _firebaseInit = Firebase.initializeApp().then(
-    (app) async {
-      _currentUser = await _authRepository.currentUser();
-      return app;
-    },
-  );
+  AuthRepository? _authRepository;
+  late final Future<FirebaseApp> _firebaseInit;
   CourseRepository? _courseRepository;
   UserActivityRepository? _userActivityRepository;
   User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseInit = Firebase.initializeApp().then((app) async {
+      _authRepository = AuthRepository();
+      _currentUser = await _authRepository!.currentUser();
+      return app;
+    });
+  }
 
   void _ensureRepositories() {
     _courseRepository ??= CourseRepository();
@@ -55,7 +60,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _handleLogout() async {
-    await _authRepository.logout();
+    await _authRepository!.logout();
     if (!mounted) {
       return;
     }
@@ -129,6 +134,7 @@ class _MyAppState extends State<MyApp> {
         _ensureRepositories();
         final courseRepository = _courseRepository!;
         final userActivityRepository = _userActivityRepository!;
+        final authRepository = _authRepository!;
 
         return MaterialApp(
           title: 'ChoiceCrafter Students',
@@ -138,7 +144,7 @@ class _MyAppState extends State<MyApp> {
           ),
           home: _currentUser == null
               ? LoginScreen(
-                  authRepository: _authRepository,
+                  authRepository: authRepository,
                   onAuthenticated: _handleAuthenticated,
                 )
               : AuthenticatedShell(
