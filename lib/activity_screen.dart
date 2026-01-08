@@ -101,6 +101,9 @@ class ActivityScreen extends StatelessWidget {
 
   Widget _buildTaskCard(BuildContext context, Task task) {
     final style = _taskTypeStyle(task, context);
+    if (task is TrueFalseTask) {
+      return _buildTrueFalseTaskCard(context, task, style);
+    }
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -152,9 +155,173 @@ class ActivityScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ..._buildTaskDetails(task),
+            if (task is! InfoCardTask) ...[
+              const SizedBox(height: 16),
+              _buildTaskActions(context),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTrueFalseTaskCard(
+    BuildContext context,
+    TrueFalseTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String helperText = (task.explanation != null &&
+            task.explanation!.trim().isNotEmpty)
+        ? task.explanation!.trim()
+        : 'Using hints reduces your reward.';
+    final String titleText =
+        task.statement.isNotEmpty ? task.statement : task.title;
+    final String subtitleText = task.description.isNotEmpty
+        ? task.description
+        : 'Decide if the statement below is correct.';
+    final String rewardText = task.status.isNotEmpty ? task.status : '+25 XP';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      color: const Color(0xFFE9EDFF),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(style.icon, color: style.color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      style.label.toUpperCase(),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: Colors.blueGrey.shade700,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      rewardText,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: Colors.blueGrey.shade400),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Text(
+              titleText,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitleText,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildTrueFalseOption('True', style.color),
+                  const Divider(height: 1),
+                  _buildTrueFalseOption('False', style.color),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade500),
+            ),
+            const SizedBox(height: 16),
+            _buildTaskActions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrueFalseOption(String label, Color accentColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Icon(Icons.radio_button_unchecked, color: accentColor),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskActions(BuildContext context) {
+    final Color buttonColor = const Color(0xFF6E7BF2);
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            child: const Text('Hint'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            child: const Text('Check Answer'),
+          ),
+        ),
+      ],
     );
   }
 
