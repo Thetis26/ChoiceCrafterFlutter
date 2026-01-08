@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class FillInTheBlankTaskCard extends StatelessWidget {
+class FillInTheBlankTaskCard extends StatefulWidget {
   const FillInTheBlankTaskCard({
     super.key,
     required this.task,
@@ -15,15 +15,76 @@ class FillInTheBlankTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<FillInTheBlankTaskCard> createState() =>
+      _FillInTheBlankTaskCardState();
+}
+
+class _FillInTheBlankTaskCardState extends State<FillInTheBlankTaskCard> {
+  late final List<TextEditingController> _controllers;
+
+  @override
+  void initState() {
+    super.initState();
+    final blanks = widget.task.missingSegments.isNotEmpty
+        ? widget.task.missingSegments
+        : ['Answer', 'Answer'];
+    _controllers =
+        List.generate(blanks.length, (_) => TextEditingController());
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _checkAnswer() {
+    final correctAnswers = widget.task.missingSegments;
+    if (correctAnswers.isEmpty) {
+      _showSnack('No correct answers configured yet.');
+      return;
+    }
+    final answers = _controllers
+        .map((controller) => controller.text.trim())
+        .toList();
+    if (answers.any((answer) => answer.isEmpty)) {
+      _showSnack('Fill in all blanks before checking.');
+      return;
+    }
+    final isCorrect = answers.length == correctAnswers.length &&
+        List.generate(answers.length, (index) {
+          return answers[index].toLowerCase() ==
+              correctAnswers[index].trim().toLowerCase();
+        }).every((match) => match);
+    _showSnack(isCorrect ? 'Great job! All blanks are correct.' : 'Not yet. Try again.');
+  }
+
+  void _showHint() {
+    final hint = widget.task.explanation?.trim();
+    _showSnack((hint != null && hint.isNotEmpty)
+        ? hint
+        : 'Check the context around each blank for clues.');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final style = widget.style;
     final theme = Theme.of(context);
-    final String helperText = (task.explanation != null &&
-            task.explanation!.trim().isNotEmpty)
-        ? task.explanation!.trim()
+    final String helperText = (widget.task.explanation != null &&
+            widget.task.explanation!.trim().isNotEmpty)
+        ? widget.task.explanation!.trim()
         : 'Using hints reduces your reward.';
-    final String rewardText = taskRewardText(task, '+35 XP');
-    final List<String> blanks = task.missingSegments.isNotEmpty
-        ? task.missingSegments
+    final String rewardText = taskRewardText(widget.task, '+35 XP');
+    final List<String> blanks = widget.task.missingSegments.isNotEmpty
+        ? widget.task.missingSegments
         : ['Answer', 'Answer'];
 
     return Card(
@@ -39,7 +100,9 @@ class FillInTheBlankTaskCard extends StatelessWidget {
             buildTaskHeader(style, rewardText, background: Colors.white),
             const SizedBox(height: 18),
             Text(
-              task.title.isNotEmpty ? task.title : 'Fill in the blanks',
+              widget.task.title.isNotEmpty
+                  ? widget.task.title
+                  : 'Fill in the blanks',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: Colors.blueGrey.shade900,
@@ -47,8 +110,8 @@ class FillInTheBlankTaskCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              task.description.isNotEmpty
-                  ? task.description
+              widget.task.description.isNotEmpty
+                  ? widget.task.description
                   : 'Complete the tale without breaking your combo.',
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: Colors.blueGrey.shade600),
@@ -64,8 +127,8 @@ class FillInTheBlankTaskCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.text.isNotEmpty
-                        ? task.text
+                    widget.task.text.isNotEmpty
+                        ? widget.task.text
                         : '____ <iostream>\nusing namespace ____;',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontFamily: 'Courier',
@@ -73,12 +136,16 @@ class FillInTheBlankTaskCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  ...blanks
-                      .map((_) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: buildBlankInput(context),
-                          ))
-                      .toList(),
+                  ...List.generate(
+                    blanks.length,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: buildBlankInputField(
+                        controller: _controllers[index],
+                        hintText: 'Blank ${index + 1}',
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -89,7 +156,11 @@ class FillInTheBlankTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(
+              context,
+              onHint: _showHint,
+              onCheck: _checkAnswer,
+            ),
           ],
         ),
       ),

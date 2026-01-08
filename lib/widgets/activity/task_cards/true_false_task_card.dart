@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class TrueFalseTaskCard extends StatelessWidget {
+class TrueFalseTaskCard extends StatefulWidget {
   const TrueFalseTaskCard({
     super.key,
     required this.task,
@@ -15,18 +15,57 @@ class TrueFalseTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<TrueFalseTaskCard> createState() => _TrueFalseTaskCardState();
+}
+
+class _TrueFalseTaskCardState extends State<TrueFalseTaskCard> {
+  bool? _selectedAnswer;
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _checkAnswer() {
+    if (_selectedAnswer == null) {
+      _showSnack('Pick true or false before checking.');
+      return;
+    }
+    final correctAnswer = widget.task.correctAnswer;
+    if (correctAnswer == null) {
+      _showSnack('No correct answer configured yet.');
+      return;
+    }
+    _showSnack(_selectedAnswer == correctAnswer
+        ? 'Correct! Well done.'
+        : 'That is not correct. Try again.');
+  }
+
+  void _showHint() {
+    final hint = widget.task.explanation?.trim();
+    _showSnack(
+      (hint != null && hint.isNotEmpty)
+          ? hint
+          : 'Look for clues in the statement.',
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final style = widget.style;
     final theme = Theme.of(context);
-    final String helperText = (task.explanation != null &&
-            task.explanation!.trim().isNotEmpty)
-        ? task.explanation!.trim()
+    final String helperText = (widget.task.explanation != null &&
+            widget.task.explanation!.trim().isNotEmpty)
+        ? widget.task.explanation!.trim()
         : 'Using hints reduces your reward.';
     final String titleText =
-        task.statement.isNotEmpty ? task.statement : task.title;
-    final String subtitleText = task.description.isNotEmpty
-        ? task.description
+        widget.task.statement.isNotEmpty ? widget.task.statement : widget.task.title;
+    final String subtitleText = widget.task.description.isNotEmpty
+        ? widget.task.description
         : 'Decide if the statement below is correct.';
-    final String rewardText = task.status.isNotEmpty ? task.status : '+25 XP';
+    final String rewardText =
+        widget.task.status.isNotEmpty ? widget.task.status : '+25 XP';
 
     return Card(
       margin: EdgeInsets.zero,
@@ -99,9 +138,19 @@ class TrueFalseTaskCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  buildTrueFalseOption('True', style.color),
+                  buildTrueFalseOption(
+                    'True',
+                    style.color,
+                    selected: _selectedAnswer == true,
+                    onTap: () => setState(() => _selectedAnswer = true),
+                  ),
                   const Divider(height: 1),
-                  buildTrueFalseOption('False', style.color),
+                  buildTrueFalseOption(
+                    'False',
+                    style.color,
+                    selected: _selectedAnswer == false,
+                    onTap: () => setState(() => _selectedAnswer = false),
+                  ),
                 ],
               ),
             ),
@@ -112,7 +161,11 @@ class TrueFalseTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(
+              context,
+              onHint: _showHint,
+              onCheck: _checkAnswer,
+            ),
           ],
         ),
       ),

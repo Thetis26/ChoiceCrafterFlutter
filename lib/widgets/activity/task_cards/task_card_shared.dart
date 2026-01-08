@@ -45,13 +45,24 @@ Widget buildTaskHeader(
   );
 }
 
-Widget buildTaskActions(BuildContext context) {
+void _showTaskSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
+}
+
+Widget buildTaskActions(
+  BuildContext context, {
+  VoidCallback? onHint,
+  VoidCallback? onCheck,
+}) {
   final Color buttonColor = const Color(0xFF6E7BF2);
   return Row(
     children: [
       Expanded(
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: onHint ??
+              () => _showTaskSnackBar(context, 'Hints will be available soon.'),
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,
@@ -67,7 +78,8 @@ Widget buildTaskActions(BuildContext context) {
       const SizedBox(width: 16),
       Expanded(
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: onCheck ??
+              () => _showTaskSnackBar(context, 'Select an answer to check it.'),
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,
@@ -84,71 +96,100 @@ Widget buildTaskActions(BuildContext context) {
   );
 }
 
-Widget buildTrueFalseOption(String label, Color accentColor) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    child: Row(
-      children: [
-        Icon(Icons.radio_button_unchecked, color: accentColor),
-        const SizedBox(width: 12),
-        Text(label, style: const TextStyle(fontSize: 16)),
-      ],
-    ),
-  );
-}
-
-Widget buildOrderingItem(String label) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFBFCBF9),
-        borderRadius: BorderRadius.circular(18),
-      ),
+Widget buildTrueFalseOption(
+  String label,
+  Color accentColor, {
+  required bool selected,
+  VoidCallback? onTap,
+}) {
+  return InkWell(
+    borderRadius: BorderRadius.circular(14),
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          Icon(
+            selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+            color: accentColor,
           ),
-          const Icon(Icons.emoji_events, color: Color(0xFFFFD166)),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 16)),
         ],
       ),
     ),
   );
 }
 
-Widget buildBlankInput(BuildContext context) {
+Widget buildOrderingItem(String label, {Widget? trailing}) {
   return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: Colors.blueGrey.shade200, width: 1.4),
+      color: const Color(0xFFBFCBF9),
+      borderRadius: BorderRadius.circular(18),
     ),
-    child: const Text(
-      'Type your answer to reveal +10 XP',
-      style: TextStyle(fontWeight: FontWeight.w600),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        trailing ??
+            const Icon(Icons.drag_handle, color: Color(0xFFFFD166), size: 20),
+      ],
     ),
   );
 }
 
-Widget buildChoiceOption(String label, Color accentColor) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      children: [
-        Icon(Icons.radio_button_unchecked, color: accentColor),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(label, style: const TextStyle(fontSize: 16)),
-        ),
-      ],
+Widget buildBlankInputField({
+  required TextEditingController controller,
+  required String hintText,
+}) {
+  return TextField(
+    controller: controller,
+    decoration: InputDecoration(
+      hintText: hintText,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.blueGrey.shade200, width: 1.4),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.blueGrey.shade200, width: 1.4),
+      ),
+    ),
+  );
+}
+
+Widget buildChoiceOption(
+  String label,
+  Color accentColor, {
+  required bool selected,
+  VoidCallback? onTap,
+}) {
+  return InkWell(
+    borderRadius: BorderRadius.circular(14),
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+            color: accentColor,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
     ),
   );
 }

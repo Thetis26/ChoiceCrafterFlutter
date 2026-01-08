@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class SpotTheErrorTaskCard extends StatelessWidget {
+class SpotTheErrorTaskCard extends StatefulWidget {
   const SpotTheErrorTaskCard({
     super.key,
     required this.task,
@@ -15,13 +15,56 @@ class SpotTheErrorTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<SpotTheErrorTaskCard> createState() => _SpotTheErrorTaskCardState();
+}
+
+class _SpotTheErrorTaskCardState extends State<SpotTheErrorTaskCard> {
+  int? _selectedIndex;
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _checkAnswer() {
+    if (_selectedIndex == null) {
+      _showSnack('Select an option before checking.');
+      return;
+    }
+    final correctIndex = widget.task.correctOptionIndex;
+    if (correctIndex == null) {
+      _showSnack('No correct option configured yet.');
+      return;
+    }
+    _showSnack(_selectedIndex == correctIndex
+        ? 'Correct! You spotted it.'
+        : 'That is not the right fix. Try again.');
+  }
+
+  void _showHint() {
+    final hint = widget.task.explanation?.trim();
+    _showSnack((hint != null && hint.isNotEmpty)
+        ? hint
+        : 'Look for syntax and missing punctuation in the snippet.');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final style = widget.style;
     final theme = Theme.of(context);
-    final String helperText = (task.explanation != null &&
-            task.explanation!.trim().isNotEmpty)
-        ? task.explanation!.trim()
+    final String helperText = (widget.task.explanation != null &&
+            widget.task.explanation!.trim().isNotEmpty)
+        ? widget.task.explanation!.trim()
         : 'Using hints reduces your reward.';
-    final String rewardText = taskRewardText(task, '+45 XP');
+    final String rewardText = taskRewardText(widget.task, '+45 XP');
+    final options = widget.task.options.isNotEmpty
+        ? widget.task.options
+        : [
+            'Add # to include, add () to main, and add return 0;',
+            'Remove the cout line and keep the rest unchanged.',
+            'Replace cin with scanf for input.',
+          ];
 
     return Card(
       margin: EdgeInsets.zero,
@@ -36,7 +79,7 @@ class SpotTheErrorTaskCard extends StatelessWidget {
             buildTaskHeader(style, rewardText, background: Colors.white),
             const SizedBox(height: 18),
             Text(
-              task.title.isNotEmpty ? task.title : 'Spot the error',
+              widget.task.title.isNotEmpty ? widget.task.title : 'Spot the error',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: Colors.blueGrey.shade900,
@@ -44,8 +87,8 @@ class SpotTheErrorTaskCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              task.description.isNotEmpty
-                  ? task.description
+              widget.task.description.isNotEmpty
+                  ? widget.task.description
                   : 'Choose the correct fix for the code snippet.',
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: Colors.blueGrey.shade600),
@@ -58,8 +101,8 @@ class SpotTheErrorTaskCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(
-                task.codeSnippet.isNotEmpty
-                    ? task.codeSnippet
+                widget.task.codeSnippet.isNotEmpty
+                    ? widget.task.codeSnippet
                     : 'include <iostream>\nint main {\n  cout << "Salut!"\n}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontFamily: 'Courier',
@@ -75,15 +118,15 @@ class SpotTheErrorTaskCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
-                children: (task.options.isNotEmpty
-                        ? task.options
-                        : [
-                            'Add # to include, add () to main, and add return 0;',
-                            'Remove the cout line and keep the rest unchanged.',
-                            'Replace cin with scanf for input.',
-                          ])
-                    .map((option) => buildChoiceOption(option, style.color))
-                    .toList(),
+                children: List.generate(options.length, (index) {
+                  final option = options[index];
+                  return buildChoiceOption(
+                    option,
+                    style.color,
+                    selected: _selectedIndex == index,
+                    onTap: () => setState(() => _selectedIndex = index),
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 12),
@@ -93,7 +136,11 @@ class SpotTheErrorTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(
+              context,
+              onHint: _showHint,
+              onCheck: _checkAnswer,
+            ),
           ],
         ),
       ),

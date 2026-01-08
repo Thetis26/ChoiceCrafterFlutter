@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class MultipleChoiceTaskCard extends StatelessWidget {
+class MultipleChoiceTaskCard extends StatefulWidget {
   const MultipleChoiceTaskCard({
     super.key,
     required this.task,
@@ -15,13 +15,52 @@ class MultipleChoiceTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<MultipleChoiceTaskCard> createState() =>
+      _MultipleChoiceTaskCardState();
+}
+
+class _MultipleChoiceTaskCardState extends State<MultipleChoiceTaskCard> {
+  int? _selectedIndex;
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _checkAnswer() {
+    if (_selectedIndex == null) {
+      _showSnack('Select an answer before checking.');
+      return;
+    }
+    final correctIndex = widget.task.correctAnswer;
+    if (correctIndex == null) {
+      _showSnack('No correct answer configured yet.');
+      return;
+    }
+    final isCorrect = _selectedIndex == correctIndex;
+    _showSnack(isCorrect ? 'Correct! Nice work.' : 'Not quite. Try again.');
+  }
+
+  void _showHint() {
+    final hint = widget.task.explanation?.trim();
+    _showSnack((hint != null && hint.isNotEmpty)
+        ? hint
+        : 'Review the question and eliminate the obvious distractors.');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final style = widget.style;
     final theme = Theme.of(context);
-    final String helperText = (task.explanation != null &&
-            task.explanation!.trim().isNotEmpty)
-        ? task.explanation!.trim()
+    final String helperText = (widget.task.explanation != null &&
+            widget.task.explanation!.trim().isNotEmpty)
+        ? widget.task.explanation!.trim()
         : 'Using hints reduces your reward.';
-    final String rewardText = taskRewardText(task, '+40 XP');
+    final String rewardText = taskRewardText(widget.task, '+40 XP');
+    final options = widget.task.options.isNotEmpty
+        ? widget.task.options
+        : ['Option A', 'Option B', 'Option C'];
 
     return Card(
       margin: EdgeInsets.zero,
@@ -36,7 +75,9 @@ class MultipleChoiceTaskCard extends StatelessWidget {
             buildTaskHeader(style, rewardText, background: Colors.white),
             const SizedBox(height: 18),
             Text(
-              task.question.isNotEmpty ? task.question : task.title,
+              widget.task.question.isNotEmpty
+                  ? widget.task.question
+                  : widget.task.title,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: Colors.blueGrey.shade900,
@@ -44,8 +85,8 @@ class MultipleChoiceTaskCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              task.description.isNotEmpty
-                  ? task.description
+              widget.task.description.isNotEmpty
+                  ? widget.task.description
                   : 'Choose the correct answer from the list.',
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: Colors.blueGrey.shade600),
@@ -58,11 +99,15 @@ class MultipleChoiceTaskCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
-                children: (task.options.isNotEmpty
-                        ? task.options
-                        : ['Option A', 'Option B', 'Option C'])
-                    .map((option) => buildChoiceOption(option, style.color))
-                    .toList(),
+                children: List.generate(options.length, (index) {
+                  final option = options[index];
+                  return buildChoiceOption(
+                    option,
+                    style.color,
+                    selected: _selectedIndex == index,
+                    onTap: () => setState(() => _selectedIndex = index),
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 12),
@@ -72,7 +117,11 @@ class MultipleChoiceTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(
+              context,
+              onHint: _showHint,
+              onCheck: _checkAnswer,
+            ),
           ],
         ),
       ),
