@@ -92,6 +92,28 @@ post_install do |installer|
         end
       end
     end
+    if target.name == 'gRPC-Core'
+      target.build_configurations.each do |config|
+        # The path to the problematic file
+        grpc_file_path = "Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h"
+
+        # Check if the file exists
+        if File.exist?(grpc_file_path)
+          file_content = File.read(grpc_file_path)
+
+          # Define the incorrect and corrected lines
+          problematic_line = 'return Traits::template CallSeqFactory(f_, *cur_, std::move(arg));'
+          correct_line = 'return Traits::template CallSeqFactory<>(f_, *cur_, std::move(arg));'
+
+          # Replace the line if the problem exists
+          if file_content.include?(problematic_line)
+            puts "Patching gRPC-Core basic_seq.h for #{config.name} configuration."
+            file_content.gsub!(problematic_line, correct_line)
+            File.open(grpc_file_path, "w") { |file| file.puts file_content }
+          end
+        end
+      end
+    end
   end
 
   installer.aggregate_targets.each do |aggregate_target|
