@@ -261,9 +261,14 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.recommend),
-                title: const Text('Recommendations'),
-                onTap: () => Navigator.of(context).pushNamed('/recommendation'),
+                leading: const Icon(Icons.message_outlined),
+                title: const Text('Messages'),
+                onTap: () => Navigator.of(context).pushNamed('/messages'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.inbox_outlined),
+                title: const Text('Inbox'),
+                onTap: () => Navigator.of(context).pushNamed('/inbox'),
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
