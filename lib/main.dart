@@ -78,6 +78,7 @@ class _MyAppState extends State<MyApp> {
         final course = args?['course'] as Course?;
         final highlightActivityId = args?['highlightActivityId'] as String?;
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => CourseActivitiesLoader(
             courseRepository: courseRepository,
             course: course,
@@ -86,9 +87,13 @@ class _MyAppState extends State<MyApp> {
           ),
         );
       case '/activity':
-        return MaterialPageRoute(builder: (_) => const ActivityScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ActivityScreen(),
+        );
       case '/module':
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => ModuleScreen(courseRepository: courseRepository),
         );
       default:
