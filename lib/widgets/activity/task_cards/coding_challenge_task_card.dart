@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class CodingChallengeTaskCard extends StatelessWidget {
+class CodingChallengeTaskCard extends StatefulWidget {
   const CodingChallengeTaskCard({
     super.key,
     required this.task,
@@ -15,18 +15,79 @@ class CodingChallengeTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<CodingChallengeTaskCard> createState() =>
+      _CodingChallengeTaskCardState();
+}
+
+class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
+  late String _selectedLanguage;
+  late final TextEditingController _codeController;
+  late final TextEditingController _inputController;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.task.defaultLanguage.isNotEmpty
+        ? widget.task.defaultLanguage
+        : _fallbackLanguage();
+    _codeController = TextEditingController(
+      text: _starterCodeForLanguage(_selectedLanguage),
+    );
+    _inputController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    _inputController.dispose();
+    super.dispose();
+  }
+
+  String _starterCodeForLanguage(String language) {
+    return widget.task.starterCodeByLanguage[language] ??
+        widget.task.starterCodeByLanguage.values.firstOrNull ??
+        '#include <iostream>\nusing namespace std;\n\nint main() {\n\n  return 0;\n}';
+  }
+
+  void _checkAnswer() {
+    final solution = widget.task.solutionCodeByLanguage[_selectedLanguage] ??
+        widget.task.solutionCodeByLanguage.values.firstOrNull;
+    if (solution == null || solution.trim().isEmpty) {
+      showTaskFeedback(
+        context,
+        message: 'No solution provided for this challenge yet.',
+        isCorrect: false,
+      );
+      return;
+    }
+    final submitted = _codeController.text.trim();
+    if (submitted.isEmpty) {
+      showTaskFeedback(
+        context,
+        message: 'Add your code before checking.',
+        isCorrect: false,
+      );
+      return;
+    }
+
+    final bool isCorrect = submitted == solution.trim();
+    showTaskFeedback(
+      context,
+      message: isCorrect ? 'Solution matches!' : 'Keep iterating on your code.',
+      isCorrect: isCorrect,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final task = widget.task;
+    final style = widget.style;
     final String helperText = (task.explanation != null &&
             task.explanation!.trim().isNotEmpty)
         ? task.explanation!.trim()
         : 'Using hints reduces your reward.';
     final String rewardText = taskRewardText(task, '+40 XP');
-    final String language =
-        task.defaultLanguage.isNotEmpty ? task.defaultLanguage : _fallbackLanguage();
-    final String starterCode = task.starterCodeByLanguage[language] ??
-        task.starterCodeByLanguage.values.firstOrNull ??
-        '#include <iostream>\nusing namespace std;\n\nint main() {\n\n  return 0;\n}';
 
     return Card(
       margin: EdgeInsets.zero,
@@ -92,23 +153,32 @@ class CodingChallengeTaskCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blueGrey.shade200),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      language,
-                      style: theme.textTheme.bodyMedium,
+            DropdownButtonFormField<String>(
+              value: _selectedLanguage,
+              items: _availableLanguages()
+                  .map(
+                    (language) => DropdownMenuItem(
+                      value: language,
+                      child: Text(language),
                     ),
-                  ),
-                  const Icon(Icons.expand_more),
-                ],
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+                setState(() {
+                  _selectedLanguage = value;
+                  _codeController.text = _starterCodeForLanguage(value);
+                });
+              },
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.blueGrey.shade200),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -120,17 +190,19 @@ class CodingChallengeTaskCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
+            TextField(
+              controller: _codeController,
+              maxLines: 10,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: 'Courier',
+                height: 1.4,
               ),
-              child: Text(
-                starterCode,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'Courier',
-                  height: 1.4,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: Colors.blueGrey.shade200),
                 ),
               ),
             ),
@@ -143,17 +215,17 @@ class CodingChallengeTaskCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.blueGrey.shade200),
-              ),
-              child: Text(
-                'Enter the input you want to send when running.',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: Colors.blueGrey.shade500),
+            TextField(
+              controller: _inputController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Enter the input you want to send when running.',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: Colors.blueGrey.shade200),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -187,7 +259,12 @@ class CodingChallengeTaskCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(child: _buildActionButton('Show solution')),
                 const SizedBox(width: 12),
-                Expanded(child: _buildActionButton('Check Answer')),
+                Expanded(
+                  child: _buildActionButton(
+                    'Check Answer',
+                    onPressed: _checkAnswer,
+                  ),
+                ),
               ],
             ),
           ],
@@ -236,9 +313,9 @@ class CodingChallengeTaskCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label) {
+  Widget _buildActionButton(String label, {VoidCallback? onPressed}) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF6E7BF2),
         foregroundColor: Colors.white,
@@ -253,13 +330,23 @@ class CodingChallengeTaskCard extends StatelessWidget {
   }
 
   String _fallbackLanguage() {
-    if (task.starterCodeByLanguage.keys.isNotEmpty) {
-      return task.starterCodeByLanguage.keys.first;
+    if (widget.task.starterCodeByLanguage.keys.isNotEmpty) {
+      return widget.task.starterCodeByLanguage.keys.first;
     }
-    if (task.solutionCodeByLanguage.keys.isNotEmpty) {
-      return task.solutionCodeByLanguage.keys.first;
+    if (widget.task.solutionCodeByLanguage.keys.isNotEmpty) {
+      return widget.task.solutionCodeByLanguage.keys.first;
     }
     return 'C++';
+  }
+
+  List<String> _availableLanguages() {
+    final languages = <String>{
+      ...widget.task.starterCodeByLanguage.keys,
+      ...widget.task.solutionCodeByLanguage.keys,
+      _selectedLanguage,
+    };
+    return languages.where((language) => language.trim().isNotEmpty).toList()
+      ..sort();
   }
 }
 

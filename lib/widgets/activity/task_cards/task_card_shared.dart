@@ -45,13 +45,30 @@ Widget buildTaskHeader(
   );
 }
 
-Widget buildTaskActions(BuildContext context) {
+void showTaskFeedback(
+  BuildContext context, {
+  required String message,
+  required bool isCorrect,
+}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: isCorrect ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+    ),
+  );
+}
+
+Widget buildTaskActions(
+  BuildContext context, {
+  VoidCallback? onHint,
+  VoidCallback? onCheckAnswer,
+}) {
   final Color buttonColor = const Color(0xFF6E7BF2);
   return Row(
     children: [
       Expanded(
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: onHint,
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,
@@ -67,7 +84,7 @@ Widget buildTaskActions(BuildContext context) {
       const SizedBox(width: 16),
       Expanded(
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: onCheckAnswer,
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,

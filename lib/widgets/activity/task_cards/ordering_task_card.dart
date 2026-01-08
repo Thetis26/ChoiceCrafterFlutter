@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class OrderingTaskCard extends StatelessWidget {
+class OrderingTaskCard extends StatefulWidget {
   const OrderingTaskCard({
     super.key,
     required this.task,
@@ -15,8 +15,53 @@ class OrderingTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<OrderingTaskCard> createState() => _OrderingTaskCardState();
+}
+
+class _OrderingTaskCardState extends State<OrderingTaskCard> {
+  late final List<String> _originalItems;
+  late final List<String> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _originalItems = widget.task.items.isNotEmpty
+        ? List<String>.from(widget.task.items)
+        : ['Step 1', 'Step 2', 'Step 3'];
+    _items = List<String>.from(_originalItems);
+  }
+
+  void _checkAnswer() {
+    if (widget.task.correctOrder.isEmpty) {
+      showTaskFeedback(
+        context,
+        message: 'No correct order provided for this task yet.',
+        isCorrect: false,
+      );
+      return;
+    }
+
+    final currentOrder = _items
+        .map((item) => _originalItems.indexOf(item))
+        .toList();
+    final bool isCorrect =
+        currentOrder.length == widget.task.correctOrder.length &&
+            List.generate(currentOrder.length,
+                    (index) => currentOrder[index] == widget.task.correctOrder[index])
+                .every((match) => match);
+
+    showTaskFeedback(
+      context,
+      message: isCorrect ? 'Perfect order!' : 'Order is off. Try again!',
+      isCorrect: isCorrect,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final task = widget.task;
+    final style = widget.style;
     final String helperText = (task.explanation != null &&
             task.explanation!.trim().isNotEmpty)
         ? task.explanation!.trim()
@@ -64,14 +109,53 @@ class OrderingTaskCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                children: task.items.isNotEmpty
-                    ? task.items.map((item) => buildOrderingItem(item)).toList()
-                    : [
-                        buildOrderingItem('Step 1'),
-                        buildOrderingItem('Step 2'),
-                        buildOrderingItem('Step 3'),
-                      ],
+              child: ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _items.length,
+                onReorder: (oldIndex, newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) {
+                      newIndex -= 1;
+                    }
+                    final item = _items.removeAt(oldIndex);
+                    _items.insert(newIndex, item);
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final item = _items[index];
+                  return Padding(
+                    key: ValueKey(item),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFBFCBF9),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.drag_handle,
+                            color: Color(0xFFFFD166),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 12),
@@ -81,7 +165,7 @@ class OrderingTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(context, onCheckAnswer: _checkAnswer),
           ],
         ),
       ),

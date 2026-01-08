@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class TrueFalseTaskCard extends StatelessWidget {
+class TrueFalseTaskCard extends StatefulWidget {
   const TrueFalseTaskCard({
     super.key,
     required this.task,
@@ -15,8 +15,42 @@ class TrueFalseTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<TrueFalseTaskCard> createState() => _TrueFalseTaskCardState();
+}
+
+class _TrueFalseTaskCardState extends State<TrueFalseTaskCard> {
+  bool? _selectedValue;
+
+  void _checkAnswer() {
+    if (widget.task.correctAnswer == null) {
+      showTaskFeedback(
+        context,
+        message: 'No correct answer provided for this task yet.',
+        isCorrect: false,
+      );
+      return;
+    }
+    if (_selectedValue == null) {
+      showTaskFeedback(
+        context,
+        message: 'Choose true or false before checking.',
+        isCorrect: false,
+      );
+      return;
+    }
+    final bool isCorrect = _selectedValue == widget.task.correctAnswer;
+    showTaskFeedback(
+      context,
+      message: isCorrect ? 'Correct!' : 'That is not correct. Try again.',
+      isCorrect: isCorrect,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final task = widget.task;
+    final style = widget.style;
     final String helperText = (task.explanation != null &&
             task.explanation!.trim().isNotEmpty)
         ? task.explanation!.trim()
@@ -27,6 +61,28 @@ class TrueFalseTaskCard extends StatelessWidget {
         ? task.description
         : 'Decide if the statement below is correct.';
     final String rewardText = task.status.isNotEmpty ? task.status : '+25 XP';
+
+    Widget buildOption(String label, bool value) {
+      final bool isSelected = _selectedValue == value;
+      return InkWell(
+        onTap: () => setState(() => _selectedValue = value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: style.color,
+              ),
+              const SizedBox(width: 12),
+              Text(label, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
       margin: EdgeInsets.zero,
@@ -99,9 +155,9 @@ class TrueFalseTaskCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  buildTrueFalseOption('True', style.color),
+                  buildOption('True', true),
                   const Divider(height: 1),
-                  buildTrueFalseOption('False', style.color),
+                  buildOption('False', false),
                 ],
               ),
             ),
@@ -112,7 +168,7 @@ class TrueFalseTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(context, onCheckAnswer: _checkAnswer),
           ],
         ),
       ),

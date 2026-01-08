@@ -4,7 +4,7 @@ import '../../../models/task.dart';
 import 'task_card_shared.dart';
 import 'task_type_style.dart';
 
-class MatchingPairTaskCard extends StatelessWidget {
+class MatchingPairTaskCard extends StatefulWidget {
   const MatchingPairTaskCard({
     super.key,
     required this.task,
@@ -15,17 +15,69 @@ class MatchingPairTaskCard extends StatelessWidget {
   final TaskTypeStyle style;
 
   @override
+  State<MatchingPairTaskCard> createState() => _MatchingPairTaskCardState();
+}
+
+class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
+  late final List<String> _leftItems;
+  late final List<String> _rightItems;
+  late final Map<String, String?> _selectedMatches;
+
+  @override
+  void initState() {
+    super.initState();
+    _leftItems = widget.task.leftItems.isNotEmpty
+        ? widget.task.leftItems
+        : ['Spring', 'React'];
+    _rightItems = widget.task.rightItems.isNotEmpty
+        ? widget.task.rightItems
+        : ['Frontend', 'Backend'];
+    _selectedMatches = {
+      for (final item in _leftItems) item: null,
+    };
+  }
+
+  void _checkAnswer() {
+    if (widget.task.correctMatches.isEmpty) {
+      showTaskFeedback(
+        context,
+        message: 'No correct matches provided for this task yet.',
+        isCorrect: false,
+      );
+      return;
+    }
+
+    if (_selectedMatches.values.any((value) => value == null)) {
+      showTaskFeedback(
+        context,
+        message: 'Match every item before checking.',
+        isCorrect: false,
+      );
+      return;
+    }
+
+    final bool isCorrect = _selectedMatches.entries.every((entry) {
+      final expected = widget.task.correctMatches[entry.key];
+      return expected != null && expected == entry.value;
+    });
+
+    showTaskFeedback(
+      context,
+      message: isCorrect ? 'All pairs match!' : 'Some pairs are incorrect.',
+      isCorrect: isCorrect,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final task = widget.task;
+    final style = widget.style;
     final String helperText = (task.explanation != null &&
             task.explanation!.trim().isNotEmpty)
         ? task.explanation!.trim()
         : 'Using hints reduces your reward.';
     final String rewardText = taskRewardText(task, '+45 XP');
-    final List<String> leftItems =
-        task.leftItems.isNotEmpty ? task.leftItems : ['Spring', 'React'];
-    final List<String> rightItems =
-        task.rightItems.isNotEmpty ? task.rightItems : ['Frontend', 'Backend'];
 
     return Card(
       margin: EdgeInsets.zero,
@@ -61,25 +113,47 @@ class MatchingPairTaskCard extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: leftItems
-                          .map((item) => _buildMatchPill(item))
-                          .toList(),
+              child: Column(
+                children: _leftItems.map((leftItem) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Expanded(child: _buildMatchPill(leftItem)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedMatches[leftItem],
+                            items: _rightItems
+                                .map(
+                                  (rightItem) => DropdownMenuItem(
+                                    value: rightItem,
+                                    child: Text(rightItem),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedMatches[leftItem] = value;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Select match',
+                              filled: true,
+                              fillColor: const Color(0xFFFFF5ED),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(
+                                  color: Colors.blueGrey.shade200,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: rightItems
-                          .map((item) => _buildMatchPill(item))
-                          .toList(),
-                    ),
-                  ),
-                ],
+                  );
+                }).toList(),
               ),
             ),
             const SizedBox(height: 12),
@@ -89,7 +163,7 @@ class MatchingPairTaskCard extends StatelessWidget {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context),
+            buildTaskActions(context, onCheckAnswer: _checkAnswer),
           ],
         ),
       ),
@@ -97,21 +171,18 @@ class MatchingPairTaskCard extends StatelessWidget {
   }
 
   Widget _buildMatchPill(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFE6D1),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF4A4A4A),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE6D1),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF4A4A4A),
         ),
       ),
     );
