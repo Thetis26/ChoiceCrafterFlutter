@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/activity.dart';
 import '../models/course.dart';
 import '../models/module.dart';
+import '../models/task.dart';
 import '../models/user.dart';
 
 class CourseRepository {
@@ -180,7 +181,20 @@ class CourseRepository {
         type: (activityMap['type'] as String?) ?? 'activity',
         content: (activityMap['content'] as String?) ?? '',
         estimatedMinutes: estimatedMinutes is num ? estimatedMinutes.round() : 15,
+        tasks: _tasksFromData(activityMap['tasks']),
       );
     }).toList();
+  }
+
+  List<Task> _tasksFromData(dynamic tasksData) {
+    if (tasksData is! List) {
+      return [];
+    }
+
+    return tasksData
+        .whereType<Map>()
+        .map((taskData) => Task.fromMap(Map<String, dynamic>.from(taskData)))
+        .whereType<Task>()
+        .toList();
   }
 }
