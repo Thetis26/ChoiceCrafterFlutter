@@ -42,23 +42,8 @@ class ActivityScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Chip(label: Text(activity.type)),
-                if (courseId != null) ...[
-                  const SizedBox(width: 8),
-                  Chip(label: Text('Course $courseId')),
-                ],
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(activity.description,
-                style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
             if (activity.content.isNotEmpty) Text(activity.content),
-            const SizedBox(height: 24),
-            Text('Tasks', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Expanded(
               child: tasks.isEmpty
                   ? const Center(
