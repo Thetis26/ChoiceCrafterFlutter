@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/user.dart';
@@ -23,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isRegistering = false;
+  bool _isSubmitting = false;
   String? _errorMessage;
 
   @override
@@ -40,22 +42,31 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    setState(() {
+      _errorMessage = null;
+      _isSubmitting = true;
+    });
+
     try {
       final user = _isRegistering
-          ? widget.authRepository.register(
+          ? await widget.authRepository.register(
               fullName: _fullNameController.text.trim(),
               email: _emailController.text.trim(),
               password: _passwordController.text,
             )
-          : widget.authRepository.login(
+          : await widget.authRepository.login(
               _emailController.text.trim(),
               _passwordController.text,
             );
+
+      if (!mounted) {
+        return;
+      }
 
       if (user == null) {
         setState(() => _errorMessage = 'Incorrect email or password.');
@@ -63,8 +74,37 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       widget.onAuthenticated(user);
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _errorMessage = _friendlyFirebaseMessage(error));
     } catch (error) {
+      if (!mounted) {
+        return;
+      }
       setState(() => _errorMessage = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  String _friendlyFirebaseMessage(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'user-not-found':
+        return 'No account exists for that email.';
+      case 'wrong-password':
+        return 'Incorrect email or password.';
+      case 'invalid-email':
+        return 'Enter a valid email address.';
+      case 'weak-password':
+        return 'Choose a stronger password.';
+      case 'email-already-in-use':
+        return 'An account already exists for that email.';
+      default:
+        return error.message ?? 'Authentication failed. Please try again.';
     }
   }
 
@@ -84,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'This mirrors the Android login and registration experience so you can test iOS parity.',
+                'Use your Firebase credentials to access ChoiceCrafter on iOS.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 24),
@@ -137,12 +177,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _submit,
-                        child: Text(_isRegistering ? 'Create account' : 'Sign in'),
+                        onPressed: _isSubmitting ? null : _submit,
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(_isRegistering ? 'Create account' : 'Sign in'),
                       ),
                     ),
                     TextButton(
-                      onPressed: _toggleMode,
+                      onPressed: _isSubmitting ? null : _toggleMode,
                       child: Text(
                         _isRegistering
                             ? 'Already registered? Switch to sign in'

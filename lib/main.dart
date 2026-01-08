@@ -35,7 +35,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final AuthRepository _authRepository = AuthRepository();
-  late final Future<FirebaseApp> _firebaseInit = Firebase.initializeApp();
+  late final Future<FirebaseApp> _firebaseInit = Firebase.initializeApp().then(
+    (app) async {
+      _currentUser = await _authRepository.currentUser();
+      return app;
+    },
+  );
   CourseRepository? _courseRepository;
   UserActivityRepository? _userActivityRepository;
   User? _currentUser;
@@ -49,14 +54,18 @@ class _MyAppState extends State<MyApp> {
     setState(() => _currentUser = user);
   }
 
-  void _handleLogout() {
+  Future<void> _handleLogout() async {
+    await _authRepository.logout();
+    if (!mounted) {
+      return;
+    }
     setState(() => _currentUser = null);
   }
 
   Route<dynamic>? _onGenerateRoute(
-      RouteSettings settings, {
-        required CourseRepository courseRepository,
-      }) {
+    RouteSettings settings, {
+    required CourseRepository courseRepository,
+  }) {
     switch (settings.name) {
       case '/courseActivities':
         final args = settings.arguments as Map?;
@@ -129,15 +138,15 @@ class _MyAppState extends State<MyApp> {
           ),
           home: _currentUser == null
               ? LoginScreen(
-            authRepository: _authRepository,
-            onAuthenticated: _handleAuthenticated,
-          )
+                  authRepository: _authRepository,
+                  onAuthenticated: _handleAuthenticated,
+                )
               : AuthenticatedShell(
-            user: _currentUser!,
-            courseRepository: courseRepository,
-            userActivityRepository: userActivityRepository,
-            onLogout: _handleLogout,
-          ),
+                  user: _currentUser!,
+                  courseRepository: courseRepository,
+                  userActivityRepository: userActivityRepository,
+                  onLogout: _handleLogout,
+                ),
           routes: {
             '/learningPath': (context) => const LearningPathScreen(),
             '/recommendation': (context) => const RecommendationWebViewScreen(),
@@ -166,7 +175,7 @@ class AuthenticatedShell extends StatefulWidget {
   final User user;
   final CourseRepository courseRepository;
   final UserActivityRepository userActivityRepository;
-  final VoidCallback onLogout;
+  final Future<void> Function() onLogout;
 
   @override
   State<AuthenticatedShell> createState() => _AuthenticatedShellState();
@@ -226,7 +235,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         title: const Text('ChoiceCrafter'),
         actions: [
           IconButton(
-            onPressed: widget.onLogout,
+            onPressed: () async {
+              await widget.onLogout();
+            },
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
           ),
@@ -239,16 +250,14 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               UserAccountsDrawerHeader(
                 accountName: Text(widget.user.fullName),
                 accountEmail: Text(widget.user.email),
+                currentAccountPicture: CircleAvatar(
+                  child: Text(widget.user.fullName.substring(0, 1)),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.inbox),
-                title: const Text('Inbox'),
-                onTap: () => Navigator.of(context).pushNamed('/inbox'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: const Text('Messages'),
-                onTap: () => Navigator.of(context).pushNamed('/messages'),
+                leading: const Icon(Icons.recommend),
+                title: const Text('Recommendations'),
+                onTap: () => Navigator.of(context).pushNamed('/recommendation'),
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
@@ -256,7 +265,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                 onTap: () => Navigator.of(context).pushNamed('/settings'),
               ),
               ListTile(
-                leading: const Icon(Icons.feedback),
+                leading: const Icon(Icons.feedback_outlined),
                 title: const Text('Feedback'),
                 onTap: () => Navigator.of(context).pushNamed('/feedback'),
               ),
@@ -268,58 +277,24 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onBottomNavTapped,
-        items: const <BottomNavigationBarItem>[
+        items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.school),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_alt),
+            icon: Icon(Icons.people_alt_outlined),
             label: 'Colleagues',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper),
+            icon: Icon(Icons.newspaper_outlined),
             label: 'News',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Personal',
+            icon: Icon(Icons.notifications_active_outlined),
+            label: 'Activity',
           ),
         ],
-      ),
-      floatingActionButton: FutureBuilder<List<Course>>(
-        future: widget.courseRepository.getEnrolledCourses(widget.user),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox.shrink();
-          }
-          if (snapshot.hasError) {
-            return const SizedBox.shrink();
-          }
-          final courses = snapshot.data ?? [];
-          if (courses.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          final course = courses.first;
-          final highlightActivityId = course.modules.isNotEmpty &&
-                  course.modules.first.activities.isNotEmpty
-              ? course.modules.first.activities.first.id
-              : null;
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.of(context).pushNamed(
-                '/courseActivities',
-                arguments: {
-                  'course': course,
-                  'courseId': course.id,
-                  'highlightActivityId': highlightActivityId,
-                },
-              );
-            },
-            icon: const Icon(Icons.list),
-            label: const Text('Activities'),
-          );
-        },
       ),
     );
   }
