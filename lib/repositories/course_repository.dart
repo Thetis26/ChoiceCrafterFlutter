@@ -140,8 +140,8 @@ class CourseRepository {
     return Course(
       id: (data['id'] as String?) ?? doc.id,
       title: (data['title'] as String?) ?? 'Untitled course',
-      instructor: (data['instructor'] as String?) ?? 'Unknown instructor',
-      summary: (data['summary'] as String?) ?? '',
+      instructor: (data['teacher'] as String?) ?? 'Unknown instructor',
+      summary: (data['description'] as String?) ?? '',
       modules: _modulesFromData(data['modules']),
     );
   }
@@ -157,8 +157,8 @@ class CourseRepository {
           : <String, dynamic>{};
       return Module(
         id: (moduleMap['id'] as String?) ?? '',
-        name: (moduleMap['name'] as String?) ?? 'Untitled module',
-        summary: (moduleMap['summary'] as String?) ?? '',
+        name: (moduleMap['title'] as String?) ?? 'Untitled module',
+        summary: (moduleMap['description'] as String?) ?? '',
         activities: _activitiesFromData(moduleMap['activities']),
       );
     }).toList();
@@ -176,7 +176,7 @@ class CourseRepository {
       final estimatedMinutes = activityMap['estimatedMinutes'];
       return Activity(
         id: (activityMap['id'] as String?) ?? '',
-        name: (activityMap['name'] as String?) ?? 'Untitled activity',
+        name: (activityMap['title'] as String?) ?? 'Untitled activity',
         description: (activityMap['description'] as String?) ?? '',
         type: (activityMap['type'] as String?) ?? 'activity',
         content: (activityMap['content'] as String?) ?? '',
