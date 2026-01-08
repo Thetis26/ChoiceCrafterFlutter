@@ -7,7 +7,7 @@ import 'models/course.dart';
 import 'models/user.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/course_repository.dart';
-import 'repositories/user_activity_repository.dart';
+import 'repositories/personal_statistics_repository.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/colleagues_activity_screen.dart';
 import 'screens/feedback_screen.dart';
@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
   AuthRepository? _authRepository;
   late final Future<FirebaseApp> _firebaseInit;
   CourseRepository? _courseRepository;
-  UserActivityRepository? _userActivityRepository;
+  PersonalStatisticsRepository? _personalStatisticsRepository;
   User? _currentUser;
 
   @override
@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
 
   void _ensureRepositories() {
     _courseRepository ??= CourseRepository();
-    _userActivityRepository ??= UserActivityRepository();
+    _personalStatisticsRepository ??= PersonalStatisticsRepository();
   }
 
   void _handleAuthenticated(User user) {
@@ -138,7 +138,7 @@ class _MyAppState extends State<MyApp> {
 
         _ensureRepositories();
         final courseRepository = _courseRepository!;
-        final userActivityRepository = _userActivityRepository!;
+        final personalStatisticsRepository = _personalStatisticsRepository!;
         final authRepository = _authRepository!;
 
         return MaterialApp(
@@ -155,7 +155,7 @@ class _MyAppState extends State<MyApp> {
               : AuthenticatedShell(
                   user: _currentUser!,
                   courseRepository: courseRepository,
-                  userActivityRepository: userActivityRepository,
+                  personalStatisticsRepository: personalStatisticsRepository,
                   onLogout: _handleLogout,
                 ),
           routes: {
@@ -179,13 +179,13 @@ class AuthenticatedShell extends StatefulWidget {
     super.key,
     required this.user,
     required this.courseRepository,
-    required this.userActivityRepository,
+    required this.personalStatisticsRepository,
     required this.onLogout,
   });
 
   final User user;
   final CourseRepository courseRepository;
-  final UserActivityRepository userActivityRepository;
+  final PersonalStatisticsRepository personalStatisticsRepository;
   final Future<void> Function() onLogout;
 
   @override
@@ -232,7 +232,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       case 3:
         return PersonalActivityScreen(
           user: widget.user,
-          userActivityRepository: widget.userActivityRepository,
+          courseRepository: widget.courseRepository,
+          personalStatisticsRepository: widget.personalStatisticsRepository,
         );
       default:
         return const SizedBox.shrink();
