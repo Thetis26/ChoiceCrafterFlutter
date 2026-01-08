@@ -97,6 +97,21 @@ class ActivityScreen extends StatelessWidget {
 
   Widget _buildTaskCard(BuildContext context, Task task) {
     final style = _taskTypeStyle(task, context);
+    if (task is OrderingTask) {
+      return _buildOrderingTaskCard(context, task, style);
+    }
+    if (task is InfoCardTask) {
+      return _buildInfoCardTask(context, task, style);
+    }
+    if (task is FillInTheBlankTask) {
+      return _buildFillInTheBlankTask(context, task, style);
+    }
+    if (task is MultipleChoiceTask) {
+      return _buildMultipleChoiceTask(context, task, style);
+    }
+    if (task is SpotTheErrorTask) {
+      return _buildSpotTheErrorTask(context, task, style);
+    }
     if (task is TrueFalseTask) {
       return _buildTrueFalseTaskCard(context, task, style);
     }
@@ -269,6 +284,486 @@ class ActivityScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildOrderingTaskCard(
+    BuildContext context,
+    OrderingTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String helperText = (task.explanation != null &&
+            task.explanation!.trim().isNotEmpty)
+        ? task.explanation!.trim()
+        : 'Using hints reduces your reward.';
+    final String rewardText = _taskRewardText(task, '+30 XP');
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: const Color(0xFFE3F4EE),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTaskHeader(style, rewardText, background: Colors.white),
+            const SizedBox(height: 18),
+            Text(
+              task.title.isNotEmpty ? task.title : 'Order the items',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              task.description.isNotEmpty
+                  ? task.description
+                  : 'Arrange each step before the timer cools down.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: task.items.isNotEmpty
+                    ? task.items
+                        .map((item) => _buildOrderingItem(item))
+                        .toList()
+                    : [
+                        _buildOrderingItem('Step 1'),
+                        _buildOrderingItem('Step 2'),
+                        _buildOrderingItem('Step 3'),
+                      ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade500),
+            ),
+            const SizedBox(height: 16),
+            _buildTaskActions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderingItem(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFBFCBF9),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const Icon(Icons.emoji_events, color: Color(0xFFFFD166)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCardTask(
+    BuildContext context,
+    InfoCardTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String rewardText = _taskRewardText(task, '+15 XP');
+    final String contentText =
+        task.contentText.isNotEmpty ? task.contentText : task.description;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: const Color(0xFFECE6F7),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTaskHeader(style, rewardText, background: Colors.white),
+            const SizedBox(height: 18),
+            Text(
+              task.title.isNotEmpty ? task.title : 'Info boost',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              contentText,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600, height: 1.4),
+            ),
+            const SizedBox(height: 20),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6E7BF2),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                child: Text(task.actionText.isNotEmpty
+                    ? task.actionText
+                    : 'I got it!'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFillInTheBlankTask(
+    BuildContext context,
+    FillInTheBlankTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String helperText = (task.explanation != null &&
+            task.explanation!.trim().isNotEmpty)
+        ? task.explanation!.trim()
+        : 'Using hints reduces your reward.';
+    final String rewardText = _taskRewardText(task, '+35 XP');
+    final List<String> blanks = task.missingSegments.isNotEmpty
+        ? task.missingSegments
+        : ['Answer', 'Answer'];
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: const Color(0xFFE3F2FC),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTaskHeader(style, rewardText, background: Colors.white),
+            const SizedBox(height: 18),
+            Text(
+              task.title.isNotEmpty ? task.title : 'Fill in the blanks',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              task.description.isNotEmpty
+                  ? task.description
+                  : 'Complete the tale without breaking your combo.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.text.isNotEmpty
+                        ? task.text
+                        : '____ <iostream>\nusing namespace ____;',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: 'Courier',
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  ...blanks
+                      .map((_) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildBlankInput(),
+                          ))
+                      .toList(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade500),
+            ),
+            const SizedBox(height: 16),
+            _buildTaskActions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlankInput() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blueGrey.shade200, width: 1.4),
+      ),
+      child: const Text(
+        'Type your answer to reveal +10 XP',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _buildMultipleChoiceTask(
+    BuildContext context,
+    MultipleChoiceTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String helperText = (task.explanation != null &&
+            task.explanation!.trim().isNotEmpty)
+        ? task.explanation!.trim()
+        : 'Using hints reduces your reward.';
+    final String rewardText = _taskRewardText(task, '+40 XP');
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: const Color(0xFFE7E9FF),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTaskHeader(style, rewardText, background: Colors.white),
+            const SizedBox(height: 18),
+            Text(
+              task.question.isNotEmpty ? task.question : task.title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              task.description.isNotEmpty
+                  ? task.description
+                  : 'Choose the correct answer from the list.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: (task.options.isNotEmpty
+                        ? task.options
+                        : ['Option A', 'Option B', 'Option C'])
+                    .map((option) => _buildChoiceOption(option, style.color))
+                    .toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade500),
+            ),
+            const SizedBox(height: 16),
+            _buildTaskActions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChoiceOption(String label, Color accentColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(Icons.radio_button_unchecked, color: accentColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpotTheErrorTask(
+    BuildContext context,
+    SpotTheErrorTask task,
+    _TaskTypeStyle style,
+  ) {
+    final theme = Theme.of(context);
+    final String helperText = (task.explanation != null &&
+            task.explanation!.trim().isNotEmpty)
+        ? task.explanation!.trim()
+        : 'Using hints reduces your reward.';
+    final String rewardText = _taskRewardText(task, '+45 XP');
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: const Color(0xFFFBE7D5),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTaskHeader(style, rewardText, background: Colors.white),
+            const SizedBox(height: 18),
+            Text(
+              task.title.isNotEmpty ? task.title : 'Spot the error',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              task.description.isNotEmpty
+                  ? task.description
+                  : 'Choose the correct fix for the code snippet.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                task.codeSnippet.isNotEmpty
+                    ? task.codeSnippet
+                    : 'include <iostream>\nint main {\n  cout << \"Salut!\"\n}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'Courier',
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: (task.options.isNotEmpty
+                        ? task.options
+                        : [
+                            'Add # to include, add () to main, and add return 0;',
+                            'Remove the cout line and keep the rest unchanged.',
+                            'Replace cin with scanf for input.',
+                          ])
+                    .map((option) => _buildChoiceOption(option, style.color))
+                    .toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade500),
+            ),
+            const SizedBox(height: 16),
+            _buildTaskActions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskHeader(
+    _TaskTypeStyle style,
+    String rewardText, {
+    required Color background,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: background,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(style.icon, color: style.color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              style.label.toUpperCase(),
+              style: TextStyle(
+                color: Colors.blueGrey.shade700,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              rewardText,
+              style: TextStyle(color: Colors.blueGrey.shade400),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _taskRewardText(Task task, String fallback) {
+    return task.status.isNotEmpty ? task.status : fallback;
+  }
+
   Widget _buildTrueFalseOption(String label, Color accentColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -429,15 +924,15 @@ _TaskTypeStyle _taskTypeStyle(Task task, BuildContext context) {
   if (task is MultipleChoiceTask) {
     return const _TaskTypeStyle(
       label: 'Multiple Choice',
-      icon: Icons.list_alt,
+      icon: Icons.local_fire_department,
       color: Colors.indigo,
     );
   }
   if (task is FillInTheBlankTask) {
     return const _TaskTypeStyle(
       label: 'Fill in the Blank',
-      icon: Icons.edit_note,
-      color: Colors.orange,
+      icon: Icons.lightbulb_outline,
+      color: Colors.blue,
     );
   }
   if (task is MatchingPairTask) {
@@ -450,8 +945,8 @@ _TaskTypeStyle _taskTypeStyle(Task task, BuildContext context) {
   if (task is OrderingTask) {
     return const _TaskTypeStyle(
       label: 'Ordering',
-      icon: Icons.format_list_numbered,
-      color: Colors.purple,
+      icon: Icons.checklist,
+      color: Colors.indigo,
     );
   }
   if (task is TrueFalseTask) {
@@ -464,8 +959,8 @@ _TaskTypeStyle _taskTypeStyle(Task task, BuildContext context) {
   if (task is SpotTheErrorTask) {
     return const _TaskTypeStyle(
       label: 'Spot the Error',
-      icon: Icons.bug_report,
-      color: Colors.redAccent,
+      icon: Icons.smart_display,
+      color: Colors.deepOrange,
     );
   }
   if (task is CodingChallengeTask) {
