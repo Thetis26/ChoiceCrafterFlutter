@@ -13,6 +13,9 @@ class AuthRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
 
+  static const String _usersCollection = 'users';
+  static const String _enrollmentsCollection = 'COURSE_ENROLLMENTS';
+  static const String _legacyEnrollmentsCollection = 'course_enrollment';
   static const List<String> _defaultEnrolledCourseIds = ['course-mobile'];
 
   Future<User?> login(String email, String password) async {
@@ -41,17 +44,41 @@ class AuthRepository {
       throw StateError('Registration failed. Please try again.');
     }
 
+    final normalizedEmail = email.trim();
     await firebaseUser.updateDisplayName(fullName);
-    await _firestore.collection('users').doc(firebaseUser.uid).set({
-      'fullName': fullName,
-      'email': email,
-      'enrolledCourseIds': _defaultEnrolledCourseIds,
-    });
+    final userDoc = await _resolveUserDoc(normalizedEmail, firebaseUser.uid);
+    await userDoc.set(
+      {
+        'fullName': fullName,
+        'email': normalizedEmail,
+        'enrolledCourseIds': _defaultEnrolledCourseIds,
+      },
+      SetOptions(merge: true),
+    );
+
+    final batch = _firestore.batch();
+    final enrollmentUserId =
+        normalizedEmail.isEmpty ? firebaseUser.uid : normalizedEmail;
+    final enrollmentDate = _formatEnrollmentDate(DateTime.now());
+    for (final courseId in _defaultEnrolledCourseIds) {
+      final enrollmentDocId = '${enrollmentUserId}_$courseId';
+      final enrollmentDoc =
+          _firestore.collection(_enrollmentsCollection).doc(enrollmentDocId);
+      batch.set(enrollmentDoc, {
+        'userId': enrollmentUserId,
+        'courseId': courseId,
+        'enrollmentDate': enrollmentDate,
+        'selfEnrolled': true,
+        'enrolledBy': enrollmentUserId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
 
     return User(
-      id: firebaseUser.uid,
+      id: userDoc.id,
       fullName: fullName,
-      email: email,
+      email: normalizedEmail,
       enrolledCourseIds: _defaultEnrolledCourseIds,
     );
   }
@@ -70,32 +97,104 @@ class AuthRepository {
   }
 
   Future<User> _userFromFirebase(firebase_auth.User firebaseUser) async {
-    final docRef = _firestore.collection('users').doc(firebaseUser.uid);
+    final userEmail = firebaseUser.email ?? '';
+    final docRef = await _resolveUserDoc(userEmail, firebaseUser.uid);
     final snapshot = await docRef.get();
     final data = snapshot.data();
 
     final fullName = data?['fullName'] as String? ??
         firebaseUser.displayName ??
         'ChoiceCrafter Student';
-    final email = data?['email'] as String? ?? firebaseUser.email ?? '';
-    final enrolledCourseIds = (data?['enrolledCourseIds'] as List?)
+    final email = data?['email'] as String? ?? userEmail;
+    final legacyCourseIds = (data?['enrolledCourseIds'] as List?)
             ?.whereType<String>()
             .toList() ??
-        _defaultEnrolledCourseIds;
+        <String>[];
+    final enrollmentKey =
+        userEmail.isNotEmpty ? userEmail : firebaseUser.uid;
+    final enrolledCourseIds =
+        await _loadEnrolledCourseIds(enrollmentKey, legacyCourseIds);
 
     if (!snapshot.exists) {
       await docRef.set({
         'fullName': fullName,
         'email': email,
-        'enrolledCourseIds': enrolledCourseIds,
+        if (legacyCourseIds.isNotEmpty) 'enrolledCourseIds': legacyCourseIds,
       });
     }
 
     return User(
-      id: firebaseUser.uid,
+      id: docRef.id,
       fullName: fullName,
       email: email,
       enrolledCourseIds: enrolledCourseIds,
     );
+  }
+
+  Future<List<String>> _loadEnrolledCourseIds(
+    String enrollmentKey,
+    List<String> fallbackIds,
+  ) async {
+    final courseIds = await _fetchEnrollmentCourseIds(enrollmentKey);
+
+    if (courseIds.isNotEmpty) {
+      return courseIds;
+    }
+    return fallbackIds;
+  }
+
+  Future<DocumentReference<Map<String, dynamic>>> _resolveUserDoc(
+    String email,
+    String fallbackUserId,
+  ) async {
+    if (email.isNotEmpty) {
+      final userQuery = await _firestore
+          .collection(_usersCollection)
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (userQuery.docs.isNotEmpty) {
+        return userQuery.docs.first.reference;
+      }
+    }
+
+    return _firestore.collection(_usersCollection).doc(fallbackUserId);
+  }
+
+  Future<List<String>> _fetchEnrollmentCourseIds(String userKey) async {
+    if (userKey.isEmpty) {
+      return [];
+    }
+    final snapshots = await Future.wait([
+      _firestore
+          .collection(_enrollmentsCollection)
+          .where('userId', isEqualTo: userKey)
+          .get(),
+      _firestore
+          .collection(_legacyEnrollmentsCollection)
+          .where('userId', isEqualTo: userKey)
+          .get(),
+    ]);
+
+    final courseIds = <String>{};
+    for (final snapshot in snapshots) {
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final courseId = (data['courseId'] as String?) ??
+            (data['course_id'] as String?) ??
+            '';
+        if (courseId.isNotEmpty) {
+          courseIds.add(courseId);
+        }
+      }
+    }
+    return courseIds.toList();
+  }
+
+  String _formatEnrollmentDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }
