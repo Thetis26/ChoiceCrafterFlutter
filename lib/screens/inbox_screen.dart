@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
+import '../sample_data.dart';
+
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
@@ -11,9 +13,7 @@ class InboxScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      return const Center(
-        child: Text('Sign in to view your notifications.'),
-      );
+      return _buildInboxList(SampleData.inbox);
     }
 
     final stream = FirebaseFirestore.instance
@@ -26,9 +26,7 @@ class InboxScreen extends StatelessWidget {
       stream: stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(
-            child: Text('Unable to load notifications right now.'),
-          );
+          return _buildInboxList(SampleData.inbox);
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -37,9 +35,7 @@ class InboxScreen extends StatelessWidget {
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const Center(
-            child: Text('No notifications yet.'),
-          );
+          return const Center(child: Text('No notifications yet.'));
         }
 
         return ListView.separated(
@@ -66,6 +62,31 @@ class InboxScreen extends StatelessWidget {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildInboxList(List<InboxItem> items) {
+    if (items.isEmpty) {
+      return const Center(child: Text('No notifications yet.'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        final timestampLabel = _formatTimestamp(item.timestamp);
+
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.notifications_active),
+            title: Text(item.title),
+            subtitle: Text(item.body),
+            trailing: Text(timestampLabel),
+          ),
         );
       },
     );
