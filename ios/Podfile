@@ -94,23 +94,23 @@ post_install do |installer|
     end
     if target.name == 'gRPC-Core'
       target.build_configurations.each do |config|
-        # The path to the problematic file
-        grpc_file_path = "Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h"
+        grpc_patch_paths = [
+          "Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h",
+          "Pods/gRPC-C++/src/core/lib/promise/detail/basic_seq.h"
+        ]
 
-        # Check if the file exists
-        if File.exist?(grpc_file_path)
+        problematic_line = 'return Traits::template CallSeqFactory(f_, *cur_, std::move(arg));'
+        correct_line = 'return Traits::template CallSeqFactory<>(f_, *cur_, std::move(arg));'
+
+        grpc_patch_paths.each do |grpc_file_path|
+          next unless File.exist?(grpc_file_path)
+
           file_content = File.read(grpc_file_path)
+          next unless file_content.include?(problematic_line)
 
-          # Define the incorrect and corrected lines
-          problematic_line = 'return Traits::template CallSeqFactory(f_, *cur_, std::move(arg));'
-          correct_line = 'return Traits::template CallSeqFactory<>(f_, *cur_, std::move(arg));'
-
-          # Replace the line if the problem exists
-          if file_content.include?(problematic_line)
-            puts "Patching gRPC-Core basic_seq.h for #{config.name} configuration."
-            file_content.gsub!(problematic_line, correct_line)
-            File.open(grpc_file_path, "w") { |file| file.puts file_content }
-          end
+          puts "Patching #{grpc_file_path} for #{config.name} configuration."
+          file_content.gsub!(problematic_line, correct_line)
+          File.open(grpc_file_path, "w") { |file| file.puts file_content }
         end
       end
     end
