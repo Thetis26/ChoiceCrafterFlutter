@@ -285,23 +285,24 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         ),
       ),
       body: _buildBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTapped,
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onBottomNavTapped,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.people_alt_outlined),
             label: 'Colleagues activity',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.campaign_outlined),
             label: 'News',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
             label: 'Personal statistics',
           ),
