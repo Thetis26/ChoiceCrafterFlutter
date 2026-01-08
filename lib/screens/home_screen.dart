@@ -18,10 +18,12 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('HomeScreen.build - user: ${user.fullName}');
     return FutureBuilder<List<Course>>(
       future: courseRepository.getEnrolledCourses(user),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('HomeScreen: loading courses for ${user.fullName}...');
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
@@ -29,6 +31,7 @@ class HomeScreen extends StatelessWidget {
         }
 
         final courses = snapshot.data ?? [];
+        debugPrint('HomeScreen: loaded ${courses.length} courses for ${user.fullName}');
         if (courses.isEmpty) {
           return const Center(child: Text('No enrolled courses yet.'));
         }
