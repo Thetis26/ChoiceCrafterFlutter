@@ -50,6 +50,7 @@ class AuthRepository {
     await userDoc.set(
       {
         'fullName': fullName,
+        'name': fullName,
         'email': normalizedEmail,
         'enrolledCourseIds': _defaultEnrolledCourseIds,
       },
@@ -102,7 +103,8 @@ class AuthRepository {
     final snapshot = await docRef.get();
     final data = snapshot.data();
 
-    final fullName = data?['fullName'] as String? ??
+    final fullName = data?['name'] as String? ??
+        data?['fullName'] as String? ??
         firebaseUser.displayName ??
         'ChoiceCrafter Student';
     final email = data?['email'] as String? ?? userEmail;
@@ -118,6 +120,7 @@ class AuthRepository {
     if (!snapshot.exists) {
       await docRef.set({
         'fullName': fullName,
+        'name': fullName,
         'email': email,
         if (legacyCourseIds.isNotEmpty) 'enrolledCourseIds': legacyCourseIds,
       });
