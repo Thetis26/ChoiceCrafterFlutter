@@ -290,20 +290,20 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         onTap: _onBottomNavTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
+            icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_alt_outlined),
-            label: 'Colleagues',
+            label: 'Colleagues activity',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper_outlined),
+            icon: Icon(Icons.campaign_outlined),
             label: 'News',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_active_outlined),
-            label: 'Activity',
+            icon: Icon(Icons.bar_chart_outlined),
+            label: 'Personal statistics',
           ),
         ],
       ),
