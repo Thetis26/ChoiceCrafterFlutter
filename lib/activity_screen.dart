@@ -1,6 +1,7 @@
 // lib/activity_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'models/activity.dart';
@@ -239,11 +240,26 @@ class _ActivityScreenState extends State<ActivityScreen> {
       _showLaunchError(context);
       return;
     }
-    final success = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (!success && context.mounted) {
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        if (context.mounted) {
+          _showLaunchError(context);
+        }
+        return;
+      }
+      final success = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+      if (!success && context.mounted) {
+        _showLaunchError(context);
+      }
+    } on MissingPluginException {
+      if (context.mounted) {
+        _showLaunchError(context);
+      }
+    } catch (_) {
       _showLaunchError(context);
     }
   }
