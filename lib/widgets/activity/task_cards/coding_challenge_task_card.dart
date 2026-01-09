@@ -9,10 +9,12 @@ class CodingChallengeTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final CodingChallengeTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<CodingChallengeTaskCard> createState() =>
@@ -71,6 +73,7 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
     }
 
     final bool isCorrect = submitted == solution.trim();
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Solution matches!' : 'Keep iterating on your code.',
