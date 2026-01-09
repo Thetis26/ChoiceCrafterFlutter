@@ -9,7 +9,7 @@ class MessagesScreen extends StatelessWidget {
 
   String _currentUserId(firebase_auth.FirebaseAuth auth) {
     final user = auth.currentUser;
-    return user?.email ?? user?.uid ?? '';
+    return user?.uid ?? user?.email ?? '';
   }
 
   DateTime? _parseTimestamp(dynamic value) {
