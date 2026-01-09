@@ -97,10 +97,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
     List<Task> tasks,
     bool showRecommendations,
   ) {
-    final controller = PageController(viewportFraction: 0.92);
     final itemCount = tasks.length + (showRecommendations ? 1 : 0);
     return PageView.builder(
-      controller: controller,
+      controller: _controller,
       itemCount: itemCount,
       onPageChanged: (index) => setState(() => _currentIndex = index),
       itemBuilder: (context, index) {
@@ -127,7 +126,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
               return SingleChildScrollView(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: _buildTaskCard(context, tasks[index], index),
+                  child: _buildTaskCard(
+                    context,
+                    tasks[index],
+                    index,
+                    tasks.length,
+                  ),
                 ),
               );
             },
@@ -297,13 +301,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  Widget _buildTaskCard(BuildContext context, Task task, int index) {
+  Widget _buildTaskCard(
+    BuildContext context,
+    Task task,
+    int index,
+    int totalTasks,
+  ) {
     final style = taskTypeStyle(task, context);
     if (task is OrderingTask) {
       return OrderingTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is InfoCardTask) {
@@ -313,42 +323,48 @@ class _ActivityScreenState extends State<ActivityScreen> {
       return FillInTheBlankTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is MultipleChoiceTask) {
       return MultipleChoiceTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is SpotTheErrorTask) {
       return SpotTheErrorTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is TrueFalseTask) {
       return TrueFalseTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is MatchingPairTask) {
       return MatchingPairTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     if (task is CodingChallengeTask) {
       return CodingChallengeTaskCard(
         task: task,
         style: style,
-        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+        onAnswerChecked: (isCorrect) =>
+            _markTaskCorrect(index, isCorrect, totalTasks),
       );
     }
     return GenericTaskCard(
@@ -358,8 +374,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  void _markTaskCorrect(int index, bool isCorrect) {
+  void _markTaskCorrect(int index, bool isCorrect, int totalTasks) {
+    final bool wasCorrect = _taskCorrect[index] ?? false;
     setState(() => _taskCorrect[index] = isCorrect);
+    if (isCorrect && !wasCorrect && index < totalTasks - 1) {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   bool _isTaskVerified(Task task, int index) {
