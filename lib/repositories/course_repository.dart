@@ -14,6 +14,11 @@ class CourseRepository {
   static const String _legacyCoursesCollection = 'courses';
   static const String _enrollmentsCollection = 'COURSE_ENROLLMENTS';
   static const String _legacyEnrollmentsCollection = 'course_enrollment';
+  static const String _newsAvailableCoursesCollection =
+      'NEWS_AVAILABLE_COURSES';
+  static const String _userAvailableCoursesCollection =
+      'USER_AVAILABLE_COURSES';
+  static const String _globalAvailableCoursesDoc = 'GLOBAL';
 
   final FirebaseFirestore _firestore;
   List<Course> _courses = [];
@@ -75,6 +80,17 @@ class CourseRepository {
     return _courseFromDoc(legacyDoc);
   }
 
+  Future<List<Course>> getAvailableCourses(User user) async {
+    final availableCourseIds = await _loadAvailableCourseIds(user);
+    if (availableCourseIds.isEmpty) {
+      return [];
+    }
+    final courses = await getAllCourses();
+    return courses
+        .where((course) => availableCourseIds.contains(course.id))
+        .toList();
+  }
+
   Future<Module?> getModuleById(String moduleId) async {
     final courses = await getAllCourses();
     for (final course in courses) {
@@ -105,6 +121,38 @@ class CourseRepository {
     return user.enrolledCourseIds;
   }
 
+  Future<List<String>> _loadAvailableCourseIds(User user) async {
+    final userKey = user.email.isNotEmpty ? user.email : user.id;
+    final globalDoc = await _firestore
+        .collection(_newsAvailableCoursesCollection)
+        .doc(_globalAvailableCoursesDoc)
+        .get();
+    final globalIds = _courseIdsFromDoc(globalDoc);
+
+    if (userKey.isEmpty) {
+      return globalIds;
+    }
+
+    final userDoc = await _firestore
+        .collection(_userAvailableCoursesCollection)
+        .doc(userKey)
+        .get();
+    final userIds = _courseIdsFromDoc(userDoc);
+
+    return {...globalIds, ...userIds}.toList();
+  }
+
+  List<String> _courseIdsFromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    final rawIds = data?['availableCourses'];
+    if (rawIds is! List) {
+      return [];
+    }
+    return rawIds.whereType<String>().toList();
+  }
+
   Future<List<String>> _fetchEnrollmentCourseIds(String userKey) async {
     if (userKey.isEmpty) {
       return [];
@@ -133,6 +181,32 @@ class CourseRepository {
       }
     }
     return courseIds.toList();
+  }
+
+  Future<void> enrollInCourse(User user, Course course) async {
+    final userKey = user.email.isNotEmpty ? user.email : user.id;
+    if (userKey.isEmpty) {
+      return;
+    }
+    final enrollmentDocId = '${userKey}_${course.id}';
+    await _firestore
+        .collection(_enrollmentsCollection)
+        .doc(enrollmentDocId)
+        .set({
+      'userId': userKey,
+      'courseId': course.id,
+      'enrollmentDate': _formatEnrollmentDate(DateTime.now()),
+      'selfEnrolled': true,
+      'enrolledBy': userKey,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  String _formatEnrollmentDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   Course _courseFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {

@@ -10,11 +10,13 @@ class HomeScreen extends StatelessWidget {
     required this.user,
     required this.courseRepository,
     required this.onCourseSelected,
+    this.highlightCourseId,
   });
 
   final User user;
   final CourseRepository courseRepository;
   final void Function(Course course) onCourseSelected;
+  final String? highlightCourseId;
 
   @override
   Widget build(BuildContext context) {
@@ -47,37 +49,46 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...courses.map(
-              (course) => Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(course.title, style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text(course.summary),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.person, size: 16),
-                              const SizedBox(width: 4),
-                              Text(course.instructor),
-                            ],
-                          ),
-                          TextButton(
-                            onPressed: () => onCourseSelected(course),
-                            child: const Text('Open'),
-                          ),
-                        ],
-                      ),
-                    ],
+              (course) {
+                final isHighlighted = course.id == highlightCourseId;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  color: isHighlighted
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course.title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(course.summary),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.person, size: 16),
+                                const SizedBox(width: 4),
+                                Text(course.instructor),
+                              ],
+                            ),
+                            TextButton(
+                              onPressed: () => onCourseSelected(course),
+                              child: const Text('Open'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         );
