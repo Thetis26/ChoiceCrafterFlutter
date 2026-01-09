@@ -24,6 +24,7 @@ class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
   late final List<String> _leftItems;
   late final List<String> _rightItems;
   late final Map<String, String?> _selectedMatches;
+  String? _activeLeftItem;
 
   @override
   void initState() {
@@ -37,6 +38,42 @@ class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
     _selectedMatches = {
       for (final item in _leftItems) item: null,
     };
+  }
+
+  Map<String, String> get _reverseMatches {
+    final reverse = <String, String>{};
+    for (final entry in _selectedMatches.entries) {
+      final match = entry.value;
+      if (match != null) {
+        reverse[match] = entry.key;
+      }
+    }
+    return reverse;
+  }
+
+  void _toggleLeftSelection(String leftItem) {
+    setState(() {
+      if (_activeLeftItem == leftItem) {
+        _activeLeftItem = null;
+      } else {
+        _activeLeftItem = leftItem;
+      }
+    });
+  }
+
+  void _selectRightItem(String rightItem) {
+    if (_activeLeftItem == null) {
+      return;
+    }
+
+    setState(() {
+      final previousLeft = _reverseMatches[rightItem];
+      if (previousLeft != null && previousLeft != _activeLeftItem) {
+        _selectedMatches[previousLeft] = null;
+      }
+      _selectedMatches[_activeLeftItem!] = rightItem;
+      _activeLeftItem = null;
+    });
   }
 
   void _checkAnswer() {
@@ -116,47 +153,45 @@ class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Column(
-                children: _leftItems.map((leftItem) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Expanded(child: _buildMatchPill(leftItem)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedMatches[leftItem],
-                            items: _rightItems
-                                .map(
-                                  (rightItem) => DropdownMenuItem(
-                                    value: rightItem,
-                                    child: Text(rightItem),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedMatches[leftItem] = value;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Select match',
-                              filled: true,
-                              fillColor: const Color(0xFFFFF5ED),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.blueGrey.shade200,
-                                ),
-                              ),
-                            ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: _leftItems.map((leftItem) {
+                        final matchedRight = _selectedMatches[leftItem];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildSelectableOption(
+                            label: leftItem,
+                            isActive: _activeLeftItem == leftItem,
+                            isMatched: matchedRight != null,
+                            matchedLabel: matchedRight,
+                            onTap: () => _toggleLeftSelection(leftItem),
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      children: _rightItems.map((rightItem) {
+                        final matchedLeft = _reverseMatches[rightItem];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildSelectableOption(
+                            label: rightItem,
+                            isActive: false,
+                            isMatched: matchedLeft != null,
+                            matchedLabel: matchedLeft,
+                            onTap: () => _selectRightItem(rightItem),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -173,19 +208,57 @@ class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
     );
   }
 
-  Widget _buildMatchPill(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE6D1),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF4A4A4A),
+  Widget _buildSelectableOption({
+    required String label,
+    required bool isActive,
+    required bool isMatched,
+    String? matchedLabel,
+    required VoidCallback onTap,
+  }) {
+    final Color backgroundColor;
+    if (isActive) {
+      backgroundColor = const Color(0xFFFFD3B0);
+    } else if (isMatched) {
+      backgroundColor = const Color(0xFFFFE6D1);
+    } else {
+      backgroundColor = const Color(0xFFFFF5ED);
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isActive ? const Color(0xFFED8B3D) : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF4A4A4A),
+              ),
+            ),
+            if (matchedLabel != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Matched: $matchedLabel',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blueGrey.shade700,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
