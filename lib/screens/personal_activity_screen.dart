@@ -205,9 +205,9 @@ class _PersonalActivityData {
   final int todayCompletionCount;
   final _ActivityStatistics activityStatistics;
 
-  factory _PersonalActivityData.empty() => const _PersonalActivityData(
-        activitySummaries: [],
-        allAttemptDates: [],
+  factory _PersonalActivityData.empty() => _PersonalActivityData(
+        activitySummaries: const [],
+        allAttemptDates: const [],
         uniqueCourseCount: 0,
         recentActivityCount: 0,
         todayCompletionCount: 0,
