@@ -206,19 +206,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return const [
       _RecommendationMaterial(
         title: 'Kotlin coroutines fundamentals',
-        url: 'https://developer.android.com/kotlin/coroutines',
+        url: 'https://www.w3schools.com/cpp/',
         description: 'Website • Android Developers',
         type: _RecommendationType.website,
       ),
       _RecommendationMaterial(
         title: 'Async programming in Flutter',
-        url: 'https://www.youtube.com/watch?v=1oF3qJr2tXc',
+        url: 'https://www.youtube.com/watch?v=CzRQ9mnmh44',
         description: 'YouTube • Flutter channel',
         type: _RecommendationType.youtube,
       ),
       _RecommendationMaterial(
         title: 'Mobile architecture checklist',
-        url: 'https://example.org/mobile-architecture-checklist.pdf',
+        url: 'https://upb.ro/wp-content/uploads/2025/05/Structura-an-universitar-2025-2026.pdf',
         description: 'PDF • Quick reference',
         type: _RecommendationType.pdf,
       ),
