@@ -9,10 +9,12 @@ class SpotTheErrorTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final SpotTheErrorTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<SpotTheErrorTaskCard> createState() => _SpotTheErrorTaskCardState();
@@ -40,6 +42,7 @@ class _SpotTheErrorTaskCardState extends State<SpotTheErrorTaskCard> {
       return;
     }
     final bool isCorrect = _selectedIndex == correctIndex;
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Correct fix!' : 'Not quite. Try again.',
