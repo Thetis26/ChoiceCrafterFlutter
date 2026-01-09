@@ -7,13 +7,13 @@ import '../sample_data.dart';
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
-  static const String _notificationsCollection = 'NOTIFICATION';
+  static const String _notificationsCollection = 'NOTIFICATIONS';
 
   @override
   Widget build(BuildContext context) {
     final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      return _buildInboxList(SampleData.inbox);
+      return _wrapBody(context, _buildInboxList(SampleData.inbox));
     }
 
     final stream = FirebaseFirestore.instance
@@ -26,42 +26,47 @@ class InboxScreen extends StatelessWidget {
       stream: stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return _buildInboxList(SampleData.inbox);
+          return _wrapBody(context, _buildInboxList(SampleData.inbox));
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _wrapBody(
+            context,
+            const Center(child: CircularProgressIndicator()),
+          );
         }
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const Center(child: Text('No notifications yet.'));
+          return _wrapBody(
+            context,
+            const Center(child: Text('No notifications yet.')),
+          );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final data = docs[index].data();
-            final title = (data['type'] as String?)?.trim();
-            final details = (data['details'] as String?)?.trim();
-            final timestamp = _parseTimestamp(data['timestamp']);
-            final timestampLabel = _formatTimestamp(timestamp);
+        return _wrapBody(
+          context,
+          ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final data = docs[index].data();
+              final title = (data['type'] as String?)?.trim();
+              final details = (data['details'] as String?)?.trim();
+              final timestamp = _parseTimestamp(data['timestamp']);
+              final timestampLabel = _formatTimestamp(timestamp);
 
-            return Card(
-              child: ListTile(
-                leading: const Icon(Icons.notifications_active),
-                title: Text(title?.isNotEmpty == true ? title! : 'Notification'),
-                subtitle: Text(
-                  details?.isNotEmpty == true
-                      ? details!
-                      : 'No details available.',
-                ),
-                trailing: Text(timestampLabel),
-              ),
-            );
-          },
+              return _buildNotificationCard(
+                context,
+                title: title?.isNotEmpty == true ? title! : 'Notification',
+                details: details?.isNotEmpty == true
+                    ? details!
+                    : 'No details available.',
+                timestampLabel: timestampLabel,
+              );
+            },
+          ),
         );
       },
     );
@@ -80,15 +85,75 @@ class InboxScreen extends StatelessWidget {
         final item = items[index];
         final timestampLabel = _formatTimestamp(item.timestamp);
 
-        return Card(
-          child: ListTile(
-            leading: const Icon(Icons.notifications_active),
-            title: Text(item.title),
-            subtitle: Text(item.body),
-            trailing: Text(timestampLabel),
-          ),
+        return _buildNotificationCard(
+          context,
+          title: item.title,
+          details: item.body,
+          timestampLabel: timestampLabel,
         );
       },
+    );
+  }
+
+  Widget _wrapBody(BuildContext context, Widget child) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(color: theme.colorScheme.surface),
+      child: SafeArea(child: child),
+    );
+  }
+
+  Widget _buildNotificationCard(
+    BuildContext context, {
+    required String title,
+    required String details,
+    required String timestampLabel,
+  }) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+              child: Icon(
+                Icons.notifications_active,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    details,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              timestampLabel,
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
