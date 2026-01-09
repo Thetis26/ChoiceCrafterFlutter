@@ -66,6 +66,314 @@ class MessagesScreen extends StatelessWidget {
     return fallback;
   }
 
+  Future<String?> _findExistingConversation({
+    required FirebaseFirestore firestore,
+    required String currentUserId,
+    required String otherUserId,
+  }) async {
+    if (currentUserId.isEmpty || otherUserId.isEmpty) {
+      return null;
+    }
+    final snapshot = await firestore
+        .collection('conversations')
+        .where('participants', arrayContains: currentUserId)
+        .get();
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final participants = _participants(data['participants']);
+      if (participants.contains(otherUserId) && participants.length == 2) {
+        return doc.id;
+      }
+    }
+    return null;
+  }
+
+  Future<String> _createConversation({
+    required FirebaseFirestore firestore,
+    required List<String> participants,
+    String? title,
+  }) async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final conversationRef = firestore.collection('conversations').doc();
+    await conversationRef.set({
+      'participants': participants,
+      if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+      'lastMessage': '',
+      'lastMessageSenderId': '',
+      'timestamp': timestamp,
+      'unread': false,
+      'unreadBy': <String>[],
+    });
+    return conversationRef.id;
+  }
+
+  Future<void> _openConversation({
+    required BuildContext context,
+    required String conversationId,
+    required String title,
+  }) async {
+    final destination = MessageThreadScreen(
+      conversationId: conversationId,
+      initialTitle: title,
+    );
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => destination),
+    );
+  }
+
+  Future<void> _startConversationWith({
+    required BuildContext context,
+    required FirebaseFirestore firestore,
+    required String currentUserId,
+    required _ContactChip contact,
+  }) async {
+    if (currentUserId.isEmpty) {
+      return;
+    }
+    final existingId = await _findExistingConversation(
+      firestore: firestore,
+      currentUserId: currentUserId,
+      otherUserId: contact.id,
+    );
+    if (existingId != null) {
+      await _openConversation(
+        context: context,
+        conversationId: existingId,
+        title: contact.name,
+      );
+      return;
+    }
+    final conversationId = await _createConversation(
+      firestore: firestore,
+      participants: [currentUserId, contact.id],
+    );
+    await _openConversation(
+      context: context,
+      conversationId: conversationId,
+      title: contact.name,
+    );
+  }
+
+  Future<void> _showNewConversationPicker({
+    required BuildContext context,
+    required FirebaseFirestore firestore,
+    required String currentUserId,
+  }) async {
+    if (currentUserId.isEmpty) {
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFFF4F6FB),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final selectedIds = <String>{};
+        var searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'New conversation',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search users',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value.trim().toLowerCase();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: firestore.collection('users').snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return const Center(
+                              child: Text('Unable to load users.'),
+                            );
+                          }
+                          final users = (snapshot.data?.docs ?? [])
+                              .map((doc) {
+                                final data = doc.data();
+                                return _ContactChip(
+                                  name: _displayName(data, doc.id),
+                                  id: doc.id,
+                                );
+                              })
+                              .where((user) => user.id != currentUserId)
+                              .where((user) => searchQuery.isEmpty
+                                  ? true
+                                  : user.name
+                                      .toLowerCase()
+                                      .contains(searchQuery))
+                              .toList()
+                            ..sort(
+                              (a, b) => a.name.toLowerCase().compareTo(
+                                    b.name.toLowerCase(),
+                                  ),
+                            );
+
+                          if (users.isEmpty) {
+                            return const Center(
+                              child: Text('No matching users found.'),
+                            );
+                          }
+
+                          return ListView.separated(
+                            itemCount: users.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final user = users[index];
+                              final isSelected = selectedIds.contains(user.id);
+                              return CheckboxListTile(
+                                value: isSelected,
+                                onChanged: (value) {
+                                  setState(() {
+                                    if (value ?? false) {
+                                      selectedIds.add(user.id);
+                                    } else {
+                                      selectedIds.remove(user.id);
+                                    }
+                                  });
+                                },
+                                title: Text(user.name),
+                                secondary: CircleAvatar(
+                                  backgroundColor: const Color(0xFFE0E4FF),
+                                  child: Text(
+                                    user.name.substring(0, 1).toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Color(0xFF4D59FF),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                controlAffinity:
+                                    ListTileControlAffinity.trailing,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: selectedIds.isEmpty
+                            ? null
+                            : () async {
+                                final snapshot = await firestore
+                                    .collection('users')
+                                    .where(FieldPath.documentId,
+                                        whereIn: selectedIds.toList())
+                                    .get();
+                                final selectedUsers = snapshot.docs.map((doc) {
+                                  final data = doc.data();
+                                  return _ContactChip(
+                                    name: _displayName(data, doc.id),
+                                    id: doc.id,
+                                  );
+                                }).toList();
+                                if (selectedUsers.isEmpty) {
+                                  return;
+                                }
+                                Navigator.of(context).pop();
+                                if (selectedUsers.length == 1) {
+                                  await _startConversationWith(
+                                    context: context,
+                                    firestore: firestore,
+                                    currentUserId: currentUserId,
+                                    contact: selectedUsers.first,
+                                  );
+                                  return;
+                                }
+                                final participantIds = [
+                                  currentUserId,
+                                  ...selectedUsers.map((user) => user.id),
+                                ];
+                                final title = selectedUsers
+                                    .map((user) => user.name)
+                                    .join(', ');
+                                final conversationId =
+                                    await _createConversation(
+                                  firestore: firestore,
+                                  participants: participantIds,
+                                  title: title,
+                                );
+                                await _openConversation(
+                                  context: context,
+                                  conversationId: conversationId,
+                                  title: title,
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7E86F9),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text('Start conversation'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final firestore = FirebaseFirestore.instance;
@@ -83,7 +391,13 @@ class MessagesScreen extends StatelessWidget {
         }
 
         if (usersSnapshot.hasError) {
-          return _buildMessagesScaffold(const [], contacts: const []);
+          return _buildMessagesScaffold(
+            context,
+            const [],
+            contacts: const [],
+            currentUserId: currentUserId,
+            firestore: firestore,
+          );
         }
 
         final contacts = (usersSnapshot.data?.docs ?? []).map((doc) {
@@ -95,7 +409,13 @@ class MessagesScreen extends StatelessWidget {
         }).toList();
 
         if (currentUserId.isEmpty) {
-          return _buildMessagesScaffold(const [], contacts: contacts);
+          return _buildMessagesScaffold(
+            context,
+            const [],
+            contacts: contacts,
+            currentUserId: currentUserId,
+            firestore: firestore,
+          );
         }
 
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -110,7 +430,13 @@ class MessagesScreen extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return _buildMessagesScaffold(const [], contacts: contacts);
+              return _buildMessagesScaffold(
+                context,
+                const [],
+                contacts: contacts,
+                currentUserId: currentUserId,
+                firestore: firestore,
+              );
             }
 
             final docs = snapshot.data?.docs ?? [];
@@ -138,7 +464,13 @@ class MessagesScreen extends StatelessWidget {
               );
             }).toList();
 
-            return _buildMessagesScaffold(entries, contacts: contacts);
+            return _buildMessagesScaffold(
+              context,
+              entries,
+              contacts: contacts,
+              currentUserId: currentUserId,
+              firestore: firestore,
+            );
           },
         );
       },
@@ -146,8 +478,11 @@ class MessagesScreen extends StatelessWidget {
   }
 
   Widget _buildMessagesScaffold(
+    BuildContext context,
     List<_MessageEntry> entries, {
     required List<_ContactChip> contacts,
+    required String currentUserId,
+    required FirebaseFirestore firestore,
   }) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
@@ -158,7 +493,11 @@ class MessagesScreen extends StatelessWidget {
         elevation: 4,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => _showNewConversationPicker(
+          context: context,
+          firestore: firestore,
+          currentUserId: currentUserId,
+        ),
         backgroundColor: const Color(0xFF7E86F9),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -174,32 +513,41 @@ class MessagesScreen extends StatelessWidget {
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
                   final contact = contacts[index];
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: const Color(0xFFE0E4FF),
-                        child: Text(
-                          contact.name.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            color: Color(0xFF4D59FF),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _startConversationWith(
+                      context: context,
+                      firestore: firestore,
+                      currentUserId: currentUserId,
+                      contact: contact,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: const Color(0xFFE0E4FF),
+                          child: Text(
+                            contact.name.substring(0, 1).toUpperCase(),
+                            style: const TextStyle(
+                              color: Color(0xFF4D59FF),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 88,
-                        child: Text(
-                          contact.name,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 12),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: 88,
+                          child: Text(
+                            contact.name,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),
