@@ -41,6 +41,9 @@ class _MyAppState extends State<MyApp> {
   CourseRepository? _courseRepository;
   PersonalStatisticsRepository? _personalStatisticsRepository;
   User? _currentUser;
+  ThemeMode _themeMode = ThemeMode.light;
+  Locale _locale = const Locale('en');
+  String _languageLabel = 'English';
 
   @override
   void initState() {
@@ -59,6 +62,18 @@ class _MyAppState extends State<MyApp> {
 
   void _handleAuthenticated(User user) {
     setState(() => _currentUser = user);
+  }
+
+  void _handleThemeModeChanged(ThemeMode themeMode) {
+    setState(() => _themeMode = themeMode);
+  }
+
+  void _handleLanguageChanged(String language) {
+    final locale = language == 'Romanian' ? const Locale('ro') : const Locale('en');
+    setState(() {
+      _languageLabel = language;
+      _locale = locale;
+    });
   }
 
   Future<void> _handleLogout() async {
@@ -111,10 +126,23 @@ class _MyAppState extends State<MyApp> {
         if (snapshot.connectionState != ConnectionState.done) {
           return MaterialApp(
             title: 'ChoiceCrafter Students',
+            themeMode: _themeMode,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepPurple,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+            ),
+            locale: _locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ro'),
+            ],
             home: const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
@@ -124,10 +152,23 @@ class _MyAppState extends State<MyApp> {
         if (snapshot.hasError) {
           return MaterialApp(
             title: 'ChoiceCrafter Students',
+            themeMode: _themeMode,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepPurple,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+            ),
+            locale: _locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ro'),
+            ],
             home: const Scaffold(
               body: Center(
                 child: Text(
@@ -145,10 +186,23 @@ class _MyAppState extends State<MyApp> {
 
         return MaterialApp(
           title: 'ChoiceCrafter Students',
+          themeMode: _themeMode,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          locale: _locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ro'),
+          ],
           home: _currentUser == null
               ? LoginScreen(
                   authRepository: authRepository,
@@ -165,7 +219,12 @@ class _MyAppState extends State<MyApp> {
             '/recommendation': (context) => const RecommendationWebViewScreen(),
             '/inbox': (context) => const InboxScreen(),
             '/messages': (context) => const MessagesScreen(),
-            '/settings': (context) => const SettingsScreen(),
+            '/settings': (context) => SettingsScreen(
+                  language: _languageLabel,
+                  themeMode: _themeMode,
+                  onLanguageChanged: _handleLanguageChanged,
+                  onThemeModeChanged: _handleThemeModeChanged,
+                ),
             '/feedback': (context) => const FeedbackScreen(),
           },
           onGenerateRoute: (settings) =>
