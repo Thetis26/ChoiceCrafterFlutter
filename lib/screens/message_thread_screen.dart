@@ -42,7 +42,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       return widget.localUserId ?? 'You';
     }
     final user = _auth.currentUser;
-    return user?.email ?? user?.uid ?? '';
+    return user?.uid ?? user?.email ?? '';
   }
 
   DateTime? _parseTimestamp(dynamic value) {
