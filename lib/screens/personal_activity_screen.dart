@@ -69,6 +69,7 @@ class _PersonalActivityScreenState extends State<PersonalActivityScreen> {
             _buildActivityCards(data.activitySummaries, context);
         final streak = _computeStreak(data.allAttemptDates);
         final points = _computePoints(data.activitySummaries);
+        final activityStatistics = data.activityStatistics;
         final badges = _buildBadges(
           streak: streak,
           completedActivities:
@@ -115,6 +116,18 @@ class _PersonalActivityScreenState extends State<PersonalActivityScreen> {
                 )
               else
                 ...activityCards,
+              if (activityStatistics.taskBreakdowns.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  'Activity statistics',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                _buildActivityStatisticsCard(
+                  context,
+                  activityStatistics,
+                ),
+              ],
             ],
           ),
         );
@@ -182,6 +195,7 @@ class _PersonalActivityData {
     required this.uniqueCourseCount,
     required this.recentActivityCount,
     required this.todayCompletionCount,
+    required this.activityStatistics,
   });
 
   final List<_ActivitySummary> activitySummaries;
@@ -189,6 +203,7 @@ class _PersonalActivityData {
   final int uniqueCourseCount;
   final int recentActivityCount;
   final int todayCompletionCount;
+  final _ActivityStatistics activityStatistics;
 
   factory _PersonalActivityData.empty() => const _PersonalActivityData(
         activitySummaries: [],
@@ -196,6 +211,7 @@ class _PersonalActivityData {
         uniqueCourseCount: 0,
         recentActivityCount: 0,
         todayCompletionCount: 0,
+        activityStatistics: _ActivityStatistics.empty(),
       );
 
   factory _PersonalActivityData.from(
@@ -219,6 +235,11 @@ class _PersonalActivityData {
     int recentActivityCount = 0;
     int todayCompletionCount = 0;
     final now = DateTime.now();
+    final taskBreakdowns = <_TaskBreakdown>[];
+    var totalTime = Duration.zero;
+    var totalTaskCompletion = 0.0;
+    var totalTasks = 0;
+    var hintsWereUsed = false;
 
     for (final snapshot in snapshots) {
       final latestAttempt = snapshot.latestAttempt();
@@ -253,6 +274,29 @@ class _PersonalActivityData {
           points: points,
         ),
       );
+
+      for (final entry in snapshot.taskStats.entries) {
+        final stats = entry.value;
+        final timeSpent = _parseTimeSpent(stats.timeSpent);
+        if (timeSpent != null) {
+          totalTime += timeSpent;
+        }
+        if (stats.hintsUsed == true) {
+          hintsWereUsed = true;
+        }
+        totalTaskCompletion += stats.resolveCompletionRatio();
+        totalTasks += 1;
+        taskBreakdowns.add(
+          _TaskBreakdown(
+            title: '${activityNameById[snapshot.activityId] ?? 'Activity ${snapshot.activityId}'} · '
+                'Task ${entry.key}',
+            timeSpent: timeSpent,
+            retries: stats.retries ?? 0,
+            hintsUsed: stats.hintsUsed ?? false,
+            completionRatio: stats.resolveCompletionRatio(),
+          ),
+        );
+      }
     }
 
     summaries.sort((a, b) => b._safeLastAttempt.compareTo(a._safeLastAttempt));
@@ -263,6 +307,14 @@ class _PersonalActivityData {
       uniqueCourseCount: courseIds.length,
       recentActivityCount: recentActivityCount,
       todayCompletionCount: todayCompletionCount,
+      activityStatistics: _ActivityStatistics(
+        totalTime: totalTime,
+        completionRatio: totalTasks == 0
+            ? 0
+            : (totalTaskCompletion / totalTasks).clamp(0.0, 1.0),
+        hintsUsed: hintsWereUsed,
+        taskBreakdowns: taskBreakdowns,
+      ),
     );
   }
 }
@@ -315,6 +367,43 @@ class _ActivityBadge {
   final bool earned;
 }
 
+class _ActivityStatistics {
+  const _ActivityStatistics({
+    required this.totalTime,
+    required this.completionRatio,
+    required this.hintsUsed,
+    required this.taskBreakdowns,
+  });
+
+  final Duration totalTime;
+  final double completionRatio;
+  final bool hintsUsed;
+  final List<_TaskBreakdown> taskBreakdowns;
+
+  factory _ActivityStatistics.empty() => const _ActivityStatistics(
+        totalTime: Duration.zero,
+        completionRatio: 0,
+        hintsUsed: false,
+        taskBreakdowns: [],
+      );
+}
+
+class _TaskBreakdown {
+  const _TaskBreakdown({
+    required this.title,
+    required this.timeSpent,
+    required this.retries,
+    required this.hintsUsed,
+    required this.completionRatio,
+  });
+
+  final String title;
+  final Duration? timeSpent;
+  final int retries;
+  final bool hintsUsed;
+  final double completionRatio;
+}
+
 Widget _buildStatsHeader(BuildContext context, int streak, int points) {
   final theme = Theme.of(context);
   return Row(
@@ -337,6 +426,126 @@ Widget _buildStatsHeader(BuildContext context, int streak, int points) {
         ),
       ),
     ],
+  );
+}
+
+Widget _buildActivityStatisticsCard(
+  BuildContext context,
+  _ActivityStatistics statistics,
+) {
+  final theme = Theme.of(context);
+  final completionPercent = (statistics.completionRatio * 100).round();
+  final timeLabel = statistics.totalTime == Duration.zero
+      ? '00:00'
+      : _formatDuration(statistics.totalTime);
+  final hintsLabel =
+      statistics.hintsUsed ? 'Hints used' : 'Hints not used';
+  return Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your statistics',
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _StatChip(
+                  icon: Icons.timer,
+                  label: timeLabel,
+                  color: Colors.blueGrey,
+                  textStyle: theme.textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatChip(
+                  icon: Icons.emoji_events,
+                  label: '${_computeTaskPoints(statistics.taskBreakdowns)} XP',
+                  color: Colors.amber.shade700,
+                  textStyle: theme.textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatChip(
+                  icon: Icons.check_circle,
+                  label: '$completionPercent%',
+                  color: Colors.green,
+                  textStyle: theme.textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                color: Colors.amber.shade600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                hintsLabel,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Task breakdown',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: statistics.taskBreakdowns
+                .map(
+                  (task) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Time: ${task.timeSpent == null ? '--' : _formatDuration(task.timeSpent!)}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        Text(
+                          'Hints: ${task.hintsUsed ? 'Used' : 'Not used'}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        Text(
+                          'Retries: ${task.retries}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        Text(
+                          'Completion: ${(task.completionRatio * 100).round()}%',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    ),
   );
 }
 
@@ -494,6 +703,48 @@ int _computeStreak(List<DateTime> attemptDates) {
 
 int _computePoints(List<_ActivitySummary> summaries) {
   return summaries.fold<int>(0, (sum, summary) => sum + summary.points);
+}
+
+int _computeTaskPoints(List<_TaskBreakdown> breakdowns) {
+  return breakdowns
+      .map((task) => (task.completionRatio * 100).round())
+      .fold<int>(0, (sum, points) => sum + points);
+}
+
+Duration? _parseTimeSpent(String? value) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  final parts = value.split(':');
+  if (parts.length == 2 || parts.length == 3) {
+    final parsed = parts.map((part) => int.tryParse(part)).toList();
+    if (parsed.contains(null)) {
+      return null;
+    }
+    if (parts.length == 2) {
+      return Duration(minutes: parsed[0]!, seconds: parsed[1]!);
+    }
+    return Duration(
+      hours: parsed[0]!,
+      minutes: parsed[1]!,
+      seconds: parsed[2]!,
+    );
+  }
+  final fallback = int.tryParse(value);
+  if (fallback != null) {
+    return Duration(seconds: fallback);
+  }
+  return null;
+}
+
+String _formatDuration(Duration duration) {
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  final hours = duration.inHours;
+  if (hours > 0) {
+    return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
+  }
+  return '$minutes:$seconds';
 }
 
 class _StatChip extends StatelessWidget {
