@@ -9,10 +9,12 @@ class MultipleChoiceTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final MultipleChoiceTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<MultipleChoiceTaskCard> createState() =>
@@ -41,6 +43,7 @@ class _MultipleChoiceTaskCardState extends State<MultipleChoiceTaskCard> {
       return;
     }
     final bool isCorrect = _selectedIndex == correctAnswer;
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Correct! Great job.' : 'Not quite. Try again!',
