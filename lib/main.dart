@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -194,9 +196,31 @@ class AuthenticatedShell extends StatefulWidget {
 
 class _AuthenticatedShellState extends State<AuthenticatedShell> {
   int _selectedIndex = 0;
+  String? _highlightedCourseId;
+  Timer? _highlightTimer;
 
   void _onBottomNavTapped(int index) {
     setState(() => _selectedIndex = index);
+  }
+
+  void _handleCourseEnrolled(Course course) {
+    _highlightTimer?.cancel();
+    setState(() {
+      _selectedIndex = 0;
+      _highlightedCourseId = course.id;
+    });
+    _highlightTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _highlightedCourseId = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _highlightTimer?.cancel();
+    super.dispose();
   }
 
   void _openCourse(Course course) {
@@ -221,13 +245,15 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           user: widget.user,
           courseRepository: widget.courseRepository,
           onCourseSelected: _openCourse,
+          highlightCourseId: _highlightedCourseId,
         );
       case 1:
         return ColleaguesActivityScreen(courseRepository: widget.courseRepository);
       case 2:
         return NewsScreen(
+          user: widget.user,
           courseRepository: widget.courseRepository,
-          onCourseSelected: _openCourse,
+          onCourseEnrolled: _handleCourseEnrolled,
         );
       case 3:
         return PersonalActivityScreen(
