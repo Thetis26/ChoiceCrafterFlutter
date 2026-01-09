@@ -256,7 +256,7 @@ class SampleData {
       recommendation: RecommendationData(
         id: 'rec-1',
         title: 'How to mirror Android engagement on iOS',
-        url: 'https://example.org/engagement-guide',
+        url: 'https://developer.android.com/guide',
         summary: 'Implementation checklist to keep parity between platforms.',
       ),
     ),
@@ -268,7 +268,7 @@ class SampleData {
       recommendation: RecommendationData(
         id: 'rec-2',
         title: 'Measuring completion in Flutter',
-        url: 'https://example.org/statistics-guide',
+        url: 'https://docs.flutter.dev/cookbook',
         summary: 'Charts and KPIs that align with the native Android screen.',
       ),
     ),

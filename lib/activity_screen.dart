@@ -218,13 +218,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ),
       _RecommendationMaterial(
         title: 'Mobile architecture checklist',
-        url: 'https://example.org/mobile-architecture-checklist.pdf',
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
         description: 'PDF • Quick reference',
         type: _RecommendationType.pdf,
       ),
       _RecommendationMaterial(
         title: 'Reflection prompts worksheet',
-        url: 'https://example.org/reflection-prompts.docx',
+        url: 'https://file-examples.com/storage/fe3ae7a12d7f48c2f1f2db8/2017/02/file-sample_100kB.docx',
         description: 'Doc • Guided worksheet',
         type: _RecommendationType.doc,
       ),
