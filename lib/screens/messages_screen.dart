@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
 import 'message_thread_screen.dart';
-import '../sample_data.dart';
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
@@ -51,88 +50,105 @@ class MessagesScreen extends StatelessWidget {
     return [];
   }
 
+  String _displayName(Map<String, dynamic> data, String fallback) {
+    final name = (data['name'] as String?)?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    final fullName = (data['fullName'] as String?)?.trim();
+    if (fullName != null && fullName.isNotEmpty) {
+      return fullName;
+    }
+    final email = (data['email'] as String?)?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+    return fallback;
+  }
+
   @override
   Widget build(BuildContext context) {
     final firestore = FirebaseFirestore.instance;
     final auth = firebase_auth.FirebaseAuth.instance;
     final currentUserId = _currentUserId(auth);
 
-    if (currentUserId.isEmpty) {
-      final sampleThreads = {
-        for (final thread in SampleData.messageThreads) thread.id: thread,
-      };
-      return _buildMessagesScaffold(
-        _sampleEntries(),
-        sampleThreads: sampleThreads,
-      );
-    }
-
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: firestore
-          .collection('conversations')
-          .where('participants', arrayContains: currentUserId)
-          .orderBy('timestamp', descending: true)
+          .collection('users')
+          .where('online', isEqualTo: true)
           .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      builder: (context, usersSnapshot) {
+        if (usersSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError) {
-          return _buildMessagesScaffold(_sampleEntries());
+        if (usersSnapshot.hasError) {
+          return _buildMessagesScaffold(const [], contacts: const []);
         }
 
-        final docs = snapshot.data?.docs ?? [];
-        final entries = docs.map((doc) {
+        final contacts = (usersSnapshot.data?.docs ?? []).map((doc) {
           final data = doc.data();
-          final participants = _participants(data['participants']);
-          final others = participants.where((id) => id != currentUserId).toList();
-          final title = (data['title'] as String?)?.trim();
-          final name = title != null && title.isNotEmpty
-              ? title
-              : (others.isNotEmpty ? others.first : 'Conversation');
-          final lastMessage = (data['lastMessage'] as String?) ?? '';
-          final timestamp = _parseTimestamp(data['timestamp']);
-          final unreadBy = _participants(data['unreadBy']);
-          final isUnread = unreadBy.contains(currentUserId) ||
-              (data['unread'] as bool? ?? false);
-
-          return _MessageEntry(
-            name: name,
-            lastMessage: lastMessage,
-            timestamp: timestamp,
-            isUnread: isUnread,
-            conversationId: doc.id,
+          return _ContactChip(
+            name: _displayName(data, doc.id),
+            id: doc.id,
           );
         }).toList();
 
-        return _buildMessagesScaffold(entries);
+        if (currentUserId.isEmpty) {
+          return _buildMessagesScaffold(const [], contacts: contacts);
+        }
+
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: firestore
+              .collection('conversations')
+              .where('participants', arrayContains: currentUserId)
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return _buildMessagesScaffold(const [], contacts: contacts);
+            }
+
+            final docs = snapshot.data?.docs ?? [];
+            final entries = docs.map((doc) {
+              final data = doc.data();
+              final participants = _participants(data['participants']);
+              final others =
+                  participants.where((id) => id != currentUserId).toList();
+              final title = (data['title'] as String?)?.trim();
+              final name = title != null && title.isNotEmpty
+                  ? title
+                  : (others.isNotEmpty ? others.first : 'Conversation');
+              final lastMessage = (data['lastMessage'] as String?) ?? '';
+              final timestamp = _parseTimestamp(data['timestamp']);
+              final unreadBy = _participants(data['unreadBy']);
+              final isUnread = unreadBy.contains(currentUserId) ||
+                  (data['unread'] as bool? ?? false);
+
+              return _MessageEntry(
+                name: name,
+                lastMessage: lastMessage,
+                timestamp: timestamp,
+                isUnread: isUnread,
+                conversationId: doc.id,
+              );
+            }).toList();
+
+            return _buildMessagesScaffold(entries, contacts: contacts);
+          },
+        );
       },
     );
   }
 
-  List<_MessageEntry> _sampleEntries() {
-    return SampleData.messageThreads.map((thread) {
-      final lastMessage =
-          thread.messages.isNotEmpty ? thread.messages.last : null;
-      return _MessageEntry(
-        name: thread.title,
-        lastMessage: lastMessage?.text ?? '',
-        timestamp: lastMessage?.timestamp,
-        isUnread: thread.unreadCount > 0,
-        conversationId: thread.id,
-      );
-    }).toList();
-  }
-
   Widget _buildMessagesScaffold(
     List<_MessageEntry> entries, {
-    Map<String, SampleConversation>? sampleThreads,
+    required List<_ContactChip> contacts,
   }) {
-    final contacts = entries
-        .map((entry) => _ContactChip(name: entry.name, id: entry.name))
-        .toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
       appBar: AppBar(
@@ -204,18 +220,10 @@ class MessagesScreen extends StatelessWidget {
                           onTap: entry.conversationId == null
                               ? null
                               : () {
-                                  final sampleThread =
-                                      sampleThreads?[entry.conversationId!];
-                                  final destination = sampleThread == null
-                                      ? MessageThreadScreen(
-                                          conversationId:
-                                              entry.conversationId!,
-                                          initialTitle: entry.name,
-                                        )
-                                      : MessageThreadScreen.local(
-                                          initialTitle: entry.name,
-                                          messages: sampleThread.messages,
-                                        );
+                                  final destination = MessageThreadScreen(
+                                    conversationId: entry.conversationId!,
+                                    initialTitle: entry.name,
+                                  );
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => destination,
