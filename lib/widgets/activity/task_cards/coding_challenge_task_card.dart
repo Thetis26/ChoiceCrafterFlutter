@@ -157,6 +157,7 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               value: _selectedLanguage,
               items: _availableLanguages()
                   .map(
