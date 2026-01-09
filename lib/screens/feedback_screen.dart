@@ -70,88 +70,94 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Report an issue',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            const Text('Share complaints, suggestions, or bugs with the team.'),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedType,
-              items: _reportTypes
-                  .map(
-                    (type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    ),
-                  )
-                  .toList(),
-              onChanged: _isSubmitting
-                  ? null
-                  : (value) {
-                      if (value == null) return;
-                      setState(() => _selectedType = value);
-                    },
-              decoration: const InputDecoration(
-                labelText: 'Report type',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Add a short title.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _detailsController,
-              decoration: const InputDecoration(
-                labelText: 'Details',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              maxLines: 6,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Describe the issue.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: _isSubmitting ? null : _submitReport,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Report an issue',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Share complaints, suggestions, or bugs with the team.',
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedType,
+                  items: _reportTypes
+                      .map(
+                        (type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type),
+                        ),
                       )
-                    : const Icon(Icons.send),
-                label: Text(_isSubmitting ? 'Submitting...' : 'Submit'),
-              ),
+                      .toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setState(() => _selectedType = value);
+                        },
+                  decoration: const InputDecoration(
+                    labelText: 'Report type',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Add a short title.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _detailsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Details',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 6,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Describe the issue.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSubmitting ? null : _submitReport,
+                    icon: _isSubmitting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send),
+                    label: Text(_isSubmitting ? 'Submitting...' : 'Submit'),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
