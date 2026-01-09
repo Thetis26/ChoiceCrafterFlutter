@@ -9,10 +9,12 @@ class OrderingTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final OrderingTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<OrderingTaskCard> createState() => _OrderingTaskCardState();
@@ -50,6 +52,7 @@ class _OrderingTaskCardState extends State<OrderingTaskCard> {
                     (index) => currentOrder[index] == widget.task.correctOrder[index])
                 .every((match) => match);
 
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Perfect order!' : 'Order is off. Try again!',

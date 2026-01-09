@@ -9,10 +9,12 @@ class FillInTheBlankTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final FillInTheBlankTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<FillInTheBlankTaskCard> createState() =>
@@ -73,6 +75,7 @@ class _FillInTheBlankTaskCardState extends State<FillInTheBlankTaskCard> {
                     (index) => normalizedResponses[index] == normalizedAnswers[index])
                 .every((match) => match);
 
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Nice! All blanks are correct.' : 'Some blanks are off. Try again!',
