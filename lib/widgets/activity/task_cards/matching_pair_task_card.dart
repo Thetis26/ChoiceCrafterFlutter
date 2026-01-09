@@ -9,10 +9,12 @@ class MatchingPairTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final MatchingPairTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<MatchingPairTaskCard> createState() => _MatchingPairTaskCardState();
@@ -61,6 +63,7 @@ class _MatchingPairTaskCardState extends State<MatchingPairTaskCard> {
       return expected != null && expected == entry.value;
     });
 
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'All pairs match!' : 'Some pairs are incorrect.',

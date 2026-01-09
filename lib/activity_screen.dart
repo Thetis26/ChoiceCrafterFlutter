@@ -15,8 +15,23 @@ import 'widgets/activity/task_cards/spot_the_error_task_card.dart';
 import 'widgets/activity/task_cards/task_type_style.dart';
 import 'widgets/activity/task_cards/true_false_task_card.dart';
 
-class ActivityScreen extends StatelessWidget {
+class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
+
+  @override
+  State<ActivityScreen> createState() => _ActivityScreenState();
+}
+
+class _ActivityScreenState extends State<ActivityScreen> {
+  final PageController _controller = PageController(viewportFraction: 0.92);
+  int _currentIndex = 0;
+  final Map<int, bool> _taskCorrect = {};
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +76,14 @@ class ActivityScreen extends StatelessWidget {
                     )
                   : _buildTaskCarousel(context, tasks),
             ),
+            if (tasks.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildTaskNavigation(
+                context,
+                tasks.length,
+                tasks[_currentIndex.clamp(0, tasks.length - 1) as int],
+              ),
+            ],
           ],
         ),
       ),
@@ -68,10 +91,10 @@ class ActivityScreen extends StatelessWidget {
   }
 
   Widget _buildTaskCarousel(BuildContext context, List<Task> tasks) {
-    final controller = PageController(viewportFraction: 0.92);
     return PageView.builder(
-      controller: controller,
+      controller: _controller,
       itemCount: tasks.length,
+      onPageChanged: (index) => setState(() => _currentIndex = index),
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -80,7 +103,7 @@ class ActivityScreen extends StatelessWidget {
               return SingleChildScrollView(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: _buildTaskCard(context, tasks[index]),
+                  child: _buildTaskCard(context, tasks[index], index),
                 ),
               );
             },
@@ -90,37 +113,142 @@ class ActivityScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskCard(BuildContext context, Task task) {
+  Widget _buildTaskNavigation(
+    BuildContext context,
+    int totalTasks,
+    Task task,
+  ) {
+    final bool hasPrevious = _currentIndex > 0;
+    final bool hasNext = _currentIndex < totalTasks - 1;
+    final bool isVerified = _isTaskVerified(task, _currentIndex);
+    final bool canMoveNext = hasNext && isVerified;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: hasPrevious
+                    ? () => _controller.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        )
+                    : null,
+                child: const Text('Previous'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text('Task ${_currentIndex + 1} of $totalTasks'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: canMoveNext
+                    ? () => _controller.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        )
+                    : null,
+                child: const Text('Next'),
+              ),
+            ),
+          ],
+        ),
+        if (!isVerified)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Answer correctly to unlock the next task.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.blueGrey.shade600),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTaskCard(BuildContext context, Task task, int index) {
     final style = taskTypeStyle(task, context);
     if (task is OrderingTask) {
-      return OrderingTaskCard(task: task, style: style);
+      return OrderingTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is InfoCardTask) {
       return InfoCardTaskCard(task: task, style: style);
     }
     if (task is FillInTheBlankTask) {
-      return FillInTheBlankTaskCard(task: task, style: style);
+      return FillInTheBlankTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is MultipleChoiceTask) {
-      return MultipleChoiceTaskCard(task: task, style: style);
+      return MultipleChoiceTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is SpotTheErrorTask) {
-      return SpotTheErrorTaskCard(task: task, style: style);
+      return SpotTheErrorTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is TrueFalseTask) {
-      return TrueFalseTaskCard(task: task, style: style);
+      return TrueFalseTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is MatchingPairTask) {
-      return MatchingPairTaskCard(task: task, style: style);
+      return MatchingPairTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     if (task is CodingChallengeTask) {
-      return CodingChallengeTaskCard(task: task, style: style);
+      return CodingChallengeTaskCard(
+        task: task,
+        style: style,
+        onAnswerChecked: (isCorrect) => _markTaskCorrect(index, isCorrect),
+      );
     }
     return GenericTaskCard(
       task: task,
       style: style,
       detailLines: _buildTaskDetails(task),
     );
+  }
+
+  void _markTaskCorrect(int index, bool isCorrect) {
+    setState(() => _taskCorrect[index] = isCorrect);
+  }
+
+  bool _isTaskVerified(Task task, int index) {
+    if (!_requiresCorrectAnswer(task)) {
+      return true;
+    }
+    return _taskCorrect[index] ?? false;
+  }
+
+  bool _requiresCorrectAnswer(Task task) {
+    return task is MultipleChoiceTask ||
+        task is TrueFalseTask ||
+        task is OrderingTask ||
+        task is FillInTheBlankTask ||
+        task is MatchingPairTask ||
+        task is SpotTheErrorTask ||
+        task is CodingChallengeTask;
   }
 
   List<Widget> _buildTaskDetails(Task task) {
