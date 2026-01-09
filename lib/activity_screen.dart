@@ -82,8 +82,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
               const SizedBox(height: 16),
               _buildTaskNavigation(
                 context,
-                tasks.length,
-                tasks[_currentIndex.clamp(0, tasks.length - 1) as int],
+                tasks,
+                showRecommendations,
               ),
             ],
           ],
@@ -97,7 +97,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     List<Task> tasks,
     bool showRecommendations,
   ) {
-    final itemCount = tasks.length + (showRecommendations ? 1 : 0);
+    final itemCount = tasks.length + (showRecommendations ? 2 : 0);
     return PageView.builder(
       controller: _controller,
       itemCount: itemCount,
@@ -112,7 +112,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: ConstrainedBox(
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
-                    child: _buildRecommendationsCard(context),
+                    child: index == tasks.length
+                        ? _buildRecommendationsCard(context)
+                        : _buildStatisticsCard(context, tasks),
                   ),
                 );
               },
@@ -130,7 +132,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     context,
                     tasks[index],
                     index,
-                    tasks.length,
+                    tasks,
                   ),
                 ),
               );
@@ -145,15 +147,24 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (tasks.isEmpty) {
       return false;
     }
-    return tasks.every(_isTaskComplete);
+    return tasks.asMap().entries.every(
+          (entry) => _isTaskSatisfied(entry.value, entry.key),
+        );
   }
 
-  bool _isTaskComplete(Task task) {
+  bool _isTaskMarkedComplete(Task task) {
     final normalized = task.status.trim().toLowerCase();
     return normalized == 'completed' ||
         normalized == 'complete' ||
         normalized == 'done' ||
         normalized == 'finished';
+  }
+
+  bool _isTaskSatisfied(Task task, int index) {
+    if (_isTaskMarkedComplete(task)) {
+      return true;
+    }
+    return _isTaskVerified(task, index);
   }
 
   Widget _buildRecommendationsCard(BuildContext context) {
@@ -247,13 +258,26 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Widget _buildTaskNavigation(
     BuildContext context,
-    int totalTasks,
-    Task task,
+    List<Task> tasks,
+    bool showCompletionPages,
   ) {
+    final int totalTasks = tasks.length;
+    final int totalPages = totalTasks + (showCompletionPages ? 2 : 0);
     final bool hasPrevious = _currentIndex > 0;
-    final bool hasNext = _currentIndex < totalTasks - 1;
-    final bool isVerified = _isTaskVerified(task, _currentIndex);
+    final bool hasNext = _currentIndex < totalPages - 1;
+    final bool isTaskPage = _currentIndex < totalTasks;
+    final bool isVerified = isTaskPage
+        ? _isTaskVerified(
+            tasks[_currentIndex.clamp(0, totalTasks - 1) as int],
+            _currentIndex,
+          )
+        : true;
     final bool canMoveNext = hasNext && isVerified;
+    final String pageLabel = _currentIndex < totalTasks
+        ? 'Task ${_currentIndex + 1} of $totalTasks'
+        : _currentIndex == totalTasks
+            ? 'Recommendations'
+            : 'Statistics';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -271,7 +295,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Text('Task ${_currentIndex + 1} of $totalTasks'),
+            Text(pageLabel),
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
@@ -285,8 +309,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
             ),
           ],
-        ),
-        if (!isVerified)
+          ),
+        if (isTaskPage && !isVerified)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
@@ -305,15 +329,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
     BuildContext context,
     Task task,
     int index,
-    int totalTasks,
+    List<Task> tasks,
   ) {
+    final int totalTasks = tasks.length;
     final style = taskTypeStyle(task, context);
     if (task is OrderingTask) {
       return OrderingTaskCard(
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is InfoCardTask) {
@@ -334,7 +359,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is MultipleChoiceTask) {
@@ -342,7 +367,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is SpotTheErrorTask) {
@@ -350,7 +375,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is TrueFalseTask) {
@@ -358,7 +383,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is MatchingPairTask) {
@@ -366,7 +391,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     if (task is CodingChallengeTask) {
@@ -374,7 +399,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task: task,
         style: style,
         onAnswerChecked: (isCorrect) =>
-            _markTaskCorrect(index, isCorrect, totalTasks),
+            _markTaskCorrect(index, isCorrect, tasks),
       );
     }
     return GenericTaskCard(
@@ -384,10 +409,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  void _markTaskCorrect(int index, bool isCorrect, int totalTasks) {
+  void _markTaskCorrect(int index, bool isCorrect, List<Task> tasks) {
+    final int totalTasks = tasks.length;
     final bool wasCorrect = _taskCorrect[index] ?? false;
     setState(() => _taskCorrect[index] = isCorrect);
-    if (isCorrect && !wasCorrect && index < totalTasks - 1) {
+    final bool showCompletionPages = _areTasksComplete(tasks);
+    final int totalPages = totalTasks + (showCompletionPages ? 2 : 0);
+    if (isCorrect && !wasCorrect && index < totalPages - 1) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
@@ -399,7 +427,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (!_requiresCorrectAnswer(task)) {
       return true;
     }
-    return _taskCorrect[index] ?? false;
+    return _taskCorrect[index] ?? _isTaskMarkedComplete(task);
   }
 
   bool _requiresCorrectAnswer(Task task) {
@@ -410,6 +438,93 @@ class _ActivityScreenState extends State<ActivityScreen> {
         task is MatchingPairTask ||
         task is SpotTheErrorTask ||
         task is CodingChallengeTask;
+  }
+
+  int _completedTaskCount(List<Task> tasks) {
+    return tasks.asMap().entries.where((entry) {
+      final task = entry.value;
+      final index = entry.key;
+      return _isTaskSatisfied(task, index);
+    }).length;
+  }
+
+  int _requiredTaskCount(List<Task> tasks) {
+    return tasks.where(_requiresCorrectAnswer).length;
+  }
+
+  int _correctTaskCount(List<Task> tasks) {
+    return tasks.asMap().entries.where((entry) {
+      final task = entry.value;
+      if (!_requiresCorrectAnswer(task)) {
+        return false;
+      }
+      return _taskCorrect[entry.key] ?? _isTaskMarkedComplete(task);
+    }).length;
+  }
+
+  Widget _buildStatisticsCard(BuildContext context, List<Task> tasks) {
+    final int totalTasks = tasks.length;
+    final int completedTasks = _completedTaskCount(tasks);
+    final int requiredTasks = _requiredTaskCount(tasks);
+    final int correctTasks = _correctTaskCount(tasks);
+    final double completionRatio =
+        totalTasks == 0 ? 0 : completedTasks / totalTasks;
+    final double correctnessRatio =
+        requiredTasks == 0 ? 0 : correctTasks / requiredTasks;
+    final stats = [
+      _ActivityStat(
+        label: 'Completion rate',
+        value: completionRatio,
+        supportingText: '$completedTasks of $totalTasks tasks',
+      ),
+      _ActivityStat(
+        label: 'Correct answers',
+        value: correctnessRatio,
+        supportingText: '$correctTasks of $requiredTasks checked tasks',
+      ),
+    ];
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your statistics',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Here is a quick snapshot of your performance.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            ...stats.map(
+              (stat) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stat.label,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 6),
+                    LinearProgressIndicator(value: stat.value),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(stat.value * 100).round()}% • ${stat.supportingText}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildTaskDetails(Task task) {
@@ -502,6 +617,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ))
         .toList();
   }
+}
+
+class _ActivityStat {
+  const _ActivityStat({
+    required this.label,
+    required this.value,
+    required this.supportingText,
+  });
+
+  final String label;
+  final double value;
+  final String supportingText;
 }
 
 enum _RecommendationType { website, youtube, pdf, doc }
