@@ -60,20 +60,32 @@ class InboxItem {
   final DateTime timestamp;
 }
 
-class MessageThread {
-  const MessageThread({
-    required this.id,
-    required this.sender,
-    required this.preview,
-    required this.unreadCount,
+class ConversationMessage {
+  const ConversationMessage({
+    required this.senderId,
+    required this.text,
     required this.timestamp,
   });
 
-  final String id;
-  final String sender;
-  final String preview;
-  final int unreadCount;
+  final String senderId;
+  final String text;
   final DateTime timestamp;
+}
+
+class SampleConversation {
+  const SampleConversation({
+    required this.id,
+    required this.title,
+    required this.participants,
+    required this.unreadCount,
+    required this.messages,
+  });
+
+  final String id;
+  final String title;
+  final List<String> participants;
+  final int unreadCount;
+  final List<ConversationMessage> messages;
 }
 
 class LearningPathData {
@@ -186,20 +198,52 @@ class SampleData {
     ),
   ];
 
-  static final List<MessageThread> messages = [
-    MessageThread(
+  static final List<SampleConversation> messageThreads = [
+    SampleConversation(
       id: 'thread-1',
-      sender: 'Learning Coach',
-      preview: 'Remember to finish the exercise from the Android build.',
+      title: 'Learning Coach',
+      participants: ['You', 'Learning Coach'],
       unreadCount: 1,
-      timestamp: DateTime.now().subtract(const Duration(minutes: 24)),
+      messages: [
+        ConversationMessage(
+          senderId: 'Learning Coach',
+          text: 'Hi! Did you see the Kotlin primer I assigned?',
+          timestamp: DateTime.now().subtract(const Duration(hours: 4, minutes: 20)),
+        ),
+        ConversationMessage(
+          senderId: 'You',
+          text: 'Yes, I finished the nullable types section today.',
+          timestamp: DateTime.now().subtract(const Duration(hours: 3, minutes: 45)),
+        ),
+        ConversationMessage(
+          senderId: 'Learning Coach',
+          text: 'Great! Remember to finish the exercise from the Android build.',
+          timestamp: DateTime.now().subtract(const Duration(minutes: 24)),
+        ),
+      ],
     ),
-    MessageThread(
+    SampleConversation(
       id: 'thread-2',
-      sender: 'Study buddy',
-      preview: 'Shall we pair on the recommendation screen redesign?',
+      title: 'Study buddy',
+      participants: ['You', 'Study buddy'],
       unreadCount: 0,
-      timestamp: DateTime.now().subtract(const Duration(hours: 6)),
+      messages: [
+        ConversationMessage(
+          senderId: 'Study buddy',
+          text: 'Want to pair on the recommendation screen redesign?',
+          timestamp: DateTime.now().subtract(const Duration(hours: 7)),
+        ),
+        ConversationMessage(
+          senderId: 'You',
+          text: 'Absolutely! How about tomorrow morning?',
+          timestamp: DateTime.now().subtract(const Duration(hours: 6, minutes: 30)),
+        ),
+        ConversationMessage(
+          senderId: 'Study buddy',
+          text: 'Works for me. I will send a calendar invite.',
+          timestamp: DateTime.now().subtract(const Duration(hours: 6)),
+        ),
+      ],
     ),
   ];
 

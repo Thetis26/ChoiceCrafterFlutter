@@ -58,7 +58,13 @@ class MessagesScreen extends StatelessWidget {
     final currentUserId = _currentUserId(auth);
 
     if (currentUserId.isEmpty) {
-      return _buildMessagesScaffold(_sampleEntries());
+      final sampleThreads = {
+        for (final thread in SampleData.messageThreads) thread.id: thread,
+      };
+      return _buildMessagesScaffold(
+        _sampleEntries(),
+        sampleThreads: sampleThreads,
+      );
     }
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -106,19 +112,23 @@ class MessagesScreen extends StatelessWidget {
   }
 
   List<_MessageEntry> _sampleEntries() {
-    return SampleData.messages
-        .map(
-          (message) => _MessageEntry(
-            name: message.sender,
-            lastMessage: message.preview,
-            timestamp: message.timestamp,
-            isUnread: message.unreadCount > 0,
-          ),
-        )
-        .toList();
+    return SampleData.messageThreads.map((thread) {
+      final lastMessage =
+          thread.messages.isNotEmpty ? thread.messages.last : null;
+      return _MessageEntry(
+        name: thread.title,
+        lastMessage: lastMessage?.text ?? '',
+        timestamp: lastMessage?.timestamp,
+        isUnread: thread.unreadCount > 0,
+        conversationId: thread.id,
+      );
+    }).toList();
   }
 
-  Widget _buildMessagesScaffold(List<_MessageEntry> entries) {
+  Widget _buildMessagesScaffold(
+    List<_MessageEntry> entries, {
+    Map<String, SampleConversation>? sampleThreads,
+  }) {
     final contacts = entries
         .map((entry) => _ContactChip(name: entry.name, id: entry.name))
         .toList();
@@ -194,12 +204,21 @@ class MessagesScreen extends StatelessWidget {
                           onTap: entry.conversationId == null
                               ? null
                               : () {
+                                  final sampleThread =
+                                      sampleThreads?[entry.conversationId!];
+                                  final destination = sampleThread == null
+                                      ? MessageThreadScreen(
+                                          conversationId:
+                                              entry.conversationId!,
+                                          initialTitle: entry.name,
+                                        )
+                                      : MessageThreadScreen.local(
+                                          initialTitle: entry.name,
+                                          messages: sampleThread.messages,
+                                        );
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => MessageThreadScreen(
-                                        conversationId: entry.conversationId!,
-                                        initialTitle: entry.name,
-                                      ),
+                                      builder: (_) => destination,
                                     ),
                                   );
                                 },
