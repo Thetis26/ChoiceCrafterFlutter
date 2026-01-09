@@ -13,7 +13,7 @@ class InboxScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      return _wrapBody(context, _buildInboxList(SampleData.inbox));
+      return _buildScaffold(context, _buildInboxList(SampleData.inbox));
     }
 
     final stream = FirebaseFirestore.instance
@@ -26,11 +26,11 @@ class InboxScreen extends StatelessWidget {
       stream: stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return _wrapBody(context, _buildInboxList(SampleData.inbox));
+          return _buildScaffold(context, _buildInboxList(SampleData.inbox));
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _wrapBody(
+          return _buildScaffold(
             context,
             const Center(child: CircularProgressIndicator()),
           );
@@ -38,13 +38,13 @@ class InboxScreen extends StatelessWidget {
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return _wrapBody(
+          return _buildScaffold(
             context,
             const Center(child: Text('No notifications yet.')),
           );
         }
 
-        return _wrapBody(
+        return _buildScaffold(
           context,
           ListView.separated(
             padding: const EdgeInsets.all(16),
@@ -69,6 +69,19 @@ class InboxScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, Widget child) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Inbox'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
+      body: _wrapBody(context, child),
     );
   }
 
