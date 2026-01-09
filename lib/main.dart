@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'activity_screen.dart';
 import 'course_activities_screen.dart';
@@ -138,15 +139,20 @@ class _MyAppState extends State<MyApp> {
               ),
               useMaterial3: true,
             ),
-            locale: _locale,
-            supportedLocales: const [
-              Locale('en'),
-              Locale('ro'),
-            ],
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-          );
+          locale: _locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ro'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+        );
         }
 
         if (snapshot.hasError) {
@@ -164,15 +170,20 @@ class _MyAppState extends State<MyApp> {
               ),
               useMaterial3: true,
             ),
-            locale: _locale,
-            supportedLocales: const [
-              Locale('en'),
-              Locale('ro'),
-            ],
-            home: const Scaffold(
-              body: Center(
-                child: Text(
-                  'Firebase failed to initialize. Check your configuration and try again.',
+          locale: _locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ro'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const Scaffold(
+            body: Center(
+              child: Text(
+                'Firebase failed to initialize. Check your configuration and try again.',
                 ),
               ),
             ),
@@ -202,6 +213,11 @@ class _MyAppState extends State<MyApp> {
           supportedLocales: const [
             Locale('en'),
             Locale('ro'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
           ],
           home: _currentUser == null
               ? LoginScreen(
