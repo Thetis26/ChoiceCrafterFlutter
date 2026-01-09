@@ -317,7 +317,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
       );
     }
     if (task is InfoCardTask) {
-      return InfoCardTaskCard(task: task, style: style);
+      final bool hasNext = index < totalTasks - 1;
+      return InfoCardTaskCard(
+        task: task,
+        style: style,
+        onActionPressed: hasNext
+            ? () => _controller.nextPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                )
+            : null,
+      );
     }
     if (task is FillInTheBlankTask) {
       return FillInTheBlankTaskCard(

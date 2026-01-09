@@ -9,10 +9,12 @@ class InfoCardTaskCard extends StatelessWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onActionPressed,
   });
 
   final InfoCardTask task;
   final TaskTypeStyle style;
+  final VoidCallback? onActionPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class InfoCardTaskCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: onActionPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6E7BF2),
                   foregroundColor: Colors.white,
