@@ -9,10 +9,12 @@ class TrueFalseTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.style,
+    this.onAnswerChecked,
   });
 
   final TrueFalseTask task;
   final TaskTypeStyle style;
+  final ValueChanged<bool>? onAnswerChecked;
 
   @override
   State<TrueFalseTaskCard> createState() => _TrueFalseTaskCardState();
@@ -39,6 +41,7 @@ class _TrueFalseTaskCardState extends State<TrueFalseTaskCard> {
       return;
     }
     final bool isCorrect = _selectedValue == widget.task.correctAnswer;
+    widget.onAnswerChecked?.call(isCorrect);
     showTaskFeedback(
       context,
       message: isCorrect ? 'Correct!' : 'That is not correct. Try again.',
