@@ -81,6 +81,7 @@ class NewsCourseDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEnrolled = user.enrolledCourseIds.contains(course.id);
     return Scaffold(
       appBar: AppBar(
         title: Text(course.title),
@@ -117,16 +118,18 @@ class NewsCourseDetailScreen extends StatelessWidget {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(16),
         child: FilledButton.icon(
-          onPressed: () async {
-            await courseRepository.enrollInCourse(user, course);
-            if (!context.mounted) {
-              return;
-            }
-            Navigator.of(context).popUntil((route) => route.isFirst);
-            onEnrolled(course);
-          },
+          onPressed: isEnrolled
+              ? null
+              : () async {
+                  await courseRepository.enrollInCourse(user, course);
+                  if (!context.mounted) {
+                    return;
+                  }
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  onEnrolled(course);
+                },
           icon: const Icon(Icons.check_circle_outline),
-          label: const Text('Enroll'),
+          label: Text(isEnrolled ? 'Enrolled' : 'Enroll'),
         ),
       ),
     );
