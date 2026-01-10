@@ -386,27 +386,15 @@ class MessagesScreen extends StatelessWidget {
           .where('online', isEqualTo: true)
           .snapshots(),
       builder: (context, usersSnapshot) {
-        if (usersSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (usersSnapshot.hasError) {
-          return _buildMessagesScaffold(
-            context,
-            const [],
-            contacts: const [],
-            currentUserId: currentUserId,
-            firestore: firestore,
-          );
-        }
-
-        final contacts = (usersSnapshot.data?.docs ?? []).map((doc) {
-          final data = doc.data();
-          return _ContactChip(
-            name: _displayName(data, doc.id),
-            id: doc.id,
-          );
-        }).toList();
+        final contacts = usersSnapshot.hasData && !usersSnapshot.hasError
+            ? (usersSnapshot.data?.docs ?? []).map((doc) {
+                final data = doc.data();
+                return _ContactChip(
+                  name: _displayName(data, doc.id),
+                  id: doc.id,
+                );
+              }).toList()
+            : const <_ContactChip>[];
 
         if (currentUserId.isEmpty) {
           return _buildMessagesScaffold(
