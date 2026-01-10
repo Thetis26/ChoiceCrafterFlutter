@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
-
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
   static const String _notificationsCollection = 'NOTIFICATIONS';
+  static const String _usersCollection = 'users';
 
   @override
   Widget build(BuildContext context) {
@@ -18,60 +18,87 @@ class InboxScreen extends StatelessWidget {
       );
     }
 
-    final stream = FirebaseFirestore.instance
-        .collection(_notificationsCollection)
-        .where('userId', isEqualTo: currentUser.uid)
-        .orderBy('timestamp', descending: true)
-        .snapshots();
-
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: stream,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
+    return FutureBuilder<String?>(
+      future: _resolveUserId(currentUser),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.hasError) {
           return _buildScaffold(
             context,
             const Center(child: Text('Unable to load notifications.')),
           );
         }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
           return _buildScaffold(
             context,
             const Center(child: CircularProgressIndicator()),
           );
         }
 
-        final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) {
+        final userId = userSnapshot.data;
+        if (userId == null || userId.isEmpty) {
           return _buildScaffold(
             context,
-            const Center(child: Text('No notifications yet.')),
+            const Center(child: Text('User profile not found.')),
           );
         }
 
-        return _buildScaffold(
-          context,
-          ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final data = docs[index].data();
-              final title = (data['type'] as String?)?.trim();
-              final details = (data['details'] as String?)?.trim();
-              final timestamp = _parseTimestamp(data['timestamp']);
-              final timestampLabel = _formatTimestamp(timestamp);
+        final stream = FirebaseFirestore.instance
+            .collection(_notificationsCollection)
+            .where('userId', isEqualTo: userId)
+            .orderBy('timestamp', descending: true)
+            .snapshots();
 
-              return _buildNotificationCard(
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: stream,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return _buildScaffold(
                 context,
-                title: title?.isNotEmpty == true ? title! : 'Notification',
-                details: details?.isNotEmpty == true
-                    ? details!
-                    : 'No details available.',
-                timestampLabel: timestampLabel,
+                const Center(child: Text('Unable to load notifications.')),
               );
-            },
-          ),
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildScaffold(
+                context,
+                const Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final docs = snapshot.data?.docs ?? [];
+            if (docs.isEmpty) {
+              return _buildScaffold(
+                context,
+                const Center(child: Text('No notifications yet.')),
+              );
+            }
+
+            return _buildScaffold(
+              context,
+              ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: docs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final data = docs[index].data();
+                  final title = (data['type'] as String?)?.trim();
+                  final details = (data['details'] as String?)?.trim();
+                  final timestamp = _parseTimestamp(data['timestamp']);
+                  final timestampLabel = _formatTimestamp(timestamp);
+
+                  return _buildNotificationCard(
+                    context,
+                    title: title?.isNotEmpty == true ? title! : 'Notification',
+                    details: details?.isNotEmpty == true
+                        ? details!
+                        : 'No details available.',
+                    timestampLabel: timestampLabel,
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -171,5 +198,28 @@ class InboxScreen extends StatelessWidget {
     final time =
         '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     return '$date $time';
+  }
+
+  Future<String?> _resolveUserId(firebase_auth.User user) async {
+    final email = user.email?.trim() ?? '';
+    final usersCollection =
+        FirebaseFirestore.instance.collection(_usersCollection);
+
+    if (email.isNotEmpty) {
+      final query = await usersCollection
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (query.docs.isNotEmpty) {
+        return query.docs.first.id;
+      }
+    }
+
+    final fallbackDoc = await usersCollection.doc(user.uid).get();
+    if (fallbackDoc.exists) {
+      return fallbackDoc.id;
+    }
+
+    return null;
   }
 }
