@@ -48,7 +48,7 @@ public class RegisterActivity extends AppCompatActivity {
     private final CourseEnrollmentRepository courseEnrollmentRepository = new CourseEnrollmentRepository();
     private final UserCourseAvailabilityRepository userCourseAvailabilityRepository = new UserCourseAvailabilityRepository();
     private static final String DEFAULT_ENROLLMENT_COURSE_ID = "FfwkHveow9h8bpwjdEQl";
-    private static final String DEFAULT_AVATAR_URL = "https://example.com/default_avatar.png";
+    private static final String DEFAULT_AVATAR_URL = null;
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int REGISTRATION_CODE_LENGTH = 6;
     private static final String REQUIRED_REGISTRATION_CODE = "274973";

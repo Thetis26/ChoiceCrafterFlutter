@@ -463,6 +463,7 @@ public class ColleaguesActivityFragment extends Fragment {
         Glide.with(imageView)
                 .load(user.getAnonymousAvatar().getImageUrl())
                 .placeholder(R.drawable.avatar_andrei)
+                .fallback(R.drawable.avatar_andrei)
                 .error(R.drawable.avatar_andrei)
                 .into(imageView);
     }
