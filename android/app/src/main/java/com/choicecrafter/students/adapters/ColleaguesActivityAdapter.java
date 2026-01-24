@@ -52,6 +52,7 @@ public class ColleaguesActivityAdapter extends RecyclerView.Adapter<ColleaguesAc
             Glide.with(holder.colleagueImage.getContext())
                     .load(activity.getImageUrl())
                     .placeholder(R.drawable.avatar_andrei)
+                    .fallback(R.drawable.avatar1)
                     .error(R.drawable.avatar1)
                     .into(holder.colleagueImage);
         } catch (Exception e) {

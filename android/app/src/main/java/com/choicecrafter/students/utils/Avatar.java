@@ -5,7 +5,11 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.firestore.IgnoreExtraProperties;
+
+@IgnoreExtraProperties
 public class Avatar implements Parcelable {
+    private static final String LEGACY_PLACEHOLDER_URL = "https://example.com/default_avatar.png";
     private String name;
     private String imageUrl;
 
@@ -40,6 +44,12 @@ public class Avatar implements Parcelable {
     }
 
     public String getImageUrl() {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return null;
+        }
+        if (LEGACY_PLACEHOLDER_URL.equals(imageUrl)) {
+            return null;
+        }
         return imageUrl;
     }
 

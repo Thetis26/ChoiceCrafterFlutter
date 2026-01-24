@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.choicecrafter.students.utils.Avatar;
+import com.google.firebase.firestore.IgnoreExtraProperties;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+@IgnoreExtraProperties
 public class User implements Parcelable {
     private String name;
     private String email;
@@ -35,7 +37,7 @@ public class User implements Parcelable {
     private Map<String, Long> scores;
 
     public User() {
-        this.anonymousAvatar = new Avatar("Anonymous", "https://example.com/default_avatar.png");
+        this.anonymousAvatar = new Avatar("Anonymous", null);
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
         this.scores = new HashMap<>();
         this.learningPathPoints = 0;
