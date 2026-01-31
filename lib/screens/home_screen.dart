@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../models/course.dart';
+import '../models/enrollment_activity_progress.dart';
 import '../models/user.dart';
 import '../repositories/course_repository.dart';
+import '../repositories/personal_statistics_repository.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -21,8 +23,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('HomeScreen.build - user: ${user.fullName}');
-    return FutureBuilder<List<Course>>(
-      future: courseRepository.getEnrolledCourses(user),
+    return FutureBuilder<_HomeScreenData>(
+      future: _loadData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           debugPrint('HomeScreen: loading courses for ${user.fullName}...');
@@ -32,11 +34,15 @@ class HomeScreen extends StatelessWidget {
           return const Center(child: Text('Unable to load courses right now.'));
         }
 
-        final courses = snapshot.data ?? [];
+        final data = snapshot.data ?? _HomeScreenData.empty();
+        final courses = data.courses;
         debugPrint('HomeScreen: loaded ${courses.length} courses for ${user.fullName}');
         if (courses.isEmpty) {
           return const Center(child: Text('No enrolled courses yet.'));
         }
+
+        final activityProgressById =
+            _buildActivityProgressLookup(data.activitySnapshots);
 
         return ListView(
           padding: const EdgeInsets.all(16),
@@ -51,6 +57,8 @@ class HomeScreen extends StatelessWidget {
             ...courses.map(
               (course) {
                 final isHighlighted = course.id == highlightCourseId;
+                final courseProgress =
+                    _courseProgress(course, activityProgressById);
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   color: isHighlighted
@@ -68,6 +76,8 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(course.summary),
                         const SizedBox(height: 8),
+                        _ProgressRow(progress: courseProgress),
+                        const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -93,6 +103,87 @@ class HomeScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  Future<_HomeScreenData> _loadData() async {
+    final courses = await courseRepository.getEnrolledCourses(user);
+    final userKey = user.email.isNotEmpty ? user.email : user.id;
+    final activitySnapshots = await PersonalStatisticsRepository()
+        .fetchActivitySnapshotsForUser(userKey);
+    return _HomeScreenData(
+      courses: courses,
+      activitySnapshots: activitySnapshots,
+    );
+  }
+
+  Map<String, double> _buildActivityProgressLookup(
+    List<EnrollmentActivityProgress> snapshots,
+  ) {
+    final lookup = <String, double>{};
+    for (final snapshot in snapshots) {
+      if (snapshot.activityId.isEmpty) {
+        continue;
+      }
+      final progress = snapshot.averageCompletionRatio().clamp(0.0, 1.0);
+      final existing = lookup[snapshot.activityId];
+      if (existing == null || progress > existing) {
+        lookup[snapshot.activityId] = progress;
+      }
+    }
+    return lookup;
+  }
+
+  double _courseProgress(Course course, Map<String, double> progressByActivity) {
+    final activities =
+        course.modules.expand((module) => module.activities).toList();
+    if (activities.isEmpty) {
+      return 0.0;
+    }
+    final total = activities
+        .map((activity) => progressByActivity[activity.id] ?? 0.0)
+        .fold<double>(0.0, (sum, value) => sum + value);
+    return (total / activities.length).clamp(0.0, 1.0);
+  }
+}
+
+class _HomeScreenData {
+  const _HomeScreenData({
+    required this.courses,
+    required this.activitySnapshots,
+  });
+
+  final List<Course> courses;
+  final List<EnrollmentActivityProgress> activitySnapshots;
+
+  factory _HomeScreenData.empty() => const _HomeScreenData(
+        courses: [],
+        activitySnapshots: [],
+      );
+}
+
+class _ProgressRow extends StatelessWidget {
+  const _ProgressRow({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final percentage = (progress * 100).round();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Progress', style: theme.textTheme.bodySmall),
+            Text('$percentage%', style: theme.textTheme.bodySmall),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LinearProgressIndicator(value: progress),
+      ],
     );
   }
 }
