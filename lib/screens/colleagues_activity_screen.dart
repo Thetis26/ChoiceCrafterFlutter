@@ -425,14 +425,7 @@ class _LeaderboardRow extends StatelessWidget {
         children: [
           Icon(medalIcon, color: medalColor, size: 28),
           const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: const Color(0xFFE3E7FF),
-            child: Text(
-              user.initials,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          _AnonymousAvatar(user: user, radius: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -479,16 +472,11 @@ class _CurrentUserScoreCard extends StatelessWidget {
     return _ScoreCardContainer(
       child: Row(
         children: [
-          CircleAvatar(
+          _AnonymousAvatar(
+            user: user!,
             radius: 26,
             backgroundColor: Colors.white.withOpacity(0.2),
-            child: Text(
-              user!.initials,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            foregroundColor: Colors.white,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -588,13 +576,7 @@ class _ColleagueActivityCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFFE3E7FF),
-          child: Text(
-            activity.user.initials,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
+        leading: _AnonymousAvatar(user: activity.user),
         title: Text(activity.user.displayName),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,6 +638,42 @@ class _ColleagueUser {
       return 'C';
     }
     return source.substring(0, 1).toUpperCase();
+  }
+}
+
+class _AnonymousAvatar extends StatelessWidget {
+  const _AnonymousAvatar({
+    required this.user,
+    this.radius = 20,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  final _ColleagueUser user;
+  final double radius;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl?.trim();
+    final resolvedBackgroundColor =
+        backgroundColor ?? const Color(0xFFE3E7FF);
+    final hasImage = avatarUrl != null && avatarUrl.isNotEmpty;
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: resolvedBackgroundColor,
+      backgroundImage: hasImage ? NetworkImage(avatarUrl) : null,
+      child: hasImage
+          ? null
+          : Text(
+              user.initials,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foregroundColor,
+              ),
+            ),
+    );
   }
 }
 
