@@ -360,11 +360,69 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         child: SafeArea(
           child: ListView(
             children: [
-              UserAccountsDrawerHeader(
-                accountName: Text(widget.user.fullName),
-                accountEmail: Text(widget.user.email),
-                currentAccountPicture: CircleAvatar(
-                  child: Text(widget.user.fullName.substring(0, 1)),
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final trimmedName = widget.user.fullName.trim();
+                        final avatarName = trimmedName.isEmpty
+                            ? '?'
+                            : trimmedName
+                                .split(RegExp(r'\\s+'))
+                                .where((part) => part.isNotEmpty)
+                                .take(2)
+                                .map((part) => part[0].toUpperCase())
+                                .join();
+                        return CircleAvatar(
+                          radius: 28,
+                          child: Text(
+                            avatarName,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Builder(
+                      builder: (context) {
+                        final trimmedName = widget.user.fullName.trim();
+                        final avatarName = trimmedName.isEmpty
+                            ? '?'
+                            : trimmedName
+                                .split(RegExp(r'\\s+'))
+                                .where((part) => part.isNotEmpty)
+                                .take(2)
+                                .map((part) => part[0].toUpperCase())
+                                .join();
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.user.fullName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              avatarName,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.user.email,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ),
               ListTile(
