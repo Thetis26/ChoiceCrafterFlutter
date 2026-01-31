@@ -143,6 +143,104 @@ class MessagesScreen extends StatelessWidget {
     return fallback;
   }
 
+  String? _avatarUrl(Map<String, dynamic> data) {
+    final anonymousAvatar = data['anonymousAvatar'];
+    final anonymousAvatarUrl = anonymousAvatar is Map
+        ? anonymousAvatar['imageUrl'] as String?
+        : null;
+    if (anonymousAvatarUrl != null && anonymousAvatarUrl.trim().isNotEmpty) {
+      return anonymousAvatarUrl.trim();
+    }
+    final directUrl = (data['avatarUrl'] as String?)?.trim();
+    if (directUrl != null && directUrl.isNotEmpty) {
+      return directUrl;
+    }
+    return null;
+  }
+
+  String _initials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return '?';
+    }
+    return trimmed.substring(0, 1).toUpperCase();
+  }
+
+  Widget _buildAvatarCircle(
+    _AvatarToken token, {
+    double radius = 28,
+  }) {
+    final imageUrl = token.imageUrl;
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: const Color(0xFFE0E4FF),
+      backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+      child: imageUrl == null
+          ? Text(
+              _initials(token.name),
+              style: TextStyle(
+                color: const Color(0xFF4D59FF),
+                fontWeight: FontWeight.bold,
+                fontSize: radius * 0.75,
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildAvatarWithBorder(
+    _AvatarToken token, {
+    required double radius,
+  }) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.white,
+      child: _buildAvatarCircle(token, radius: radius - 2),
+    );
+  }
+
+  Widget _buildAvatarGroup(
+    List<_AvatarToken> tokens, {
+    double size = 56,
+  }) {
+    if (tokens.isEmpty) {
+      return _buildAvatarCircle(
+        const _AvatarToken(name: 'Conversation'),
+        radius: size / 2,
+      );
+    }
+    if (tokens.length == 1) {
+      return _buildAvatarCircle(tokens.first, radius: size / 2);
+    }
+    final displayTokens = tokens.take(2).toList();
+    final smallDiameter = size * 0.7;
+    final smallRadius = smallDiameter / 2;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 0,
+            child: _buildAvatarWithBorder(
+              displayTokens[0],
+              radius: smallRadius,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: _buildAvatarWithBorder(
+              displayTokens[1],
+              radius: smallRadius,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<String?> _findExistingConversation({
     required FirebaseFirestore firestore,
     required String currentUserId,
@@ -398,6 +496,7 @@ class MessagesScreen extends StatelessWidget {
                                     return _ContactChip(
                                       name: _displayName(data, doc.id),
                                       id: doc.id,
+                                      avatarUrl: _avatarUrl(data),
                                     );
                                   })
                                   .where((user) => user.id != currentUserId)
@@ -447,13 +546,18 @@ class MessagesScreen extends StatelessWidget {
                                 title: Text(user.name),
                                 secondary: CircleAvatar(
                                   backgroundColor: const Color(0xFFE0E4FF),
-                                  child: Text(
-                                    user.name.substring(0, 1).toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Color(0xFF4D59FF),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  backgroundImage: user.avatarUrl != null
+                                      ? NetworkImage(user.avatarUrl!)
+                                      : null,
+                                  child: user.avatarUrl == null
+                                      ? Text(
+                                          _initials(user.name),
+                                          style: const TextStyle(
+                                            color: Color(0xFF4D59FF),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
                                 ),
                                 controlAffinity:
                                     ListTileControlAffinity.trailing,
@@ -486,6 +590,7 @@ class MessagesScreen extends StatelessWidget {
                                   return _ContactChip(
                                     name: _displayName(data, doc.id),
                                     id: doc.id,
+                                    avatarUrl: _avatarUrl(data),
                                   );
                                 }).toList();
                                 developer.log(
@@ -596,6 +701,9 @@ class MessagesScreen extends StatelessWidget {
             final userNames = <String, String>{
               for (final doc in users) doc.id: _displayName(doc.data(), doc.id),
             };
+            final userAvatarUrls = <String, String?>{
+              for (final doc in users) doc.id: _avatarUrl(doc.data()),
+            };
             final contacts = users
                 .where((doc) => (doc.data()['online'] as bool?) ?? false)
                 .map((doc) {
@@ -603,6 +711,7 @@ class MessagesScreen extends StatelessWidget {
                   return _ContactChip(
                     name: _displayName(data, doc.id),
                     id: doc.id,
+                    avatarUrl: _avatarUrl(data),
                   );
                 })
                 .toList();
@@ -670,6 +779,14 @@ class MessagesScreen extends StatelessWidget {
                       .map((id) => userNames[id] ?? id)
                       .where((name) => name.trim().isNotEmpty)
                       .toList();
+                  final otherAvatars = others
+                      .map(
+                        (id) => _AvatarToken(
+                          name: userNames[id] ?? id,
+                          imageUrl: userAvatarUrls[id],
+                        ),
+                      )
+                      .toList();
                   final name = title != null && title.isNotEmpty
                       ? title
                       : (otherNames.isNotEmpty
@@ -693,6 +810,7 @@ class MessagesScreen extends StatelessWidget {
                     timestamp: timestamp,
                     isUnread: isUnread,
                     conversationId: doc.id,
+                    avatars: otherAvatars,
                   );
                 }).toList();
 
@@ -777,17 +895,12 @@ class MessagesScreen extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: const Color(0xFFE0E4FF),
-                          child: Text(
-                            contact.name.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
-                              color: Color(0xFF4D59FF),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
+                        _buildAvatarCircle(
+                          _AvatarToken(
+                            name: contact.name,
+                            imageUrl: contact.avatarUrl,
                           ),
+                          radius: 28,
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
@@ -851,18 +964,7 @@ class MessagesScreen extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: const Color(0xFFE0E4FF),
-                                  child: Text(
-                                    entry.name.substring(0, 1).toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Color(0xFF4D59FF),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
+                                _buildAvatarGroup(entry.avatars),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
@@ -926,10 +1028,15 @@ class MessagesScreen extends StatelessWidget {
 }
 
 class _ContactChip {
-  const _ContactChip({required this.name, required this.id});
+  const _ContactChip({
+    required this.name,
+    required this.id,
+    this.avatarUrl,
+  });
 
   final String name;
   final String id;
+  final String? avatarUrl;
 }
 
 class _MessageEntry {
@@ -938,6 +1045,7 @@ class _MessageEntry {
     required this.lastMessage,
     required this.timestamp,
     required this.isUnread,
+    required this.avatars,
     this.conversationId,
   });
 
@@ -945,5 +1053,13 @@ class _MessageEntry {
   final String lastMessage;
   final DateTime? timestamp;
   final bool isUnread;
+  final List<_AvatarToken> avatars;
   final String? conversationId;
+}
+
+class _AvatarToken {
+  const _AvatarToken({required this.name, this.imageUrl});
+
+  final String name;
+  final String? imageUrl;
 }
