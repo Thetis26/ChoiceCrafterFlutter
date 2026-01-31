@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _registrationCodeController = TextEditingController();
   bool _isRegistering = false;
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -32,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _registrationCodeController.dispose();
     super.dispose();
   }
 
@@ -42,9 +44,91 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Future<bool> _confirmGdprConsent() async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Data processing & privacy'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Before creating your account, please review how we handle your information.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'What we collect',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Your name, email address, and registration code so we can create your '
+                'ChoiceCrafter account and activate access to your course.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'How we use it',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'We use this information to personalize recommendations, track anonymized '
+                'study progress, and confirm your participation in research activities.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'How we protect it',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Your data is encrypted in transit and at rest, stored on GDPR-compliant '
+                'servers, and accessed only by authorised members of the research team.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Your rights',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'You can request a copy, update, or deletion of your personal data at any '
+                'time by contacting the research team. We respond within GDPR timelines.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Tap Agree to continue and confirm your consent to this processing.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Agree'),
+          ),
+        ],
+      ),
+    );
+
+    return accepted ?? false;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
+    }
+
+    if (_isRegistering) {
+      final consented = await _confirmGdprConsent();
+      if (!consented) {
+        return;
+      }
     }
 
     setState(() {
@@ -164,6 +248,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (value) =>
                           value != null && value.length >= 6 ? null : 'Use at least 6 characters',
                     ),
+                    if (_isRegistering) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _registrationCodeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Registration code',
+                          prefixIcon: Icon(Icons.verified_outlined),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          final trimmed = value?.trim() ?? '';
+                          if (trimmed.isEmpty) {
+                            return 'Enter the registration code';
+                          }
+                          if (trimmed != '274973') {
+                            return 'Registration code is invalid.';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     if (_errorMessage != null)
                       Align(
