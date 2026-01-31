@@ -195,29 +195,141 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     required List<String> participants,
   }) async {
     final controller = TextEditingController();
+    var searchQuery = '';
+    final canSearchUsers = !isLocal;
     final newParticipant = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Add new participant'),
-          content: TextField(
-            controller: controller,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              hintText: 'Enter email or user id',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.pop(context, controller.text.trim()),
-              child: const Text('Add'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add new participant'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        hintText: 'Enter email or user id',
+                        prefixIcon: canSearchUsers
+                            ? const Icon(Icons.search)
+                            : null,
+                        filled: canSearchUsers,
+                        fillColor: canSearchUsers ? Colors.grey.shade100 : null,
+                      ),
+                      onChanged: canSearchUsers
+                          ? (value) {
+                              setState(() {
+                                searchQuery = value.trim().toLowerCase();
+                              });
+                            }
+                          : null,
+                    ),
+                    if (canSearchUsers) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 220,
+                        child: StreamBuilder<
+                            QuerySnapshot<Map<String, dynamic>>>(
+                          stream: _firestore.collection('users').snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return const Center(
+                                child: Text('Unable to load users.'),
+                              );
+                            }
+                            final users = (snapshot.data?.docs ?? [])
+                                .where((doc) =>
+                                    !participants.contains(doc.id) &&
+                                    doc.id != _currentUserId)
+                                .map((doc) {
+                                  final data = doc.data();
+                                  final name = _displayName(data, doc.id);
+                                  final email =
+                                      (data['email'] as String?)?.trim() ?? '';
+                                  return (
+                                    id: doc.id,
+                                    name: name,
+                                    email: email
+                                  );
+                                })
+                                .where((user) {
+                                  if (searchQuery.isEmpty) {
+                                    return true;
+                                  }
+                                  final name = user.name.toLowerCase();
+                                  final email = user.email.toLowerCase();
+                                  return name.contains(searchQuery) ||
+                                      email.contains(searchQuery);
+                                })
+                                .toList()
+                              ..sort(
+                                (a, b) => a.name
+                                    .toLowerCase()
+                                    .compareTo(b.name.toLowerCase()),
+                              );
+                            if (users.isEmpty) {
+                              return const Center(
+                                child: Text('No matching users found.'),
+                              );
+                            }
+                            return ListView.separated(
+                              itemCount: users.length,
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final user = users[index];
+                                return ListTile(
+                                  title: Text(user.name),
+                                  subtitle: user.email.isNotEmpty
+                                      ? Text(user.email)
+                                      : null,
+                                  onTap: () {
+                                    final value = user.email.isNotEmpty
+                                        ? user.email
+                                        : user.id;
+                                    setState(() {
+                                      controller.text = value;
+                                      controller.selection =
+                                          TextSelection.collapsed(
+                                        offset: value.length,
+                                      );
+                                      searchQuery =
+                                          value.trim().toLowerCase();
+                                    });
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pop(context, controller.text.trim()),
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
