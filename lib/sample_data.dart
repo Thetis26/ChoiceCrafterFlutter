@@ -1,3 +1,5 @@
+import 'models/activity.dart';
+
 class ActivityData {
   const ActivityData({
     required this.id,
@@ -6,6 +8,8 @@ class ActivityData {
     required this.type,
     required this.content,
     this.estimatedMinutes = 15,
+    this.reactions = const [],
+    this.comments = const [],
   });
 
   final String id;
@@ -14,6 +18,8 @@ class ActivityData {
   final String type;
   final String content;
   final int estimatedMinutes;
+  final List<ActivityReaction> reactions;
+  final List<ActivityComment> comments;
 }
 
 class ModuleData {
@@ -127,6 +133,22 @@ class SampleData {
       type: 'article',
       content: 'Review nullable types, collections, and coroutines basics.',
       estimatedMinutes: 20,
+      reactions: [
+        ActivityReaction(type: 'like', count: 14),
+        ActivityReaction(type: 'celebrate', count: 4),
+      ],
+      comments: [
+        ActivityComment(
+          author: 'Liam',
+          message: 'The coroutines section was super helpful.',
+          timestamp: DateTime(2024, 4, 12, 9, 30),
+        ),
+        ActivityComment(
+          author: 'Nia',
+          message: 'I bookmarked the nullable types reference.',
+          timestamp: DateTime(2024, 4, 12, 11, 10),
+        ),
+      ],
     ),
     const ActivityData(
       id: 'activity-2',
@@ -135,6 +157,16 @@ class SampleData {
       type: 'exercise',
       content: 'Use the provided REST endpoint and render results in the UI.',
       estimatedMinutes: 35,
+      reactions: [
+        ActivityReaction(type: 'like', count: 9),
+      ],
+      comments: [
+        ActivityComment(
+          author: 'Avery',
+          message: 'Make sure to handle loading states before the request.',
+          timestamp: DateTime(2024, 4, 13, 14, 5),
+        ),
+      ],
     ),
     const ActivityData(
       id: 'activity-3',
@@ -143,6 +175,16 @@ class SampleData {
       type: 'reflection',
       content: 'Capture blockers, wins, and the next action you will take.',
       estimatedMinutes: 10,
+      reactions: [
+        ActivityReaction(type: 'like', count: 6),
+      ],
+      comments: [
+        ActivityComment(
+          author: 'Morgan',
+          message: 'Sharing wins here kept me accountable this week.',
+          timestamp: DateTime(2024, 4, 14, 16, 45),
+        ),
+      ],
     ),
   ];
 

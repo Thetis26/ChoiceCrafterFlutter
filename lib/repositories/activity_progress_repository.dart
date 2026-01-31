@@ -125,6 +125,9 @@ class ActivityProgressRepository {
       debugPrint(
         '[ActivityProgressRepository] addTaskStats taskStatsMap before=${taskStatsMap.length}',
       );
+      debugPrint(
+        '[ActivityProgressRepository] addTaskStats taskStats details attemptDateTime=${taskStats.attemptDateTime} timeSpent=${taskStats.timeSpent} retries=${taskStats.retries} success=${taskStats.success} hintsUsed=${taskStats.hintsUsed} completionRatio=${taskStats.completionRatio} scoreRatio=${taskStats.scoreRatio}',
+      );
       taskStatsMap[taskId] = taskStats.toMap();
       snapshot['taskStats'] = taskStatsMap;
       debugPrint(

@@ -9,6 +9,8 @@ class Activity {
     required this.content,
     this.estimatedMinutes = 15,
     this.tasks = const [],
+    this.reactions = const [],
+    this.comments = const [],
   });
 
   final String id;
@@ -18,4 +20,28 @@ class Activity {
   final String content;
   final int estimatedMinutes;
   final List<Task> tasks;
+  final List<ActivityReaction> reactions;
+  final List<ActivityComment> comments;
+}
+
+class ActivityReaction {
+  const ActivityReaction({
+    required this.type,
+    required this.count,
+  });
+
+  final String type;
+  final int count;
+}
+
+class ActivityComment {
+  const ActivityComment({
+    required this.author,
+    required this.message,
+    required this.timestamp,
+  });
+
+  final String author;
+  final String message;
+  final DateTime timestamp;
 }
