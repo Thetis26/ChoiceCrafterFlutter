@@ -33,6 +33,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final Map<int, bool> _taskCorrect = {};
   final Map<int, bool> _taskCompleted = {};
   final Map<int, int> _taskAttempts = {};
+  final Map<String, TaskStats> _taskStatsById = {};
   final ActivityProgressRepository _activityProgressRepository =
       ActivityProgressRepository();
   bool _progressInitialized = false;
@@ -545,6 +546,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       completionRatio: isCorrect ? 1.0 : 0.0,
       scoreRatio: isCorrect ? 1.0 : 0.0,
     );
+    _taskStatsById[task.id] = stats;
     _activityProgressRepository.addTaskStats(
       userId: userKey,
       courseId: courseId,
@@ -721,8 +723,144 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Task breakdown',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            ...tasks.asMap().entries.map((entry) {
+              final index = entry.key;
+              final task = entry.value;
+              final stats = _taskStatsById[task.id];
+              final attemptDate = _formatAttemptDate(
+                context,
+                stats?.attemptDateTime,
+              );
+              final timeSpent = stats?.timeSpent?.isNotEmpty == true
+                  ? stats!.timeSpent!
+                  : 'Not recorded';
+              final retries =
+                  stats?.retries != null ? '${stats!.retries}' : 'Not recorded';
+              final success = stats?.success == null
+                  ? 'Not recorded'
+                  : (stats!.success! ? 'Yes' : 'No');
+              final hintsUsed = stats?.hintsUsed == null
+                  ? 'Not recorded'
+                  : (stats!.hintsUsed! ? 'Yes' : 'No');
+              final completion = stats == null
+                  ? 'Not recorded'
+                  : _formatRatio(stats.resolveCompletionRatio());
+              final score = stats == null
+                  ? 'Not recorded'
+                  : _formatRatio(stats.resolveScoreRatio());
+              return Container(
+                margin: EdgeInsets.only(bottom: index == tasks.length - 1 ? 0 : 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title.isNotEmpty
+                          ? 'Task ${index + 1}: ${task.title}'
+                          : 'Task ${index + 1}',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Attempted',
+                      value: attemptDate,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Time spent',
+                      value: timeSpent,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Retries',
+                      value: retries,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Success',
+                      value: success,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Hints used',
+                      value: hintsUsed,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Completion',
+                      value: completion,
+                    ),
+                    _buildTaskStatRow(
+                      context,
+                      label: 'Score',
+                      value: score,
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
+      ),
+    );
+  }
+
+  String _formatAttemptDate(BuildContext context, String? attemptDateTime) {
+    if (attemptDateTime == null || attemptDateTime.isEmpty) {
+      return 'Not recorded';
+    }
+    final parsed = DateTime.tryParse(attemptDateTime);
+    if (parsed == null) {
+      return 'Not recorded';
+    }
+    final localizations = MaterialLocalizations.of(context);
+    final date = localizations.formatShortDate(parsed);
+    final time = localizations.formatTimeOfDay(TimeOfDay.fromDateTime(parsed));
+    return '$date • $time';
+  }
+
+  String _formatRatio(double ratio) {
+    return '${(ratio * 100).round()}%';
+  }
+
+  Widget _buildTaskStatRow(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
     );
   }
