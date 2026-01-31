@@ -36,8 +36,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   final _firestore = FirebaseFirestore.instance;
   final _auth = firebase_auth.FirebaseAuth.instance;
   final List<ConversationMessage> _localMessages = [];
+  final List<String> _localParticipants = [];
   String? _resolvedUserId;
   bool _isResolvingUser = false;
+  late String _localTitle;
 
   String get _currentUserId {
     if (widget.localMessages != null) {
@@ -45,6 +47,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     }
     return _resolvedUserId ?? _auth.currentUser?.uid ?? _auth.currentUser?.email ?? '';
   }
+
 
   Future<String> _resolveCurrentUserId() async {
     final user = _auth.currentUser;
@@ -142,6 +145,170 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     _scrollToBottom();
   }
 
+  Future<void> _showEditChatNameDialog({
+    required String currentTitle,
+    required bool isLocal,
+  }) async {
+    final controller = TextEditingController(text: currentTitle);
+    final updatedTitle = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit chat name'),
+          content: TextField(
+            controller: controller,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              hintText: 'Enter a chat name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    if (updatedTitle == null || updatedTitle.isEmpty) {
+      return;
+    }
+    if (isLocal) {
+      setState(() {
+        _localTitle = updatedTitle;
+      });
+    } else if (widget.conversationId != null) {
+      await _firestore
+          .collection('conversations')
+          .doc(widget.conversationId!)
+          .update({'title': updatedTitle});
+    }
+  }
+
+  Future<void> _showAddParticipantDialog({
+    required bool isLocal,
+    required List<String> participants,
+  }) async {
+    final controller = TextEditingController();
+    final newParticipant = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add new participant'),
+          content: TextField(
+            controller: controller,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              hintText: 'Enter email or user id',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(context, controller.text.trim()),
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newParticipant == null || newParticipant.isEmpty) {
+      return;
+    }
+
+    if (isLocal) {
+      if (_localParticipants.contains(newParticipant)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Participant already added.')),
+        );
+        return;
+      }
+      setState(() {
+        _localParticipants.add(newParticipant);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added $newParticipant to the chat.')),
+      );
+      return;
+    }
+
+    if (widget.conversationId == null) {
+      return;
+    }
+
+    String participantId = newParticipant;
+    if (newParticipant.contains('@')) {
+      final query = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: newParticipant)
+          .limit(1)
+          .get();
+      if (query.docs.isNotEmpty) {
+        participantId = query.docs.first.id;
+      }
+    }
+
+    if (participants.contains(participantId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Participant already in this chat.')),
+      );
+      return;
+    }
+
+    await _firestore
+        .collection('conversations')
+        .doc(widget.conversationId!)
+        .update({
+      'participants': FieldValue.arrayUnion([participantId]),
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added $newParticipant to the chat.')),
+    );
+  }
+
+  PopupMenuButton<String> _buildThreadMenu({
+    required bool isLocal,
+    required List<String> participants,
+    required String currentTitle,
+  }) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) {
+        if (value == 'add_participant') {
+          _showAddParticipantDialog(
+            isLocal: isLocal,
+            participants: participants,
+          );
+        } else if (value == 'edit_name') {
+          _showEditChatNameDialog(
+            currentTitle: currentTitle,
+            isLocal: isLocal,
+          );
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'add_participant',
+          child: Text('Add new participant'),
+        ),
+        const PopupMenuItem(
+          value: 'edit_name',
+          child: Text('Edit chat name'),
+        ),
+      ],
+    );
+  }
+
   Future<void> _sendMessage(List<String> participants) async {
     if (widget.conversationId == null) {
       _sendLocalMessage();
@@ -202,6 +369,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   @override
   void initState() {
     super.initState();
+    _localTitle = widget.initialTitle;
+    final localUserId = widget.localUserId ?? 'You';
+    _localParticipants.add(localUserId);
     if (widget.localMessages != null) {
       _localMessages.addAll(widget.localMessages!);
     } else {
@@ -318,13 +488,14 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
       appBar: AppBar(
-        title: Text(widget.initialTitle),
+        title: Text(_localTitle),
         backgroundColor: const Color(0xFF7E86F9),
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert),
+          _buildThreadMenu(
+            isLocal: true,
+            participants: _localParticipants,
+            currentTitle: _localTitle,
           ),
         ],
       ),
@@ -410,9 +581,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 backgroundColor: const Color(0xFF7E86F9),
                 foregroundColor: Colors.white,
                 actions: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_vert),
+                  _buildThreadMenu(
+                    isLocal: false,
+                    participants: participants,
+                    currentTitle: displayTitle,
                   ),
                 ],
               ),
