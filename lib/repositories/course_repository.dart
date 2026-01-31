@@ -256,8 +256,76 @@ class CourseRepository {
         content: (activityMap['content'] as String?) ?? '',
         estimatedMinutes: estimatedMinutes is num ? estimatedMinutes.round() : 15,
         tasks: _tasksFromData(activityMap['tasks']),
+        reactions: _reactionsFromData(activityMap['reactions']),
+        comments: _commentsFromData(activityMap['comments']),
       );
     }).toList();
+  }
+
+  List<ActivityReaction> _reactionsFromData(dynamic reactionsData) {
+    if (reactionsData is! List) {
+      return [];
+    }
+    return reactionsData.map((reactionData) {
+      if (reactionData is Map) {
+        final data = Map<String, dynamic>.from(reactionData);
+        final countValue = data['count'] ?? data['total'];
+        return ActivityReaction(
+          type: (data['type'] as String?) ?? 'like',
+          count: countValue is num ? countValue.round() : 0,
+        );
+      }
+      if (reactionData is String) {
+        return ActivityReaction(type: reactionData, count: 1);
+      }
+      return const ActivityReaction(type: 'like', count: 0);
+    }).toList();
+  }
+
+  List<ActivityComment> _commentsFromData(dynamic commentsData) {
+    if (commentsData is! List) {
+      return [];
+    }
+    return commentsData.map((commentData) {
+      if (commentData is Map) {
+        final data = Map<String, dynamic>.from(commentData);
+        final message = (data['message'] as String?) ??
+            (data['comment'] as String?) ??
+            '';
+        if (message.isEmpty) {
+          return null;
+        }
+        return ActivityComment(
+          author: (data['author'] as String?) ??
+              (data['user'] as String?) ??
+              'Anonymous',
+          message: message,
+          timestamp: _parseCommentTimestamp(
+            data['timestamp'] ?? data['createdAt'],
+          ),
+        );
+      }
+      return null;
+    }).whereType<ActivityComment>().toList();
+  }
+
+  DateTime _parseCommentTimestamp(dynamic rawTimestamp) {
+    if (rawTimestamp is Timestamp) {
+      return rawTimestamp.toDate();
+    }
+    if (rawTimestamp is DateTime) {
+      return rawTimestamp;
+    }
+    if (rawTimestamp is String) {
+      final parsed = DateTime.tryParse(rawTimestamp);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    if (rawTimestamp is num) {
+      return DateTime.fromMillisecondsSinceEpoch(rawTimestamp.round());
+    }
+    return DateTime.now();
   }
 
   List<Task> _tasksFromData(dynamic tasksData) {

@@ -35,11 +35,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final Map<int, int> _taskAttempts = {};
   final ActivityProgressRepository _activityProgressRepository =
       ActivityProgressRepository();
+  final TextEditingController _commentController = TextEditingController();
   bool _progressInitialized = false;
   bool _completionDialogShown = false;
   String? _userKey;
   String? _courseId;
   String? _activityId;
+  bool _conversationInitialized = false;
+  List<ActivityComment> _comments = [];
+  int _likeCount = 0;
+  bool _liked = false;
 
   @override
   void didChangeDependencies() {
@@ -50,6 +55,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -106,6 +112,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
     _courseId = courseId;
     _activityId = activity.id.isNotEmpty ? activity.id : activity.name;
+    _initializeConversation(activity);
 
     final List<Task> tasks = activity.tasks;
     final bool showRecommendations = _areTasksComplete(tasks);
@@ -166,7 +173,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     List<Task> tasks,
     bool showRecommendations,
   ) {
-    final itemCount = tasks.length + (showRecommendations ? 2 : 0);
+    final itemCount = tasks.length + (showRecommendations ? 3 : 0);
     return PageView.builder(
       controller: _controller,
       itemCount: itemCount,
@@ -184,9 +191,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: ConstrainedBox(
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
-                    child: index == tasks.length
-                        ? _buildRecommendationsCard(context)
-                        : _buildStatisticsCard(context, tasks),
+                    child: _buildActivityOutroCard(context, tasks, index),
                   ),
                 );
               },
@@ -213,6 +218,69 @@ class _ActivityScreenState extends State<ActivityScreen> {
         );
       },
     );
+  }
+
+  Widget _buildActivityOutroCard(
+    BuildContext context,
+    List<Task> tasks,
+    int index,
+  ) {
+    if (index == tasks.length) {
+      return _buildRecommendationsCard(context);
+    }
+    if (index == tasks.length + 1) {
+      return _buildStatisticsCard(context, tasks);
+    }
+    return _buildConversationFeedCard(context);
+  }
+
+  void _initializeConversation(Activity activity) {
+    if (_conversationInitialized) {
+      return;
+    }
+    _conversationInitialized = true;
+    _comments = List<ActivityComment>.from(activity.comments);
+    _likeCount = _likeCountFrom(activity.reactions);
+    _liked = false;
+  }
+
+  int _likeCountFrom(List<ActivityReaction> reactions) {
+    for (final reaction in reactions) {
+      if (reaction.type.toLowerCase() == 'like') {
+        return reaction.count;
+      }
+    }
+    return reactions.isEmpty
+        ? 0
+        : reactions.map((reaction) => reaction.count).fold(0, (a, b) => a + b);
+  }
+
+  void _toggleLike() {
+    setState(() {
+      _liked = !_liked;
+      _likeCount += _liked ? 1 : -1;
+      if (_likeCount < 0) {
+        _likeCount = 0;
+      }
+    });
+  }
+
+  void _addComment() {
+    final message = _commentController.text.trim();
+    if (message.isEmpty) {
+      return;
+    }
+    setState(() {
+      _comments.add(
+        ActivityComment(
+          author: 'You',
+          message: message,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+    _commentController.clear();
+    FocusScope.of(context).unfocus();
   }
 
   bool _areTasksComplete(List<Task> tasks) {
@@ -352,7 +420,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     bool showCompletionPages,
   ) {
     final int totalTasks = tasks.length;
-    final int totalPages = totalTasks + (showCompletionPages ? 2 : 0);
+    final int totalPages = totalTasks + (showCompletionPages ? 3 : 0);
     final bool hasPrevious = _currentIndex > 0;
     final bool hasNext = _currentIndex < totalPages - 1;
     final bool isTaskPage = _currentIndex < totalTasks;
@@ -367,7 +435,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ? 'Task ${_currentIndex + 1} of $totalTasks'
         : _currentIndex == totalTasks
             ? 'Recommendations'
-            : 'Statistics';
+            : _currentIndex == totalTasks + 1
+                ? 'Statistics'
+                : 'Conversation';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -725,6 +795,144 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildConversationFeedCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Conversation feed',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Share feedback, drop questions, and react to this activity.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: _toggleLike,
+                  icon: Icon(
+                    _liked ? Icons.favorite : Icons.favorite_border,
+                    color: _liked ? Colors.pinkAccent : null,
+                  ),
+                  tooltip: _liked ? 'Unlike' : 'Like',
+                ),
+                Text(
+                  '$_likeCount likes',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const Spacer(),
+                Text(
+                  '${_comments.length} comments',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_comments.isEmpty)
+              Text(
+                'Be the first to add a comment.',
+                style: theme.textTheme.bodySmall,
+              )
+            else
+              Column(
+                children: _comments
+                    .map(
+                      (comment) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              child: Text(
+                                comment.author.isNotEmpty
+                                    ? comment.author[0].toUpperCase()
+                                    : '?',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        comment.author,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _formatCommentTimestamp(
+                                          context,
+                                          comment.timestamp,
+                                        ),
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    comment.message,
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _addComment(),
+                    decoration: const InputDecoration(
+                      labelText: 'Add a comment',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _addComment,
+                  child: const Text('Post'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatCommentTimestamp(
+    BuildContext context,
+    DateTime timestamp,
+  ) {
+    final time = TimeOfDay.fromDateTime(timestamp).format(context);
+    final month = timestamp.month.toString().padLeft(2, '0');
+    final day = timestamp.day.toString().padLeft(2, '0');
+    return '$month/$day $time';
   }
 
   List<Widget> _buildTaskDetails(Task task) {
