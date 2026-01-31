@@ -547,6 +547,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
       scoreRatio: isCorrect ? 1.0 : 0.0,
     );
     _taskStatsById[task.id] = stats;
+    debugPrint(
+      '[ActivityScreen] task progress stats taskId=${task.id} attemptDateTime=${stats.attemptDateTime} timeSpent=${stats.timeSpent} retries=${stats.retries} success=${stats.success} hintsUsed=${stats.hintsUsed} completionRatio=${stats.completionRatio} scoreRatio=${stats.scoreRatio}',
+    );
     _activityProgressRepository.addTaskStats(
       userId: userKey,
       courseId: courseId,
