@@ -81,6 +81,8 @@ class AuthRepository {
       fullName: fullName,
       email: normalizedEmail,
       enrolledCourseIds: _defaultEnrolledCourseIds,
+      anonymousAvatarName: null,
+      anonymousAvatarImageUrl: null,
     );
   }
 
@@ -108,6 +110,13 @@ class AuthRepository {
         firebaseUser.displayName ??
         'ChoiceCrafter Student';
     final email = data?['email'] as String? ?? userEmail;
+    final anonymousAvatar = data?['anonymousAvatar'];
+    final anonymousAvatarName = anonymousAvatar is Map
+        ? anonymousAvatar['name'] as String?
+        : null;
+    final anonymousAvatarImageUrl = anonymousAvatar is Map
+        ? anonymousAvatar['imageUrl'] as String?
+        : null;
     final legacyCourseIds = (data?['enrolledCourseIds'] as List?)
             ?.whereType<String>()
             .toList() ??
@@ -131,6 +140,8 @@ class AuthRepository {
       fullName: fullName,
       email: email,
       enrolledCourseIds: enrolledCourseIds,
+      anonymousAvatarName: anonymousAvatarName,
+      anonymousAvatarImageUrl: anonymousAvatarImageUrl,
     );
   }
 
