@@ -343,6 +343,13 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
 
   @override
   Widget build(BuildContext context) {
+    final anonymousAvatarName = widget.user.anonymousAvatarName?.trim() ?? '';
+    final anonymousAvatarImageUrl =
+        widget.user.anonymousAvatarImageUrl?.trim() ?? '';
+    final drawerDisplayName = anonymousAvatarName.isNotEmpty
+        ? '${widget.user.fullName} ($anonymousAvatarName)'
+        : widget.user.fullName;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('ChoiceCrafter'),
@@ -361,9 +368,12 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           child: ListView(
             children: [
               UserAccountsDrawerHeader(
-                accountName: Text(widget.user.fullName),
+                accountName: Text(drawerDisplayName),
                 accountEmail: Text(widget.user.email),
                 currentAccountPicture: CircleAvatar(
+                  backgroundImage: anonymousAvatarImageUrl.isNotEmpty
+                      ? NetworkImage(anonymousAvatarImageUrl)
+                      : null,
                   child: Text(widget.user.fullName.substring(0, 1)),
                 ),
               ),
