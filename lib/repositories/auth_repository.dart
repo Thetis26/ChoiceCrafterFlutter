@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/user.dart';
 
@@ -7,11 +10,14 @@ class AuthRepository {
   AuthRepository({
     firebase_auth.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
+    FirebaseStorage? storage,
   })  : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _storage = storage ?? FirebaseStorage.instance;
 
   final firebase_auth.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   static const String _usersCollection = 'users';
   static const String _enrollmentsCollection = 'COURSE_ENROLLMENTS';
@@ -47,12 +53,16 @@ class AuthRepository {
     final normalizedEmail = email.trim();
     await firebaseUser.updateDisplayName(fullName);
     final userDoc = await _resolveUserDoc(normalizedEmail, firebaseUser.uid);
+    final anonymousAvatar = await _selectRandomAvatar();
+    final anonymousAvatarName = anonymousAvatar?['name'] as String?;
+    final anonymousAvatarImageUrl = anonymousAvatar?['imageUrl'] as String?;
     await userDoc.set(
       {
         'fullName': fullName,
         'name': fullName,
         'email': normalizedEmail,
         'enrolledCourseIds': _defaultEnrolledCourseIds,
+        if (anonymousAvatar != null) 'anonymousAvatar': anonymousAvatar,
       },
       SetOptions(merge: true),
     );
@@ -81,8 +91,8 @@ class AuthRepository {
       fullName: fullName,
       email: normalizedEmail,
       enrolledCourseIds: _defaultEnrolledCourseIds,
-      anonymousAvatarName: null,
-      anonymousAvatarImageUrl: null,
+      anonymousAvatarName: anonymousAvatarName,
+      anonymousAvatarImageUrl: anonymousAvatarImageUrl,
     );
   }
 
@@ -210,5 +220,28 @@ class AuthRepository {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
+  }
+
+  Future<Map<String, String>?> _selectRandomAvatar() async {
+    try {
+      final avatarsRef = _storage.ref('avatars');
+      final results = await avatarsRef.listAll();
+      if (results.items.isEmpty) {
+        return null;
+      }
+      final selectedRef =
+          results.items[Random().nextInt(results.items.length)];
+      final downloadUrl = await selectedRef.getDownloadURL();
+      final displayName = selectedRef.name.replaceFirst(
+        RegExp(r'\.png$', caseSensitive: false),
+        '',
+      );
+      return {
+        'name': displayName,
+        'imageUrl': downloadUrl,
+      };
+    } catch (_) {
+      return null;
+    }
   }
 }
