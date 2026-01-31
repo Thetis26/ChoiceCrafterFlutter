@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
+
+import '../sample_data.dart';
 
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
@@ -12,10 +15,7 @@ class InboxScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      return _buildScaffold(
-        context,
-        const Center(child: Text('Sign in to view notifications.')),
-      );
+      return _buildLocalInbox(context);
     }
 
     return FutureBuilder<String?>(
@@ -37,11 +37,10 @@ class InboxScreen extends StatelessWidget {
 
         final userId = userSnapshot.data;
         if (userId == null || userId.isEmpty) {
-          return _buildScaffold(
-            context,
-            const Center(child: Text('User profile not found.')),
-          );
+          return _buildLocalInbox(context);
         }
+
+        developer.log('Searching notifications by user id: uid=$userId');
 
         final stream = FirebaseFirestore.instance
             .collection(_notificationsCollection)
@@ -53,12 +52,13 @@ class InboxScreen extends StatelessWidget {
           stream: stream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
+              developer.log('Error loading notifications: ${snapshot.error}');
               return _buildScaffold(
                 context,
                 const Center(child: Text('Unable to load notifications.')),
               );
             }
-
+            developer.log('Loading notifications: ${snapshot.connectionState}');
             if (snapshot.connectionState == ConnectionState.waiting) {
               return _buildScaffold(
                 context,
@@ -68,34 +68,31 @@ class InboxScreen extends StatelessWidget {
 
             final docs = snapshot.data?.docs ?? [];
             if (docs.isEmpty) {
-              return _buildScaffold(
-                context,
-                const Center(child: Text('No notifications yet.')),
-              );
+              return _buildLocalInbox(context);
             }
 
             return _buildScaffold(
               context,
-              ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: docs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final data = docs[index].data();
-                  final title = (data['type'] as String?)?.trim();
-                  final details = (data['details'] as String?)?.trim();
-                  final timestamp = _parseTimestamp(data['timestamp']);
-                  final timestampLabel = _formatTimestamp(timestamp);
-
-                  return _buildNotificationCard(
-                    context,
-                    title: title?.isNotEmpty == true ? title! : 'Notification',
-                    details: details?.isNotEmpty == true
-                        ? details!
-                        : 'No details available.',
-                    timestampLabel: timestampLabel,
-                  );
-                },
+              _buildNotificationList(
+                context,
+                docs
+                    .map(
+                      (doc) {
+                        final data = doc.data();
+                        final title = (data['type'] as String?)?.trim();
+                        final details = (data['details'] as String?)?.trim();
+                        return _InboxEntry(
+                          title: title?.isNotEmpty == true
+                              ? title!
+                              : 'Notification',
+                          details: details?.isNotEmpty == true
+                              ? details!
+                              : 'No details available.',
+                          timestamp: _parseTimestamp(data['timestamp']),
+                        );
+                      },
+                    )
+                    .toList(),
               ),
             );
           },
@@ -103,6 +100,7 @@ class InboxScreen extends StatelessWidget {
       },
     );
   }
+
 
   Widget _buildScaffold(BuildContext context, Widget child) {
     return Scaffold(
@@ -183,6 +181,12 @@ class InboxScreen extends StatelessWidget {
     if (value is Timestamp) {
       return value.toDate();
     }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
     if (value is String) {
       return DateTime.tryParse(value);
     }
@@ -201,25 +205,108 @@ class InboxScreen extends StatelessWidget {
   }
 
   Future<String?> _resolveUserId(firebase_auth.User user) async {
+    final uid = user.uid;
     final email = user.email?.trim() ?? '';
+    final displayName = user.displayName;
+    final phone = user.phoneNumber;
+    final providerData = user.providerData
+        .map((p) => '${p.providerId}:${p.uid ?? ''}')
+        .join(',');
+
+    developer.log(
+      'Resolving user id: uid=$uid, email=$email, displayName=$displayName, phone=$phone, providers=$providerData',
+      name: 'inbox._resolveUserId',
+    );
+
     final usersCollection =
-        FirebaseFirestore.instance.collection(_usersCollection);
+    FirebaseFirestore.instance.collection(_usersCollection);
 
     if (email.isNotEmpty) {
+      developer.log('Querying users by email: $email', name: 'inbox._resolveUserId');
       final query = await usersCollection
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
+      developer.log('Email query returned ${query.docs.length} documents',
+          name: 'inbox._resolveUserId');
       if (query.docs.isNotEmpty) {
-        return query.docs.first.id;
+        final foundId = query.docs.first.id;
+        developer.log('Found user doc by email: $foundId', name: 'inbox._resolveUserId');
+        return foundId;
       }
+    } else {
+      developer.log('Email empty; skipping email query', name: 'inbox._resolveUserId');
     }
 
-    final fallbackDoc = await usersCollection.doc(user.uid).get();
+    developer.log('Checking fallback doc for uid: $uid', name: 'inbox._resolveUserId');
+    final fallbackDoc = await usersCollection.doc(uid).get();
+    developer.log('Fallback doc exists=${fallbackDoc.exists} id=${fallbackDoc.id}',
+        name: 'inbox._resolveUserId');
     if (fallbackDoc.exists) {
       return fallbackDoc.id;
     }
 
+    developer.log('No matching user document found for uid=$uid', name: 'inbox._resolveUserId');
     return null;
   }
+
+  Widget _buildLocalInbox(BuildContext context) {
+    if (SampleData.inbox.isEmpty) {
+      return _buildScaffold(
+        context,
+        const Center(child: Text('No notifications yet.')),
+      );
+    }
+
+    return _buildScaffold(
+      context,
+      _buildNotificationList(
+        context,
+        SampleData.inbox
+            .map(
+              (item) => _InboxEntry(
+                title: item.title,
+                details: item.body,
+                timestamp: item.timestamp,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildNotificationList(
+    BuildContext context,
+    List<_InboxEntry> entries,
+  ) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: entries.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final entry = entries[index];
+        final timestampLabel = _formatTimestamp(entry.timestamp);
+
+        return _buildNotificationCard(
+          context,
+          title: entry.title,
+          details: entry.details,
+          timestampLabel: timestampLabel,
+        );
+      },
+    );
+  }
+
+}
+
+class _InboxEntry {
+  const _InboxEntry({
+    required this.title,
+    required this.details,
+    required this.timestamp,
+  });
+
+  final String title;
+  final String details;
+  final DateTime? timestamp;
 }
