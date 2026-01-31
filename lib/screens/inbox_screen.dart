@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 
 import '../sample_data.dart';
 
@@ -96,6 +97,7 @@ class InboxScreen extends StatelessWidget {
       },
     );
   }
+
 
   Widget _buildScaffold(BuildContext context, Widget child) {
     return Scaffold(
@@ -200,25 +202,48 @@ class InboxScreen extends StatelessWidget {
   }
 
   Future<String?> _resolveUserId(firebase_auth.User user) async {
+    final uid = user.uid;
     final email = user.email?.trim() ?? '';
+    final displayName = user.displayName;
+    final phone = user.phoneNumber;
+    final providerData = user.providerData
+        .map((p) => '${p.providerId}:${p.uid ?? ''}')
+        .join(',');
+
+    developer.log(
+      'Resolving user id: uid=$uid, email=$email, displayName=$displayName, phone=$phone, providers=$providerData',
+      name: 'inbox._resolveUserId',
+    );
+
     final usersCollection =
-        FirebaseFirestore.instance.collection(_usersCollection);
+    FirebaseFirestore.instance.collection(_usersCollection);
 
     if (email.isNotEmpty) {
+      developer.log('Querying users by email: $email', name: 'inbox._resolveUserId');
       final query = await usersCollection
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
+      developer.log('Email query returned ${query.docs.length} documents',
+          name: 'inbox._resolveUserId');
       if (query.docs.isNotEmpty) {
-        return query.docs.first.id;
+        final foundId = query.docs.first.id;
+        developer.log('Found user doc by email: $foundId', name: 'inbox._resolveUserId');
+        return foundId;
       }
+    } else {
+      developer.log('Email empty; skipping email query', name: 'inbox._resolveUserId');
     }
 
-    final fallbackDoc = await usersCollection.doc(user.uid).get();
+    developer.log('Checking fallback doc for uid: $uid', name: 'inbox._resolveUserId');
+    final fallbackDoc = await usersCollection.doc(uid).get();
+    developer.log('Fallback doc exists=${fallbackDoc.exists} id=${fallbackDoc.id}',
+        name: 'inbox._resolveUserId');
     if (fallbackDoc.exists) {
       return fallbackDoc.id;
     }
 
+    developer.log('No matching user document found for uid=$uid', name: 'inbox._resolveUserId');
     return null;
   }
 
@@ -268,6 +293,7 @@ class InboxScreen extends StatelessWidget {
       },
     );
   }
+
 }
 
 class _InboxEntry {

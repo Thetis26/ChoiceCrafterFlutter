@@ -461,7 +461,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           ),
           NavigationDestination(
             icon: Icon(Icons.people_alt_outlined),
-            label: 'Colleagues activity',
+            label: 'Peers\' activity',
           ),
           NavigationDestination(
             icon: Icon(Icons.campaign_outlined),
