@@ -31,10 +31,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final PageController _controller = PageController(viewportFraction: 0.92);
   int _currentIndex = 0;
   final Map<int, bool> _taskCorrect = {};
+  final Map<int, bool> _taskCompleted = {};
   final Map<int, int> _taskAttempts = {};
   final ActivityProgressRepository _activityProgressRepository =
       ActivityProgressRepository();
   bool _progressInitialized = false;
+  bool _completionDialogShown = false;
   String? _userKey;
   String? _courseId;
   String? _activityId;
@@ -108,6 +110,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final List<Task> tasks = activity.tasks;
     final bool showRecommendations = _areTasksComplete(tasks);
 
+    if (tasks.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleUngradedTaskCompletion(tasks, _currentIndex);
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -162,7 +170,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return PageView.builder(
       controller: _controller,
       itemCount: itemCount,
-      onPageChanged: (index) => setState(() => _currentIndex = index),
+      onPageChanged: (index) {
+        setState(() => _currentIndex = index);
+        _handleUngradedTaskCompletion(tasks, index);
+      },
       itemBuilder: (context, index) {
         if (index >= tasks.length) {
           return Padding(
@@ -225,7 +236,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (_isTaskMarkedComplete(task)) {
       return true;
     }
-    return _isTaskVerified(task, index);
+    if (_requiresCorrectAnswer(task)) {
+      return _isTaskVerified(task, index);
+    }
+    return _taskCompleted[index] ?? false;
   }
 
   Widget _buildRecommendationsCard(BuildContext context) {
@@ -547,6 +561,52 @@ class _ActivityScreenState extends State<ActivityScreen> {
         score: score,
       );
     }
+    _handleCompletionIfNeeded(tasks);
+  }
+
+  void _handleUngradedTaskCompletion(List<Task> tasks, int index) {
+    if (index < 0 || index >= tasks.length) {
+      return;
+    }
+    final task = tasks[index];
+    if (_requiresCorrectAnswer(task) || _isTaskMarkedComplete(task)) {
+      return;
+    }
+    if (_taskCompleted[index] == true) {
+      return;
+    }
+    setState(() => _taskCompleted[index] = true);
+    _recordTaskProgress(
+      task: task,
+      index: index,
+      isCorrect: true,
+      tasks: tasks,
+    );
+  }
+
+  void _handleCompletionIfNeeded(List<Task> tasks) {
+    if (_completionDialogShown || !_areTasksComplete(tasks)) {
+      return;
+    }
+    _completionDialogShown = true;
+    if (!mounted) {
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Congratulations!'),
+        content: const Text(
+          'You completed every task in this activity. Great work!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   int _calculateActivityScore(List<Task> tasks) {
