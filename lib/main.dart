@@ -23,6 +23,7 @@ import 'screens/news_screen.dart';
 import 'screens/personal_activity_screen.dart';
 import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
+import 'localization/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +45,6 @@ class _MyAppState extends State<MyApp> {
   User? _currentUser;
   ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale('en');
-  String _languageLabel = 'English';
 
   @override
   void initState() {
@@ -69,12 +69,8 @@ class _MyAppState extends State<MyApp> {
     setState(() => _themeMode = themeMode);
   }
 
-  void _handleLanguageChanged(String language) {
-    final locale = language == 'Romanian' ? const Locale('ro') : const Locale('en');
-    setState(() {
-      _languageLabel = language;
-      _locale = locale;
-    });
+  void _handleLanguageChanged(Locale locale) {
+    setState(() => _locale = locale);
   }
 
   Future<void> _handleLogout() async {
@@ -139,20 +135,21 @@ class _MyAppState extends State<MyApp> {
               ),
               useMaterial3: true,
             ),
-          locale: _locale,
-          supportedLocales: const [
-            Locale('en'),
-            Locale('ro'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
-        );
+            locale: _locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ro'),
+            ],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
         }
 
         if (snapshot.hasError) {
@@ -170,20 +167,21 @@ class _MyAppState extends State<MyApp> {
               ),
               useMaterial3: true,
             ),
-          locale: _locale,
-          supportedLocales: const [
-            Locale('en'),
-            Locale('ro'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: const Scaffold(
-            body: Center(
-              child: Text(
-                'Firebase failed to initialize. Check your configuration and try again.',
+            locale: _locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ro'),
+            ],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: const Scaffold(
+              body: Center(
+                child: Text(
+                  'Firebase failed to initialize. Check your configuration and try again.',
                 ),
               ),
             ),
@@ -215,6 +213,7 @@ class _MyAppState extends State<MyApp> {
             Locale('ro'),
           ],
           localizationsDelegates: const [
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
@@ -236,7 +235,7 @@ class _MyAppState extends State<MyApp> {
             '/inbox': (context) => const InboxScreen(),
             '/messages': (context) => const MessagesScreen(),
             '/settings': (context) => SettingsScreen(
-                  language: _languageLabel,
+                  locale: _locale,
                   themeMode: _themeMode,
                   onLanguageChanged: _handleLanguageChanged,
                   onThemeModeChanged: _handleThemeModeChanged,
@@ -349,6 +348,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     final drawerDisplayName = anonymousAvatarName.isNotEmpty
         ? '${widget.user.fullName} ($anonymousAvatarName)'
         : widget.user.fullName;
+    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -359,7 +359,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               await widget.onLogout();
             },
             icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
+            tooltip: localizations.signOut,
           ),
         ],
       ),
@@ -379,22 +379,22 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               ),
               ListTile(
                 leading: const Icon(Icons.message_outlined),
-                title: const Text('Messages'),
+                title: Text(localizations.messages),
                 onTap: () => Navigator.of(context).pushNamed('/messages'),
               ),
               ListTile(
                 leading: const Icon(Icons.inbox_outlined),
-                title: const Text('Inbox'),
+                title: Text(localizations.inbox),
                 onTap: () => Navigator.of(context).pushNamed('/inbox'),
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
-                title: const Text('Settings'),
+                title: Text(localizations.settings),
                 onTap: () => Navigator.of(context).pushNamed('/settings'),
               ),
               ListTile(
                 leading: const Icon(Icons.feedback_outlined),
-                title: const Text('Feedback'),
+                title: Text(localizations.feedback),
                 onTap: () => Navigator.of(context).pushNamed('/feedback'),
               ),
             ],
@@ -406,22 +406,22 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onBottomNavTapped,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
+        destinations: [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            label: localizations.home,
           ),
           NavigationDestination(
             icon: Icon(Icons.people_alt_outlined),
-            label: 'Peers\' activity',
+            label: localizations.peersActivity,
           ),
           NavigationDestination(
             icon: Icon(Icons.campaign_outlined),
-            label: 'News',
+            label: localizations.news,
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
-            label: 'Personal statistics',
+            label: localizations.personalStatistics,
           ),
         ],
       ),

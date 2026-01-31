@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
-    required this.language,
+    required this.locale,
     required this.themeMode,
     required this.onLanguageChanged,
     required this.onThemeModeChanged,
   });
 
-  final String language;
+  final Locale locale;
   final ThemeMode themeMode;
-  final ValueChanged<String> onLanguageChanged;
+  final ValueChanged<Locale> onLanguageChanged;
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
   @override
@@ -21,21 +23,21 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool notificationsEnabled = true;
   bool analyticsSharing = false;
-  late String language;
+  late Locale locale;
   late ThemeMode themeMode;
 
   @override
   void initState() {
     super.initState();
-    language = widget.language;
+    locale = widget.locale;
     themeMode = widget.themeMode;
   }
 
   @override
   void didUpdateWidget(covariant SettingsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.language != widget.language) {
-      language = widget.language;
+    if (oldWidget.locale != widget.locale) {
+      locale = widget.locale;
     }
     if (oldWidget.themeMode != widget.themeMode) {
       themeMode = widget.themeMode;
@@ -44,71 +46,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(localizations.settings),
       ),
       body: SafeArea(
         child: ListView(
           children: [
             SwitchListTile(
-              title: const Text('Push notifications'),
-              subtitle: const Text('Match the Android notification behavior'),
+              title: Text(localizations.pushNotifications),
+              subtitle: Text(localizations.matchAndroidNotifications),
               value: notificationsEnabled,
               onChanged: (value) => setState(() => notificationsEnabled = value),
             ),
             SwitchListTile(
-              title: const Text('Share anonymous analytics'),
-              subtitle: const Text('Use the same metrics as the Android build'),
+              title: Text(localizations.shareAnonymousAnalytics),
+              subtitle: Text(localizations.matchAndroidMetrics),
               value: analyticsSharing,
               onChanged: (value) => setState(() => analyticsSharing = value),
             ),
             ListTile(
-              title: const Text('Language'),
-              subtitle: Text(language),
+              title: Text(localizations.language),
+              subtitle: Text(localizations.languageName(locale)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
-                final selected = await showDialog<String>(
+                final selected = await showDialog<Locale>(
                   context: context,
                   builder: (context) => SimpleDialog(
-                    title: const Text('Choose language'),
+                    title: Text(localizations.chooseLanguage),
                     children: [
                       SimpleDialogOption(
-                        onPressed: () => Navigator.of(context).pop('English'),
-                        child: const Text('English'),
+                        onPressed: () =>
+                            Navigator.of(context).pop(const Locale('en')),
+                        child: Text(localizations.languageName(const Locale('en'))),
                       ),
                       SimpleDialogOption(
-                        onPressed: () => Navigator.of(context).pop('Romanian'),
-                        child: const Text('Romanian'),
+                        onPressed: () =>
+                            Navigator.of(context).pop(const Locale('ro')),
+                        child: Text(localizations.languageName(const Locale('ro'))),
                       ),
                     ],
                   ),
                 );
                 if (selected != null) {
-                  setState(() => language = selected);
+                  setState(() => locale = selected);
                   widget.onLanguageChanged(selected);
                 }
               },
             ),
             ListTile(
-              title: const Text('Theme'),
-              subtitle: Text(themeMode == ThemeMode.dark ? 'Dark' : 'Light'),
+              title: Text(localizations.theme),
+              subtitle: Text(
+                themeMode == ThemeMode.dark
+                    ? localizations.dark
+                    : localizations.light,
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 final selected = await showDialog<ThemeMode>(
                   context: context,
                   builder: (context) => SimpleDialog(
-                    title: const Text('Choose theme'),
+                    title: Text(localizations.chooseTheme),
                     children: [
                       SimpleDialogOption(
                         onPressed: () =>
                             Navigator.of(context).pop(ThemeMode.light),
-                        child: const Text('Light'),
+                        child: Text(localizations.light),
                       ),
                       SimpleDialogOption(
                         onPressed: () =>
                             Navigator.of(context).pop(ThemeMode.dark),
-                        child: const Text('Dark'),
+                        child: Text(localizations.dark),
                       ),
                     ],
                   ),
@@ -122,10 +131,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              subtitle: const Text('Mimics the Android navigation drawer action'),
+              title: Text(localizations.logout),
+              subtitle: Text(localizations.logoutSubtitle),
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logout tapped (demo only)')),
+                SnackBar(content: Text(localizations.logoutSnackBar)),
               ),
             ),
           ],
