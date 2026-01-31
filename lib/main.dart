@@ -95,10 +95,20 @@ class _MyAppState extends State<MyApp> {
         final courseId = args?['courseId'] as String?;
         final course = args?['course'] as Course?;
         final highlightActivityId = args?['highlightActivityId'] as String?;
+        final user = args?['user'] as User?;
+        if (user == null) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('No user data available.')),
+            ),
+          );
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => CourseActivitiesLoader(
             courseRepository: courseRepository,
+            user: user,
             course: course,
             courseId: courseId,
             highlightActivityId: highlightActivityId,
@@ -309,6 +319,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         'course': course,
         'courseId': course.id,
         'highlightActivityId': highlightActivityId,
+        'user': widget.user,
       },
     );
   }

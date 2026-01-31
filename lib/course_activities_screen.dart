@@ -4,18 +4,21 @@ import 'package:flutter/material.dart';
 
 import 'models/course.dart';
 import 'models/module.dart';
+import 'models/user.dart';
 import 'repositories/course_repository.dart';
 
 class CourseActivitiesLoader extends StatelessWidget {
   const CourseActivitiesLoader({
     super.key,
     required this.courseRepository,
+    required this.user,
     this.course,
     this.courseId,
     this.highlightActivityId,
   });
 
   final CourseRepository courseRepository;
+  final User user;
   final Course? course;
   final String? courseId;
   final String? highlightActivityId;
@@ -26,6 +29,7 @@ class CourseActivitiesLoader extends StatelessWidget {
     if (resolvedCourse != null) {
       return CourseActivitiesScreen(
         course: resolvedCourse,
+        user: user,
         highlightActivityId: highlightActivityId,
       );
     }
@@ -51,6 +55,7 @@ class CourseActivitiesLoader extends StatelessWidget {
         }
         return CourseActivitiesScreen(
           course: course,
+          user: user,
           highlightActivityId: highlightActivityId,
         );
       },
@@ -62,10 +67,12 @@ class CourseActivitiesScreen extends StatelessWidget {
   const CourseActivitiesScreen({
     super.key,
     required this.course,
+    required this.user,
     this.highlightActivityId,
   });
 
   final Course course;
+  final User user;
   final String? highlightActivityId;
 
   @override
@@ -112,6 +119,7 @@ class CourseActivitiesScreen extends StatelessWidget {
                       arguments: {
                         'activity': activity,
                         'courseId': course.id,
+                        'user': user,
                       },
                     );
                   },

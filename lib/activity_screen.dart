@@ -6,6 +6,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'models/activity.dart';
 import 'models/task.dart';
+import 'models/task_stats.dart';
+import 'models/user.dart';
+import 'repositories/activity_progress_repository.dart';
 import 'widgets/activity/task_cards/coding_challenge_task_card.dart';
 import 'widgets/activity/task_cards/fill_in_the_blank_task_card.dart';
 import 'widgets/activity/task_cards/generic_task_card.dart';
@@ -28,11 +31,62 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final PageController _controller = PageController(viewportFraction: 0.92);
   int _currentIndex = 0;
   final Map<int, bool> _taskCorrect = {};
+  final Map<int, int> _taskAttempts = {};
+  final ActivityProgressRepository _activityProgressRepository =
+      ActivityProgressRepository();
+  bool _progressInitialized = false;
+  String? _userKey;
+  String? _courseId;
+  String? _activityId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeProgress();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _initializeProgress() {
+    if (_progressInitialized) {
+      return;
+    }
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is! Map) {
+      _progressInitialized = true;
+      return;
+    }
+    final activityArg = arguments['activity'];
+    final courseId = arguments['courseId'] as String?;
+    final userArg = arguments['user'];
+    String? userKey;
+    if (userArg is User) {
+      userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
+    }
+    if (activityArg is Activity) {
+      final resolvedActivityId =
+          activityArg.id.isNotEmpty ? activityArg.id : activityArg.name;
+      _activityId = resolvedActivityId;
+    }
+    _courseId = courseId;
+    _userKey = userKey;
+    _progressInitialized = true;
+    if (_userKey != null &&
+        _userKey!.isNotEmpty &&
+        _courseId != null &&
+        _courseId!.isNotEmpty &&
+        _activityId != null &&
+        _activityId!.isNotEmpty) {
+      _activityProgressRepository.startActivity(
+        userId: _userKey!,
+        courseId: _courseId!,
+        activityId: _activityId!,
+      );
+    }
   }
 
   @override
@@ -44,6 +98,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
     final Activity activity = arguments['activity'] as Activity;
     final String? courseId = arguments['courseId'] as String?;
+    final userArg = arguments['user'];
+    if (userArg is User) {
+      _userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
+    }
+    _courseId = courseId;
+    _activityId = activity.id.isNotEmpty ? activity.id : activity.name;
 
     final List<Task> tasks = activity.tasks;
     final bool showRecommendations = _areTasksComplete(tasks);
@@ -428,7 +488,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
   void _markTaskCorrect(int index, bool isCorrect, List<Task> tasks) {
     final int totalTasks = tasks.length;
     final bool wasCorrect = _taskCorrect[index] ?? false;
+    _taskAttempts[index] = (_taskAttempts[index] ?? 0) + 1;
     setState(() => _taskCorrect[index] = isCorrect);
+    _recordTaskProgress(
+      task: tasks[index],
+      index: index,
+      isCorrect: isCorrect,
+      tasks: tasks,
+    );
     final bool showCompletionPages = _areTasksComplete(tasks);
     final int totalPages = totalTasks + (showCompletionPages ? 2 : 0);
     if (isCorrect && !wasCorrect && index < totalPages - 1) {
@@ -437,6 +504,63 @@ class _ActivityScreenState extends State<ActivityScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  void _recordTaskProgress({
+    required Task task,
+    required int index,
+    required bool isCorrect,
+    required List<Task> tasks,
+  }) {
+    final userKey = _userKey;
+    final courseId = _courseId;
+    final activityId = _activityId;
+    if (userKey == null ||
+        userKey.isEmpty ||
+        courseId == null ||
+        courseId.isEmpty ||
+        activityId == null ||
+        activityId.isEmpty) {
+      return;
+    }
+    final attemptCount = _taskAttempts[index] ?? 1;
+    final stats = TaskStats(
+      attemptDateTime: DateTime.now().toIso8601String(),
+      retries: attemptCount > 0 ? attemptCount - 1 : 0,
+      success: isCorrect,
+      completionRatio: isCorrect ? 1.0 : 0.0,
+      scoreRatio: isCorrect ? 1.0 : 0.0,
+    );
+    _activityProgressRepository.addTaskStats(
+      userId: userKey,
+      courseId: courseId,
+      activityId: activityId,
+      taskId: task.id,
+      taskStats: stats,
+    );
+    if (_areTasksComplete(tasks)) {
+      final score = _calculateActivityScore(tasks);
+      _activityProgressRepository.updateHighestScoreIfGreater(
+        userId: userKey,
+        courseId: courseId,
+        activityId: activityId,
+        score: score,
+      );
+    }
+  }
+
+  int _calculateActivityScore(List<Task> tasks) {
+    final requiredTasks = _requiredTaskCount(tasks);
+    if (requiredTasks > 0) {
+      final correctTasks = _correctTaskCount(tasks);
+      return ((correctTasks / requiredTasks) * 100).round();
+    }
+    final totalTasks = tasks.length;
+    if (totalTasks == 0) {
+      return 0;
+    }
+    final completedTasks = _completedTaskCount(tasks);
+    return ((completedTasks / totalTasks) * 100).round();
   }
 
   bool _isTaskVerified(Task task, int index) {
