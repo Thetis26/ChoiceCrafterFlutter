@@ -412,20 +412,24 @@ class MessagesScreen extends StatelessWidget {
         final currentUserId = currentUserSnapshot.data ?? '';
 
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: firestore
-              .collection('users')
-              .where('online', isEqualTo: true)
-              .snapshots(),
+          stream: firestore.collection('users').snapshots(),
           builder: (context, usersSnapshot) {
-            final contacts = usersSnapshot.hasData && !usersSnapshot.hasError
-                ? (usersSnapshot.data?.docs ?? []).map((doc) {
-                    final data = doc.data();
-                    return _ContactChip(
-                      name: _displayName(data, doc.id),
-                      id: doc.id,
-                    );
-                  }).toList()
-                : const <_ContactChip>[];
+            final users = usersSnapshot.hasData && !usersSnapshot.hasError
+                ? usersSnapshot.data?.docs ?? []
+                : const <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+            final userNames = <String, String>{
+              for (final doc in users) doc.id: _displayName(doc.data(), doc.id),
+            };
+            final contacts = users
+                .where((doc) => (doc.data()['online'] as bool?) ?? false)
+                .map((doc) {
+                  final data = doc.data();
+                  return _ContactChip(
+                    name: _displayName(data, doc.id),
+                    id: doc.id,
+                  );
+                })
+                .toList();
 
             if (currentUserId.isEmpty) {
               return _buildMessagesScaffold(
@@ -465,9 +469,15 @@ class MessagesScreen extends StatelessWidget {
                   final others =
                       participants.where((id) => id != currentUserId).toList();
                   final title = (data['title'] as String?)?.trim();
+                  final otherNames = others
+                      .map((id) => userNames[id] ?? id)
+                      .where((name) => name.trim().isNotEmpty)
+                      .toList();
                   final name = title != null && title.isNotEmpty
                       ? title
-                      : (others.isNotEmpty ? others.first : 'Conversation');
+                      : (otherNames.isNotEmpty
+                          ? otherNames.join(', ')
+                          : 'Conversation');
                   final lastMessage = (data['lastMessage'] as String?) ?? '';
                   final timestamp = _parseTimestamp(data['timestamp']);
                   final unreadBy = _participants(data['unreadBy']);

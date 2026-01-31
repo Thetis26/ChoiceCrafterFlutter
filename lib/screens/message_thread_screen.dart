@@ -36,13 +36,40 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   final _firestore = FirebaseFirestore.instance;
   final _auth = firebase_auth.FirebaseAuth.instance;
   final List<ConversationMessage> _localMessages = [];
+  String? _resolvedUserId;
+  bool _isResolvingUser = false;
 
   String get _currentUserId {
     if (widget.localMessages != null) {
       return widget.localUserId ?? 'You';
     }
+    return _resolvedUserId ?? _auth.currentUser?.uid ?? _auth.currentUser?.email ?? '';
+  }
+
+  Future<String> _resolveCurrentUserId() async {
     final user = _auth.currentUser;
-    return user?.uid ?? user?.email ?? '';
+    if (user == null) {
+      return '';
+    }
+
+    final email = user.email ?? '';
+    if (email.isNotEmpty) {
+      final query = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (query.docs.isNotEmpty) {
+        return query.docs.first.id;
+      }
+    }
+
+    final fallbackDoc = await _firestore.collection('users').doc(user.uid).get();
+    if (fallbackDoc.exists) {
+      return fallbackDoc.id;
+    }
+
+    return user.uid;
   }
 
   DateTime? _parseTimestamp(dynamic value) {
@@ -69,6 +96,22 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       return value.whereType<String>().toList();
     }
     return [];
+  }
+
+  String _displayName(Map<String, dynamic> data, String fallback) {
+    final name = (data['name'] as String?)?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    final fullName = (data['fullName'] as String?)?.trim();
+    if (fullName != null && fullName.isNotEmpty) {
+      return fullName;
+    }
+    final email = (data['email'] as String?)?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+    return fallback;
   }
 
   void _scrollToBottom() {
@@ -161,11 +204,22 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     super.initState();
     if (widget.localMessages != null) {
       _localMessages.addAll(widget.localMessages!);
+    } else {
+      _isResolvingUser = true;
+      _resolveCurrentUserId().then((id) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _resolvedUserId = id;
+          _isResolvingUser = false;
+        });
+      });
     }
   }
 
   Widget _buildMessageBubble({
-    required String senderId,
+    required String senderName,
     required bool isMe,
     required String text,
     required DateTime? timestamp,
@@ -194,7 +248,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
           children: [
             if (!isMe)
               Text(
-                senderId,
+                senderName,
                 style: const TextStyle(
                   color: Colors.black54,
                   fontSize: 11,
@@ -285,7 +339,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 final message = _localMessages[index];
                 final isMe = message.senderId == _currentUserId;
                 return _buildMessageBubble(
-                  senderId: message.senderId,
+                  senderName: message.senderId,
                   isMe: isMe,
                   text: message.text,
                   timestamp: message.timestamp,
@@ -305,84 +359,118 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       return _buildLocalThread();
     }
 
+    if (_isResolvingUser) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (_currentUserId.isEmpty) {
       return const Scaffold(
         body: Center(child: Text('Sign in to view this conversation.')),
       );
     }
 
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: _firestore
-          .collection('conversations')
-          .doc(widget.conversationId!)
-          .snapshots(),
-      builder: (context, conversationSnapshot) {
-        final data = conversationSnapshot.data?.data();
-        final participants = _participants(data?['participants']);
-        final title = (data?['title'] as String?)?.trim();
-        final others =
-            participants.where((id) => id != _currentUserId).toList();
-        final displayTitle = title != null && title.isNotEmpty
-            ? title
-            : (others.isNotEmpty ? others.first : widget.initialTitle);
-        final unreadBy = _participants(data?['unreadBy']);
-        _markRead(unreadBy);
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _firestore.collection('users').snapshots(),
+      builder: (context, usersSnapshot) {
+        final userNameById = <String, String>{};
+        final userDocs = usersSnapshot.data?.docs ?? [];
+        for (final doc in userDocs) {
+          userNameById[doc.id] = _displayName(doc.data(), doc.id);
+        }
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF4F6FB),
-          appBar: AppBar(
-            title: Text(displayTitle),
-            backgroundColor: const Color(0xFF7E86F9),
-            foregroundColor: Colors.white,
-            actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.more_vert),
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _firestore
+              .collection('conversations')
+              .doc(widget.conversationId!)
+              .snapshots(),
+          builder: (context, conversationSnapshot) {
+            final data = conversationSnapshot.data?.data();
+            final participants = _participants(data?['participants']);
+            final title = (data?['title'] as String?)?.trim();
+            final others =
+                participants.where((id) => id != _currentUserId).toList();
+            final othersDisplay = others
+                .map((id) => userNameById[id] ?? id)
+                .where((name) => name.trim().isNotEmpty)
+                .toList();
+            final displayTitle = title != null && title.isNotEmpty
+                ? title
+                : (othersDisplay.isNotEmpty
+                    ? othersDisplay.join(', ')
+                    : widget.initialTitle);
+            final unreadBy = _participants(data?['unreadBy']);
+            _markRead(unreadBy);
+
+            return Scaffold(
+              backgroundColor: const Color(0xFFF4F6FB),
+              appBar: AppBar(
+                title: Text(displayTitle),
+                backgroundColor: const Color(0xFF7E86F9),
+                foregroundColor: Colors.white,
+                actions: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.more_vert),
+                  ),
+                ],
               ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _firestore
-                      .collection('conversations')
-                      .doc(widget.conversationId!)
-                      .collection('messages')
-                      .orderBy('timestamp')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return const Center(child: Text('Unable to load messages.'));
-                    }
-                    final docs = snapshot.data?.docs ?? [];
-                    return ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                      itemCount: docs.length,
-                      itemBuilder: (context, index) {
-                        final message = docs[index].data();
-                        final senderId = (message['senderId'] as String?) ?? '';
-                        final isMe = senderId == _currentUserId;
-                        final text = (message['text'] as String?) ?? '';
-                        final timestamp = _parseTimestamp(message['timestamp']);
-                        return _buildMessageBubble(
-                          senderId: senderId,
-                          isMe: isMe,
-                          text: text,
-                          timestamp: timestamp,
+              body: Column(
+                children: [
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: _firestore
+                          .collection('conversations')
+                          .doc(widget.conversationId!)
+                          .collection('messages')
+                          .orderBy('timestamp')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return const Center(
+                            child: Text('Unable to load messages.'),
+                          );
+                        }
+                        final docs = snapshot.data?.docs ?? [];
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final message = docs[index].data();
+                            final senderId =
+                                (message['senderId'] as String?) ?? '';
+                            final isMe = senderId == _currentUserId;
+                            final text = (message['text'] as String?) ?? '';
+                            final timestamp =
+                                _parseTimestamp(message['timestamp']);
+                            final senderName =
+                                userNameById[senderId] ?? senderId;
+                            return _buildMessageBubble(
+                              senderName: senderName,
+                              isMe: isMe,
+                              text: text,
+                              timestamp: timestamp,
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                  _buildMessageComposer(
+                    onSend: () => _sendMessage(participants),
+                  ),
+                ],
               ),
-              _buildMessageComposer(onSend: () => _sendMessage(participants)),
-            ],
-          ),
+            );
+          },
         );
       },
     );
