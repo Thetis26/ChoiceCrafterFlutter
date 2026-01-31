@@ -489,7 +489,7 @@ Widget _buildMotivationCard(
 
 Widget _buildBadgeRow(List<_ActivityBadge> badges, BuildContext context) {
   return SizedBox(
-    height: 120,
+    height: 140,
     child: ListView.separated(
       scrollDirection: Axis.horizontal,
       itemCount: badges.length,
@@ -516,28 +516,33 @@ Widget _buildBadgeRow(List<_ActivityBadge> badges, BuildContext context) {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
+                  radius: 20,
                   backgroundColor: badge.earned
                       ? Colors.deepPurple.shade50
                       : Colors.grey.shade200,
                   child: Icon(
                     badge.icon,
-                    color: badge.earned
-                        ? Colors.deepPurple
-                        : Colors.grey.shade500,
+                    size: 20,
+                    color: badge.earned ? Colors.deepPurple : Colors.grey.shade500,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   badge.title,
                   style: Theme.of(context).textTheme.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   badge.subtitle,
                   style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

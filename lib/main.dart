@@ -25,6 +25,8 @@ import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
 import 'localization/app_localizations.dart';
 
+import 'dart:developer' as developer;
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -360,6 +362,10 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         ? '${widget.user.fullName} ($anonymousAvatarName)'
         : widget.user.fullName;
     final localizations = AppLocalizations.of(context);
+    developer.log('Building AuthenticatedShell', name: 'authenticated_shell');
+    developer.log('User: ${widget.user.fullName}', name: 'authenticated_shell');
+    developer.log('Anonymous avatar name: $anonymousAvatarName', name: 'authenticated_shell');
+    developer.log('Anonymous avatar image URL: $anonymousAvatarImageUrl', name: 'authenticated_shell');
 
     return Scaffold(
       appBar: AppBar(
