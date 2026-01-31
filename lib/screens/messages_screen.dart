@@ -1,8 +1,10 @@
+// dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
 import 'message_thread_screen.dart';
+import 'dart:developer' as developer;
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
@@ -11,28 +13,79 @@ class MessagesScreen extends StatelessWidget {
     required FirebaseFirestore firestore,
     required firebase_auth.FirebaseAuth auth,
   }) async {
+    developer.log(
+      'Starting _resolveCurrentUserId',
+      name: 'messages._resolveCurrentUserId',
+    );
     final user = auth.currentUser;
     if (user == null) {
+      developer.log(
+        'No authenticated Firebase user',
+        name: 'messages._resolveCurrentUserId',
+      );
       return '';
     }
 
+    final providers = user.providerData
+        .map((p) => '${p.providerId}:${p.email ?? p.uid ?? ''}')
+        .join(',');
+    developer.log(
+      'Auth user details: uid=${user.uid}, email=${user.email}, displayName=${user.displayName}, phone=${user.phoneNumber}, providers=$providers',
+      name: 'messages._resolveCurrentUserId',
+    );
+
     final email = user.email ?? '';
     if (email.isNotEmpty) {
+      developer.log(
+        'Querying users collection by email: $email',
+        name: 'messages._resolveCurrentUserId',
+      );
       final query = await firestore
           .collection('users')
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
+      developer.log(
+        'Email query returned ${query.docs.length} documents',
+        name: 'messages._resolveCurrentUserId',
+      );
       if (query.docs.isNotEmpty) {
-        return query.docs.first.id;
+        final id = query.docs.first.id;
+        developer.log(
+          'Found user doc by email: $id',
+          name: 'messages._resolveCurrentUserId',
+        );
+        return id;
+      } else {
+        developer.log(
+          'No user doc found by email',
+          name: 'messages._resolveCurrentUserId',
+        );
       }
+    } else {
+      developer.log(
+        'Auth user has no email, skipping email lookup',
+        name: 'messages._resolveCurrentUserId',
+      );
     }
 
+    developer.log(
+      'Attempting fallback lookup by auth uid: ${user.uid}',
+      name: 'messages._resolveCurrentUserId',
+    );
     final fallbackDoc = await firestore.collection('users').doc(user.uid).get();
     if (fallbackDoc.exists) {
+      developer.log(
+        'Found fallback user doc by uid: ${fallbackDoc.id}',
+        name: 'messages._resolveCurrentUserId',
+      );
       return fallbackDoc.id;
     }
 
+    developer.log(
+      'Falling back to returning auth uid: ${user.uid}',
+      name: 'messages._resolveCurrentUserId',
+    );
     return user.uid;
   }
 
@@ -95,20 +148,44 @@ class MessagesScreen extends StatelessWidget {
     required String currentUserId,
     required String otherUserId,
   }) async {
+    developer.log(
+      'Looking for existing conversation: currentUser=$currentUserId, otherUser=$otherUserId',
+      name: 'messages._findExistingConversation',
+    );
     if (currentUserId.isEmpty || otherUserId.isEmpty) {
+      developer.log(
+        'One of the participant ids is empty, aborting search',
+        name: 'messages._findExistingConversation',
+      );
       return null;
     }
     final snapshot = await firestore
         .collection('conversations')
         .where('participants', arrayContains: currentUserId)
         .get();
+    developer.log(
+      'Found ${snapshot.docs.length} conversations',
+      name: 'messages._findExistingConversation',
+    );
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final participants = _participants(data['participants']);
+      developer.log(
+        'Checking conversation ${doc.id} with participants $participants',
+        name: 'messages._findExistingConversation',
+      );
       if (participants.contains(otherUserId) && participants.length == 2) {
+        developer.log(
+          'Matched existing conversation ${doc.id}',
+          name: 'messages._findExistingConversation',
+        );
         return doc.id;
       }
     }
+    developer.log(
+      'No existing conversation found',
+      name: 'messages._findExistingConversation',
+    );
     return null;
   }
 
@@ -119,6 +196,10 @@ class MessagesScreen extends StatelessWidget {
   }) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final conversationRef = firestore.collection('conversations').doc();
+    developer.log(
+      'Creating conversation ${conversationRef.id} with participants=$participants title=${title ?? ''}',
+      name: 'messages._createConversation',
+    );
     await conversationRef.set({
       'participants': participants,
       if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
@@ -128,6 +209,10 @@ class MessagesScreen extends StatelessWidget {
       'unread': false,
       'unreadBy': <String>[],
     });
+    developer.log(
+      'Conversation created: ${conversationRef.id}',
+      name: 'messages._createConversation',
+    );
     return conversationRef.id;
   }
 
@@ -136,12 +221,20 @@ class MessagesScreen extends StatelessWidget {
     required String conversationId,
     required String title,
   }) async {
+    developer.log(
+      'Opening conversation: id=$conversationId, title=$title',
+      name: 'messages._openConversation',
+    );
     final destination = MessageThreadScreen(
       conversationId: conversationId,
       initialTitle: title,
     );
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => destination),
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => destination));
+    developer.log(
+      'Returned from conversation: id=$conversationId',
+      name: 'messages._openConversation',
     );
   }
 
@@ -151,7 +244,15 @@ class MessagesScreen extends StatelessWidget {
     required String currentUserId,
     required _ContactChip contact,
   }) async {
+    developer.log(
+      'Start conversation requested: currentUser=$currentUserId, contact=${contact.id}',
+      name: 'messages._startConversationWith',
+    );
     if (currentUserId.isEmpty) {
+      developer.log(
+        'Current user id is empty, aborting start conversation',
+        name: 'messages._startConversationWith',
+      );
       return;
     }
     final existingId = await _findExistingConversation(
@@ -160,6 +261,10 @@ class MessagesScreen extends StatelessWidget {
       otherUserId: contact.id,
     );
     if (existingId != null) {
+      developer.log(
+        'Existing conversation found: $existingId - opening',
+        name: 'messages._startConversationWith',
+      );
       await _openConversation(
         context: context,
         conversationId: existingId,
@@ -167,9 +272,17 @@ class MessagesScreen extends StatelessWidget {
       );
       return;
     }
+    developer.log(
+      'No existing conversation, creating new',
+      name: 'messages._startConversationWith',
+    );
     final conversationId = await _createConversation(
       firestore: firestore,
       participants: [currentUserId, contact.id],
+    );
+    developer.log(
+      'Created conversation $conversationId - opening',
+      name: 'messages._startConversationWith',
     );
     await _openConversation(
       context: context,
@@ -183,7 +296,15 @@ class MessagesScreen extends StatelessWidget {
     required FirebaseFirestore firestore,
     required String currentUserId,
   }) async {
+    developer.log(
+      'Showing new conversation picker for user $currentUserId',
+      name: 'messages._showNewConversationPicker',
+    );
     if (currentUserId.isEmpty) {
+      developer.log(
+        'Current user id empty - aborting showNewConversationPicker',
+        name: 'messages._showNewConversationPicker',
+      );
       return;
     }
     await showModalBottomSheet<void>(
@@ -251,6 +372,10 @@ class MessagesScreen extends StatelessWidget {
                       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: firestore.collection('users').snapshots(),
                         builder: (context, snapshot) {
+                          developer.log(
+                            'Users stream state: ${snapshot.connectionState}',
+                            name: 'messages._showNewConversationPicker',
+                          );
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return const Center(
@@ -258,30 +383,42 @@ class MessagesScreen extends StatelessWidget {
                             );
                           }
                           if (snapshot.hasError) {
+                            developer.log(
+                              'Users stream error: ${snapshot.error}',
+                              name: 'messages._showNewConversationPicker',
+                            );
                             return const Center(
                               child: Text('Unable to load users.'),
                             );
                           }
-                          final users = (snapshot.data?.docs ?? [])
-                              .map((doc) {
-                                final data = doc.data();
-                                return _ContactChip(
-                                  name: _displayName(data, doc.id),
-                                  id: doc.id,
-                                );
-                              })
-                              .where((user) => user.id != currentUserId)
-                              .where((user) => searchQuery.isEmpty
-                                  ? true
-                                  : user.name
-                                      .toLowerCase()
-                                      .contains(searchQuery))
-                              .toList()
-                            ..sort(
-                              (a, b) => a.name.toLowerCase().compareTo(
+                          final users =
+                              (snapshot.data?.docs ?? [])
+                                  .map((doc) {
+                                    final data = doc.data();
+                                    return _ContactChip(
+                                      name: _displayName(data, doc.id),
+                                      id: doc.id,
+                                    );
+                                  })
+                                  .where((user) => user.id != currentUserId)
+                                  .where(
+                                    (user) => searchQuery.isEmpty
+                                        ? true
+                                        : user.name.toLowerCase().contains(
+                                            searchQuery,
+                                          ),
+                                  )
+                                  .toList()
+                                ..sort(
+                                  (a, b) => a.name.toLowerCase().compareTo(
                                     b.name.toLowerCase(),
                                   ),
-                            );
+                                );
+
+                          developer.log(
+                            'Users available for picker: ${users.length}',
+                            name: 'messages._showNewConversationPicker',
+                          );
 
                           if (users.isEmpty) {
                             return const Center(
@@ -333,10 +470,16 @@ class MessagesScreen extends StatelessWidget {
                         onPressed: selectedIds.isEmpty
                             ? null
                             : () async {
+                                developer.log(
+                                  'Create conversation button pressed with selectedIds=$selectedIds',
+                                  name: 'messages._showNewConversationPicker',
+                                );
                                 final snapshot = await firestore
                                     .collection('users')
-                                    .where(FieldPath.documentId,
-                                        whereIn: selectedIds.toList())
+                                    .where(
+                                      FieldPath.documentId,
+                                      whereIn: selectedIds.toList(),
+                                    )
                                     .get();
                                 final selectedUsers = snapshot.docs.map((doc) {
                                   final data = doc.data();
@@ -345,7 +488,15 @@ class MessagesScreen extends StatelessWidget {
                                     id: doc.id,
                                   );
                                 }).toList();
+                                developer.log(
+                                  'Selected users from firestore: ${selectedUsers.map((u) => u.id).toList()}',
+                                  name: 'messages._showNewConversationPicker',
+                                );
                                 if (selectedUsers.isEmpty) {
+                                  developer.log(
+                                    'No selected users found after fetch',
+                                    name: 'messages._showNewConversationPicker',
+                                  );
                                   return;
                                 }
                                 Navigator.of(context).pop();
@@ -365,11 +516,19 @@ class MessagesScreen extends StatelessWidget {
                                 final title = selectedUsers
                                     .map((user) => user.name)
                                     .join(', ');
+                                developer.log(
+                                  'Creating group conversation with participants=$participantIds title=$title',
+                                  name: 'messages._showNewConversationPicker',
+                                );
                                 final conversationId =
                                     await _createConversation(
-                                  firestore: firestore,
-                                  participants: participantIds,
-                                  title: title,
+                                      firestore: firestore,
+                                      participants: participantIds,
+                                      title: title,
+                                    );
+                                developer.log(
+                                  'Group conversation created: $conversationId',
+                                  name: 'messages._showNewConversationPicker',
                                 );
                                 await _openConversation(
                                   context: context,
@@ -402,21 +561,38 @@ class MessagesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final firestore = FirebaseFirestore.instance;
     final auth = firebase_auth.FirebaseAuth.instance;
+    developer.log('Building MessagesScreen', name: 'messages.build');
     return FutureBuilder<String>(
       future: _resolveCurrentUserId(firestore: firestore, auth: auth),
       builder: (context, currentUserSnapshot) {
+        developer.log(
+          'Current user Future state: ${currentUserSnapshot.connectionState}',
+          name: 'messages.build',
+        );
         if (currentUserSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         final currentUserId = currentUserSnapshot.data ?? '';
+        developer.log(
+          'Resolved currentUserId=$currentUserId',
+          name: 'messages.build',
+        );
 
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: firestore.collection('users').snapshots(),
           builder: (context, usersSnapshot) {
+            developer.log(
+              'Users stream state: ${usersSnapshot.connectionState}',
+              name: 'messages.build.usersStream',
+            );
             final users = usersSnapshot.hasData && !usersSnapshot.hasError
                 ? usersSnapshot.data?.docs ?? []
                 : const <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+            developer.log(
+              'Users snapshot contains ${users.length} docs',
+              name: 'messages.build.usersStream',
+            );
             final userNames = <String, String>{
               for (final doc in users) doc.id: _displayName(doc.data(), doc.id),
             };
@@ -430,8 +606,16 @@ class MessagesScreen extends StatelessWidget {
                   );
                 })
                 .toList();
+            developer.log(
+              'Contacts count: ${contacts.length}',
+              name: 'messages.build.usersStream',
+            );
 
             if (currentUserId.isEmpty) {
+              developer.log(
+                'currentUserId empty - rendering scaffold without conversations',
+                name: 'messages.build',
+              );
               return _buildMessagesScaffold(
                 context,
                 const [],
@@ -448,11 +632,19 @@ class MessagesScreen extends StatelessWidget {
                   .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
+                developer.log(
+                  'Conversations stream state: ${snapshot.connectionState}',
+                  name: 'messages.build.conversationsStream',
+                );
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
                 if (snapshot.hasError) {
+                  developer.log(
+                    'Conversations stream error: ${snapshot.error}',
+                    name: 'messages.build.conversationsStream',
+                  );
                   return _buildMessagesScaffold(
                     context,
                     const [],
@@ -463,11 +655,16 @@ class MessagesScreen extends StatelessWidget {
                 }
 
                 final docs = snapshot.data?.docs ?? [];
+                developer.log(
+                  'Conversations snapshot contains ${docs.length} docs',
+                  name: 'messages.build.conversationsStream',
+                );
                 final entries = docs.map((doc) {
                   final data = doc.data();
                   final participants = _participants(data['participants']);
-                  final others =
-                      participants.where((id) => id != currentUserId).toList();
+                  final others = participants
+                      .where((id) => id != currentUserId)
+                      .toList();
                   final title = (data['title'] as String?)?.trim();
                   final otherNames = others
                       .map((id) => userNames[id] ?? id)
@@ -476,13 +673,19 @@ class MessagesScreen extends StatelessWidget {
                   final name = title != null && title.isNotEmpty
                       ? title
                       : (otherNames.isNotEmpty
-                          ? otherNames.join(', ')
-                          : 'Conversation');
+                            ? otherNames.join(', ')
+                            : 'Conversation');
                   final lastMessage = (data['lastMessage'] as String?) ?? '';
                   final timestamp = _parseTimestamp(data['timestamp']);
                   final unreadBy = _participants(data['unreadBy']);
-                  final isUnread = unreadBy.contains(currentUserId) ||
+                  final isUnread =
+                      unreadBy.contains(currentUserId) ||
                       (data['unread'] as bool? ?? false);
+
+                  developer.log(
+                    'Conversation ${doc.id}: title=$name, participants=$participants, isUnread=$isUnread',
+                    name: 'messages.build.conversationsStream',
+                  );
 
                   return _MessageEntry(
                     name: name,
@@ -515,6 +718,10 @@ class MessagesScreen extends StatelessWidget {
     required String currentUserId,
     required FirebaseFirestore firestore,
   }) {
+    developer.log(
+      'Rendering messages scaffold: entries=${entries.length}, contacts=${contacts.length}, currentUserId=$currentUserId',
+      name: 'messages._buildMessagesScaffold',
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
       appBar: AppBar(
@@ -524,11 +731,17 @@ class MessagesScreen extends StatelessWidget {
         elevation: 4,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showNewConversationPicker(
-          context: context,
-          firestore: firestore,
-          currentUserId: currentUserId,
-        ),
+        onPressed: () {
+          developer.log(
+            'FAB pressed to open new conversation picker',
+            name: 'messages._buildMessagesScaffold',
+          );
+          _showNewConversationPicker(
+            context: context,
+            firestore: firestore,
+            currentUserId: currentUserId,
+          );
+        },
         backgroundColor: const Color(0xFF7E86F9),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -538,7 +751,10 @@ class MessagesScreen extends StatelessWidget {
             SizedBox(
               height: 120,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 scrollDirection: Axis.horizontal,
                 itemCount: contacts.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
@@ -546,12 +762,18 @@ class MessagesScreen extends StatelessWidget {
                   final contact = contacts[index];
                   return InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () => _startConversationWith(
-                      context: context,
-                      firestore: firestore,
-                      currentUserId: currentUserId,
-                      contact: contact,
-                    ),
+                    onTap: () {
+                      developer.log(
+                        'Contact tapped: ${contact.id}',
+                        name: 'messages._buildMessagesScaffold',
+                      );
+                      _startConversationWith(
+                        context: context,
+                        firestore: firestore,
+                        currentUserId: currentUserId,
+                        contact: contact,
+                      );
+                    },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -599,6 +821,10 @@ class MessagesScreen extends StatelessWidget {
                           onTap: entry.conversationId == null
                               ? null
                               : () {
+                                  developer.log(
+                                    'Conversation tapped: ${entry.conversationId}',
+                                    name: 'messages._buildMessagesScaffold',
+                                  );
                                   final destination = MessageThreadScreen(
                                     conversationId: entry.conversationId!,
                                     initialTitle: entry.name,
@@ -640,7 +866,8 @@ class MessagesScreen extends StatelessWidget {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         entry.name,
