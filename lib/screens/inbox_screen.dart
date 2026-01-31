@@ -40,6 +40,8 @@ class InboxScreen extends StatelessWidget {
           return _buildLocalInbox(context);
         }
 
+        developer.log('Searching notifications by user id: uid=$userId');
+
         final stream = FirebaseFirestore.instance
             .collection(_notificationsCollection)
             .where('userId', isEqualTo: userId)
@@ -50,12 +52,13 @@ class InboxScreen extends StatelessWidget {
           stream: stream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
+              developer.log('Error loading notifications: ${snapshot.error}');
               return _buildScaffold(
                 context,
                 const Center(child: Text('Unable to load notifications.')),
               );
             }
-
+            developer.log('Loading notifications: ${snapshot.connectionState}');
             if (snapshot.connectionState == ConnectionState.waiting) {
               return _buildScaffold(
                 context,
