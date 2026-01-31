@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/course.dart';
-import '../models/enrollment_activity_snapshot.dart';
+import '../models/enrollment_activity_progress.dart';
 import '../models/user.dart';
 import '../repositories/course_repository.dart';
 import '../repositories/personal_statistics_repository.dart';
@@ -219,7 +219,7 @@ class _PersonalActivityData {
 
   factory _PersonalActivityData.from(
     List<Course> courses,
-    List<EnrollmentActivitySnapshot> snapshots,
+    List<EnrollmentActivityProgress> snapshots,
   ) {
     final activityNameById = <String, String>{};
     final courseTitleById = <String, String>{};

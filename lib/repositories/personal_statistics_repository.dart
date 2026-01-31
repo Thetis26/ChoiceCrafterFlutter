@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../models/enrollment_activity_snapshot.dart';
+import '../models/enrollment_activity_progress.dart';
 
 class PersonalStatisticsRepository {
   PersonalStatisticsRepository({FirebaseFirestore? firestore})
@@ -11,7 +11,7 @@ class PersonalStatisticsRepository {
 
   final FirebaseFirestore _firestore;
 
-  Future<List<EnrollmentActivitySnapshot>> fetchActivitySnapshotsForUser(
+  Future<List<EnrollmentActivityProgress>> fetchActivitySnapshotsForUser(
     String userKey,
   ) async {
     if (userKey.isEmpty) {
@@ -28,7 +28,7 @@ class PersonalStatisticsRepository {
           .get(),
     ]);
 
-    final activitySnapshots = <EnrollmentActivitySnapshot>[];
+    final activitySnapshots = <EnrollmentActivityProgress>[];
     for (final snapshot in snapshots) {
       for (final doc in snapshot.docs) {
         final data = doc.data();
@@ -50,7 +50,7 @@ class PersonalStatisticsRepository {
               entryMap['courseId'] = courseId;
             }
           }
-          activitySnapshots.add(EnrollmentActivitySnapshot.fromMap(entryMap));
+          activitySnapshots.add(EnrollmentActivityProgress.fromMap(entryMap));
         }
       }
     }
