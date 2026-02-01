@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
-import '../sample_data.dart';
+import '../models/conversation_message.dart';
 
 class MessageThreadScreen extends StatefulWidget {
   const MessageThreadScreen({
@@ -141,8 +141,22 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
           timestamp: DateTime.now(),
         ),
       );
+      _localMessages.add(
+        ConversationMessage(
+          senderId: 'Virtual Assistant',
+          text: _assistantResponse(text),
+          timestamp: DateTime.now(),
+        ),
+      );
     });
     _scrollToBottom();
+  }
+
+  String _assistantResponse(String prompt) {
+    if (prompt.trim().isEmpty) {
+      return 'Could you share a bit more detail so I can help?';
+    }
+    return 'Thanks for your question! I can help you break this down into steps or clarify the requirements.';
   }
 
   Future<void> _showEditChatNameDialog({
@@ -486,6 +500,11 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     _localParticipants.add(localUserId);
     if (widget.localMessages != null) {
       _localMessages.addAll(widget.localMessages!);
+      for (final message in widget.localMessages!) {
+        if (!_localParticipants.contains(message.senderId)) {
+          _localParticipants.add(message.senderId);
+        }
+      }
     } else {
       _isResolvingUser = true;
       _resolveCurrentUserId().then((id) {

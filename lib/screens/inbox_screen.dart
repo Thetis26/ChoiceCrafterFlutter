@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 
-import '../sample_data.dart';
 
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
@@ -251,27 +250,9 @@ class InboxScreen extends StatelessWidget {
   }
 
   Widget _buildLocalInbox(BuildContext context) {
-    if (SampleData.inbox.isEmpty) {
-      return _buildScaffold(
-        context,
-        const Center(child: Text('No notifications yet.')),
-      );
-    }
-
     return _buildScaffold(
       context,
-      _buildNotificationList(
-        context,
-        SampleData.inbox
-            .map(
-              (item) => _InboxEntry(
-                title: item.title,
-                details: item.body,
-                timestamp: item.timestamp,
-              ),
-            )
-            .toList(),
-      ),
+      const Center(child: Text('No notifications yet.')),
     );
   }
 

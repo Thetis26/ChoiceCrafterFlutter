@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'sample_data.dart';
 import 'screens/message_thread_screen.dart';
 import 'models/activity.dart';
+import 'models/conversation_message.dart';
 import 'models/task.dart';
 import 'models/task_stats.dart';
 import 'models/user.dart';
@@ -430,21 +430,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final now = DateTime.now();
     return [
       ConversationMessage(
-        senderId: 'Task Assistant',
+        senderId: 'Virtual Assistant',
         text:
-            'Hi! I can help explain tasks, clarify requirements, or suggest next steps. What are you working on?',
-        timestamp: now.subtract(const Duration(minutes: 12)),
-      ),
-      ConversationMessage(
-        senderId: 'You',
-        text: 'I am unsure how to validate the next task.',
-        timestamp: now.subtract(const Duration(minutes: 10)),
-      ),
-      ConversationMessage(
-        senderId: 'Task Assistant',
-        text:
-            'Try listing the acceptance criteria, then compare your solution against each item. I can help review it too.',
-        timestamp: now.subtract(const Duration(minutes: 8)),
+            'Hello! I am your virtual assistant. How can I help you today?',
+        timestamp: now.subtract(const Duration(minutes: 1)),
       ),
     ];
   }
