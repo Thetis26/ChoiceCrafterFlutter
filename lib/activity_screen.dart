@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'sample_data.dart';
+import 'screens/message_thread_screen.dart';
 import 'models/activity.dart';
 import 'models/task.dart';
 import 'models/task_stats.dart';
@@ -262,6 +264,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _openTaskAssistant(context),
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('Chat with task assistant'),
+            ),
+            const SizedBox(height: 16),
             ...recommendations.map(
               (recommendation) => _RecommendationListTile(
                 recommendation: recommendation,
@@ -337,6 +345,40 @@ class _ActivityScreenState extends State<ActivityScreen> {
     } catch (_) {
       _showLaunchError(context);
     }
+  }
+
+  Future<void> _openTaskAssistant(BuildContext context) async {
+    final destination = MessageThreadScreen.local(
+      initialTitle: 'Task assistant',
+      messages: _assistantConversationMessages(),
+      localUserId: 'You',
+    );
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => destination),
+    );
+  }
+
+  List<ConversationMessage> _assistantConversationMessages() {
+    final now = DateTime.now();
+    return [
+      ConversationMessage(
+        senderId: 'Task Assistant',
+        text:
+            'Hi! I can help explain tasks, clarify requirements, or suggest next steps. What are you working on?',
+        timestamp: now.subtract(const Duration(minutes: 12)),
+      ),
+      ConversationMessage(
+        senderId: 'You',
+        text: 'I am unsure how to validate the next task.',
+        timestamp: now.subtract(const Duration(minutes: 10)),
+      ),
+      ConversationMessage(
+        senderId: 'Task Assistant',
+        text:
+            'Try listing the acceptance criteria, then compare your solution against each item. I can help review it too.',
+        timestamp: now.subtract(const Duration(minutes: 8)),
+      ),
+    ];
   }
 
   void _showLaunchError(BuildContext context) {
