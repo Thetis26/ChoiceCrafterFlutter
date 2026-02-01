@@ -390,8 +390,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     debugPrint(
       '[ActivityScreen] persist conversation courseId=$courseId activityId=$activityId comments=${_comments.length} reactions=$_reactionCounts',
     );
-      return;
-    }
     await _courseRepository.updateActivityConversation(
       courseId: courseId,
       activityId: activityId,
