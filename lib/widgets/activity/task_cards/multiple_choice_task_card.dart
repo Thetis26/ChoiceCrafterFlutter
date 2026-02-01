@@ -76,7 +76,9 @@ class _MultipleChoiceTaskCardState extends State<MultipleChoiceTaskCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildTaskHeader(style, rewardText, background: Colors.white),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            buildAiHelperBanner(context, task),
+            const SizedBox(height: 16),
             Text(
               task.question.isNotEmpty ? task.question : task.title,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -137,7 +139,11 @@ class _MultipleChoiceTaskCardState extends State<MultipleChoiceTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onCheckAnswer: _checkAnswer,
+              showHintButton: false,
+            ),
           ],
         ),
       ),

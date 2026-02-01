@@ -79,7 +79,9 @@ class _SpotTheErrorTaskCardState extends State<SpotTheErrorTaskCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildTaskHeader(style, rewardText, background: Colors.white),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            buildAiHelperBanner(context, task),
+            const SizedBox(height: 16),
             Text(
               task.title.isNotEmpty ? task.title : 'Spot the error',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -157,7 +159,11 @@ class _SpotTheErrorTaskCardState extends State<SpotTheErrorTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onCheckAnswer: _checkAnswer,
+              showHintButton: false,
+            ),
           ],
         ),
       ),
