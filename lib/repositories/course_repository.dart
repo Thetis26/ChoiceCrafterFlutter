@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/activity.dart';
+import '../models/comment.dart';
 import '../models/recommendation.dart';
 import '../models/course.dart';
 import '../models/module.dart';
@@ -217,6 +218,10 @@ class CourseRepository {
       title: (data['title'] as String?) ?? 'Untitled course',
       instructor: (data['teacher'] as String?) ?? 'Unknown instructor',
       summary: (data['description'] as String?) ?? '',
+      description: data['description'] as String?,
+      teacher: data['teacher'] as String?,
+      imageUrl: data['imageUrl'] as String?,
+      activities: _activitiesFromData(data['activities']),
       modules: _modulesFromData(data['modules']),
     );
   }
@@ -235,6 +240,12 @@ class CourseRepository {
         name: (moduleMap['title'] as String?) ?? 'Untitled module',
         summary: (moduleMap['description'] as String?) ?? '',
         activities: _activitiesFromData(moduleMap['activities']),
+        title: moduleMap['title'] as String?,
+        description: moduleMap['description'] as String?,
+        completedPercentage: (moduleMap['completedPercentage'] as num?)?.toInt() ??
+            (moduleMap['completionPercentage'] as num?)?.toInt() ??
+            0,
+        courseId: moduleMap['courseId'] as String?,
       );
     }).toList();
   }
@@ -252,15 +263,23 @@ class CourseRepository {
       return Activity(
         id: (activityMap['id'] as String?) ?? '',
         name: (activityMap['title'] as String?) ?? 'Untitled activity',
+        title: activityMap['title'] as String?,
         description: (activityMap['description'] as String?) ?? '',
         type: (activityMap['type'] as String?) ?? 'activity',
         content: (activityMap['content'] as String?) ?? '',
+        date: activityMap['date'] as String?,
+        time: activityMap['time'] as String?,
+        status: _activityStatusFrom(activityMap['status']),
+        reminders: _stringList(activityMap['reminders']),
         estimatedMinutes: estimatedMinutes is num ? estimatedMinutes.round() : 15,
         tasks: _tasksFromData(activityMap['tasks']),
         recommendations: _recommendationsFromData(
           activityMap['recommendations'],
         ),
         reactions: _reactionsFromData(activityMap['reactions']),
+        reactionCounts: _reactionCountsFromData(
+          activityMap['reactionCounts'] ?? activityMap['reactions'],
+        ),
         comments: _commentsFromData(activityMap['comments']),
       );
     }).toList();
@@ -303,7 +322,57 @@ class CourseRepository {
     }).toList();
   }
 
-  List<ActivityComment> _commentsFromData(dynamic commentsData) {
+  Status _activityStatusFrom(dynamic statusData) {
+    final raw = statusData?.toString().toLowerCase();
+    switch (raw) {
+      case 'started':
+        return Status.started;
+      case 'ended':
+        return Status.ended;
+      case 'created':
+      default:
+        return Status.created;
+    }
+  }
+
+  List<String> _stringList(dynamic raw) {
+    if (raw is List) {
+      return raw
+          .where((entry) => entry != null)
+          .map((entry) => entry.toString())
+          .toList();
+    }
+    return [];
+  }
+
+  Map<String, int> _reactionCountsFromData(dynamic raw) {
+    if (raw is Map) {
+      return raw.map((key, value) => MapEntry(
+            key.toString(),
+            value is num ? value.toInt() : int.tryParse(value.toString()) ?? 0,
+          ));
+    }
+    if (raw is List) {
+      final counts = <String, int>{};
+      for (final entry in raw) {
+        if (entry is Map) {
+          final type = entry['type']?.toString();
+          if (type == null) {
+            continue;
+          }
+          final countValue = entry['count'] ?? entry['total'];
+          counts[type] =
+              countValue is num ? countValue.toInt() : int.tryParse('$countValue') ?? 0;
+        } else if (entry is String) {
+          counts[entry] = (counts[entry] ?? 0) + 1;
+        }
+      }
+      return counts;
+    }
+    return {};
+  }
+
+  List<Comment> _commentsFromData(dynamic commentsData) {
     if (commentsData is! List) {
       return [];
     }
@@ -316,37 +385,35 @@ class CourseRepository {
         if (message.isEmpty) {
           return null;
         }
-        return ActivityComment(
-          author: (data['author'] as String?) ??
+        return Comment(
+          userId: (data['author'] as String?) ??
               (data['user'] as String?) ??
               'Anonymous',
-          message: message,
+          text: message,
           timestamp: _parseCommentTimestamp(
             data['timestamp'] ?? data['createdAt'],
           ),
         );
       }
       return null;
-    }).whereType<ActivityComment>().toList();
+    }).whereType<Comment>().toList();
   }
 
-  DateTime _parseCommentTimestamp(dynamic rawTimestamp) {
+  String _parseCommentTimestamp(dynamic rawTimestamp) {
     if (rawTimestamp is Timestamp) {
-      return rawTimestamp.toDate();
+      return rawTimestamp.toDate().toIso8601String();
     }
     if (rawTimestamp is DateTime) {
-      return rawTimestamp;
+      return rawTimestamp.toIso8601String();
     }
     if (rawTimestamp is String) {
-      final parsed = DateTime.tryParse(rawTimestamp);
-      if (parsed != null) {
-        return parsed;
-      }
+      return rawTimestamp;
     }
     if (rawTimestamp is num) {
-      return DateTime.fromMillisecondsSinceEpoch(rawTimestamp.round());
+      return DateTime.fromMillisecondsSinceEpoch(rawTimestamp.round())
+          .toIso8601String();
     }
-    return DateTime.now();
+    return DateTime.now().toIso8601String();
   }
 
   List<Task> _tasksFromData(dynamic tasksData) {

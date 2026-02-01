@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'screens/message_thread_screen.dart';
 import 'models/activity.dart';
+import 'models/comment.dart';
 import 'models/conversation_message.dart';
 import 'models/recommendation.dart';
 import 'models/task.dart';
@@ -50,7 +51,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   String? _activityId;
   int? _activityIndex;
   bool _conversationInitialized = false;
-  List<ActivityComment> _comments = [];
+  List<Comment> _comments = [];
   int _likeCount = 0;
   bool _liked = false;
   String? _recommendationsActivityId;
@@ -274,7 +275,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       return;
     }
     _conversationInitialized = true;
-    _comments = List<ActivityComment>.from(activity.comments);
+    _comments = List<Comment>.from(activity.comments);
     _likeCount = _likeCountFrom(activity.reactions);
     _liked = false;
   }
@@ -307,10 +308,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
     setState(() {
       _comments.add(
-        ActivityComment(
-          author: 'You',
-          message: message,
-          timestamp: DateTime.now(),
+        Comment(
+          userId: 'You',
+          text: message,
+          timestamp: DateTime.now().toIso8601String(),
         ),
       );
     });
@@ -1113,8 +1114,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             CircleAvatar(
                               radius: 16,
                               child: Text(
-                                comment.author.isNotEmpty
-                                    ? comment.author[0].toUpperCase()
+                                comment.userId.isNotEmpty
+                                    ? comment.userId[0].toUpperCase()
                                     : '?',
                               ),
                             ),
@@ -1126,7 +1127,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        comment.author,
+                                        comment.userId,
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
                                           fontWeight: FontWeight.w600,
@@ -1144,7 +1145,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    comment.message,
+                                    comment.text,
                                     style: theme.textTheme.bodyMedium,
                                   ),
                                 ],
@@ -1185,11 +1186,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   String _formatCommentTimestamp(
     BuildContext context,
-    DateTime timestamp,
+    String timestamp,
   ) {
-    final time = TimeOfDay.fromDateTime(timestamp).format(context);
-    final month = timestamp.month.toString().padLeft(2, '0');
-    final day = timestamp.day.toString().padLeft(2, '0');
+    final parsed = DateTime.tryParse(timestamp);
+    if (parsed == null) {
+      return timestamp;
+    }
+    final time = TimeOfDay.fromDateTime(parsed).format(context);
+    final month = parsed.month.toString().padLeft(2, '0');
+    final day = parsed.day.toString().padLeft(2, '0');
     return '$month/$day $time';
   }
 
