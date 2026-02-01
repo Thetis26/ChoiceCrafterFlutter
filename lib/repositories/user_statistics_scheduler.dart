@@ -8,7 +8,7 @@ import '../models/enrollment_activity_progress.dart';
 class UserStatisticsScheduler {
   UserStatisticsScheduler({
     FirebaseFirestore? firestore,
-    Duration interval = const Duration(seconds: 30),
+    Duration interval = const Duration(seconds: 3),
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _interval = interval;
 
