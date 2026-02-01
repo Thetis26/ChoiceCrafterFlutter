@@ -118,6 +118,21 @@ class MultipleChoiceTask extends Task {
   }
 }
 
+class MultipleChoiceQuestion extends MultipleChoiceTask {
+  const MultipleChoiceQuestion({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.type,
+    required super.status,
+    super.explanation,
+    required super.question,
+    required super.options,
+    required super.correctAnswer,
+    super.supportingContent,
+  });
+}
+
 class FillInTheBlankTask extends Task {
   const FillInTheBlankTask({
     required super.id,
@@ -151,6 +166,21 @@ class FillInTheBlankTask extends Task {
       supportingContent: _supportingContent(map),
     );
   }
+}
+
+class FillInTheBlank extends FillInTheBlankTask {
+  const FillInTheBlank({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.type,
+    required super.status,
+    super.explanation,
+    required super.text,
+    required super.missingSegments,
+    required super.segmentPositions,
+    super.supportingContent,
+  });
 }
 
 class MatchingPairTask extends Task {

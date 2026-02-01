@@ -6,12 +6,14 @@ class Recommendation {
     required this.url,
     required this.description,
     required this.type,
+    this.rawType,
   });
 
   final String title;
   final String url;
   final String description;
   final RecommendationType type;
+  final String? rawType;
 
   factory Recommendation.fromMap(Map<String, dynamic> map) {
     final url = (map['url'] as String?)?.trim() ?? '';
@@ -23,6 +25,7 @@ class Recommendation {
       url: url,
       description: (map['description'] as String?)?.trim() ?? '',
       type: _parseType(typeString, url),
+      rawType: typeString,
     );
   }
 
@@ -31,7 +34,7 @@ class Recommendation {
       'title': title,
       'url': url,
       'description': description,
-      'type': type.name,
+      'type': rawType ?? type.name,
     };
   }
 

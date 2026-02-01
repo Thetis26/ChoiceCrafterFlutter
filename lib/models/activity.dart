@@ -1,5 +1,12 @@
+import 'comment.dart';
 import 'recommendation.dart';
 import 'task.dart';
+
+enum Status {
+  created,
+  started,
+  ended,
+}
 
 class Activity {
   const Activity({
@@ -13,18 +20,30 @@ class Activity {
     this.recommendations = const [],
     this.reactions = const [],
     this.comments = const [],
-  });
+    this.title,
+    this.date,
+    this.time,
+    this.status = Status.created,
+    this.reminders = const [],
+    Map<String, int>? reactionCounts,
+  }) : reactionCounts = reactionCounts ?? const {};
 
   final String id;
   final String name;
+  final String? title;
   final String description;
   final String type;
   final String content;
+  final String? date;
+  final String? time;
   final int estimatedMinutes;
   final List<Task> tasks;
   final List<Recommendation> recommendations;
   final List<ActivityReaction> reactions;
-  final List<ActivityComment> comments;
+  final List<Comment> comments;
+  final Status status;
+  final List<String> reminders;
+  final Map<String, int> reactionCounts;
 }
 
 class ActivityReaction {
