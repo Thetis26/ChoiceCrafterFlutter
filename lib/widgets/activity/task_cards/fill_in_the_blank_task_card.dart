@@ -180,7 +180,11 @@ class _FillInTheBlankTaskCardState extends State<FillInTheBlankTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onHint: () => showTaskHintDialog(context, task: task),
+              onCheckAnswer: _checkAnswer,
+            ),
           ],
         ),
       ),
