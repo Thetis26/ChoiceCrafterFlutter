@@ -25,6 +25,7 @@ import 'screens/personal_activity_screen.dart';
 import 'screens/recommendation_webview_screen.dart';
 import 'screens/settings_screen.dart';
 import 'localization/app_localizations.dart';
+import 'navigation/app_route_observer.dart';
 
 import 'dart:developer' as developer;
 
@@ -255,6 +256,7 @@ class _MyAppState extends State<MyApp> {
                 ),
             '/feedback': (context) => const FeedbackScreen(),
           },
+          navigatorObservers: [routeObserver],
           onGenerateRoute: (settings) =>
               _onGenerateRoute(settings, courseRepository: courseRepository),
         );
