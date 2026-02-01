@@ -1,5 +1,6 @@
 // lib/activity_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,6 +14,7 @@ import 'models/task.dart';
 import 'models/task_stats.dart';
 import 'models/user.dart';
 import 'repositories/activity_progress_repository.dart';
+import 'repositories/course_repository.dart';
 import 'services/open_ai_recommendations_service.dart';
 import 'widgets/activity/task_cards/coding_challenge_task_card.dart';
 import 'widgets/activity/task_cards/fill_in_the_blank_task_card.dart';
@@ -41,6 +43,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final Map<String, TaskStats> _taskStatsById = {};
   final ActivityProgressRepository _activityProgressRepository =
       ActivityProgressRepository();
+  final CourseRepository _courseRepository = CourseRepository();
   final TextEditingController _commentController = TextEditingController();
   final OpenAiRecommendationsService _openAiRecommendationsService =
       OpenAiRecommendationsService();
@@ -52,6 +55,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   int? _activityIndex;
   bool _conversationInitialized = false;
   List<Comment> _comments = [];
+  Map<String, int> _reactionCounts = {};
   int _likeCount = 0;
   bool _liked = false;
   String? _recommendationsActivityId;
@@ -276,8 +280,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
     _conversationInitialized = true;
     _comments = List<Comment>.from(activity.comments);
-    _likeCount = _likeCountFrom(activity.reactions);
+    _reactionCounts = _reactionCountsFrom(activity);
+    _likeCount = _reactionCounts['like'] ?? _likeCountFrom(activity.reactions);
     _liked = false;
+  }
+
+  Map<String, int> _reactionCountsFrom(Activity activity) {
+    if (activity.reactionCounts.isNotEmpty) {
+      return Map<String, int>.from(activity.reactionCounts);
+    }
+    final counts = <String, int>{};
+    for (final reaction in activity.reactions) {
+      counts[reaction.type] = reaction.count;
+    }
+    return counts;
   }
 
   int _likeCountFrom(List<ActivityReaction> reactions) {
@@ -298,7 +314,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
       if (_likeCount < 0) {
         _likeCount = 0;
       }
+      _reactionCounts = {
+        ..._reactionCounts,
+        'like': _likeCount,
+      };
     });
+    debugPrint(
+      '[ActivityScreen] toggleLike liked=$_liked likeCount=$_likeCount',
+    );
+    _persistConversationFeedback();
   }
 
   void _addComment() {
@@ -315,8 +339,36 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ),
       );
     });
+    debugPrint('[ActivityScreen] addComment count=${_comments.length}');
     _commentController.clear();
     FocusScope.of(context).unfocus();
+    _persistConversationFeedback();
+  }
+
+  Future<void> _persistConversationFeedback() async {
+    final courseId = _courseId;
+    final activityId = _activityId;
+    if (courseId == null ||
+        courseId.isEmpty ||
+        activityId == null ||
+        activityId.isEmpty) {
+      debugPrint(
+        '[ActivityScreen] skip persist: courseId=$courseId activityId=$activityId',
+      );
+      return;
+    }
+    debugPrint(
+      '[ActivityScreen] persist conversation courseId=$courseId activityId=$activityId comments=${_comments.length} reactions=$_reactionCounts',
+    );
+    await _courseRepository.updateActivityConversation(
+      courseId: courseId,
+      activityId: activityId,
+      comments: _comments,
+      reactionCounts: _reactionCounts,
+    );
+    debugPrint(
+      '[ActivityScreen] persist conversation complete activityId=$activityId',
+    );
   }
 
   bool _areTasksComplete(List<Task> tasks) {

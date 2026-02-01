@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/activity.dart';
 import '../models/comment.dart';
@@ -204,11 +205,204 @@ class CourseRepository {
     }, SetOptions(merge: true));
   }
 
+  Future<void> updateActivityConversation({
+    required String courseId,
+    required String activityId,
+    required List<Comment> comments,
+    required Map<String, int> reactionCounts,
+  }) async {
+    if (courseId.isEmpty || activityId.isEmpty) {
+      debugPrint(
+        '[CourseRepository] updateActivityConversation skipped courseId=$courseId activityId=$activityId',
+      );
+      return;
+    }
+    debugPrint(
+      '[CourseRepository] updateActivityConversation start courseId=$courseId activityId=$activityId comments=${comments.length} reactions=$reactionCounts',
+    );
+    final courseDoc = await _resolveCourseDocument(courseId);
+    if (courseDoc == null) {
+      debugPrint(
+        '[CourseRepository] updateActivityConversation no course doc for courseId=$courseId',
+      );
+      return;
+    }
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(courseDoc);
+      if (!snapshot.exists) {
+        debugPrint(
+          '[CourseRepository] updateActivityConversation missing snapshot for courseId=$courseId',
+        );
+        return;
+      }
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final updatedActivities = _updateActivitiesConversation(
+        data['activities'],
+        activityId,
+        comments,
+        reactionCounts,
+      );
+      final updatedModules = _updateModulesConversation(
+        data['modules'],
+        activityId,
+        comments,
+        reactionCounts,
+      );
+      final updates = <String, dynamic>{};
+      if (updatedActivities != null) {
+        updates['activities'] = updatedActivities;
+      }
+      if (updatedModules != null) {
+        updates['modules'] = updatedModules;
+      }
+      if (updates.isNotEmpty) {
+        transaction.update(courseDoc, updates);
+        debugPrint(
+          '[CourseRepository] updateActivityConversation updated courseId=$courseId activityId=$activityId',
+        );
+      } else {
+        debugPrint(
+          '[CourseRepository] updateActivityConversation no matching activity for activityId=$activityId',
+        );
+      }
+    });
+  }
+
   String _formatEnrollmentDate(DateTime date) {
     final year = date.year.toString().padLeft(4, '0');
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
+  }
+
+  Future<DocumentReference<Map<String, dynamic>>?> _resolveCourseDocument(
+    String courseId,
+  ) async {
+    final primaryDoc =
+        await _firestore.collection(_coursesCollection).doc(courseId).get();
+    if (primaryDoc.exists) {
+      debugPrint(
+        '[CourseRepository] resolveCourseDocument found primary courseId=$courseId',
+      );
+      return primaryDoc.reference;
+    }
+    final legacyDoc =
+        await _firestore.collection(_legacyCoursesCollection).doc(courseId).get();
+    if (legacyDoc.exists) {
+      debugPrint(
+        '[CourseRepository] resolveCourseDocument found legacy courseId=$courseId',
+      );
+      return legacyDoc.reference;
+    }
+    debugPrint(
+      '[CourseRepository] resolveCourseDocument not found courseId=$courseId',
+    );
+    return null;
+  }
+
+  List<dynamic>? _updateActivitiesConversation(
+    dynamic rawActivities,
+    String activityId,
+    List<Comment> comments,
+    Map<String, int> reactionCounts,
+  ) {
+    if (rawActivities is! List) {
+      return null;
+    }
+    var didUpdate = false;
+    final updated = rawActivities.map((entry) {
+      if (entry is Map) {
+        final activityMap = Map<String, dynamic>.from(entry);
+        if (_matchesActivity(activityMap, activityId)) {
+          _applyConversation(activityMap, comments, reactionCounts);
+          didUpdate = true;
+          debugPrint(
+            '[CourseRepository] updateActivitiesConversation matched activityId=$activityId',
+          );
+        }
+        return activityMap;
+      }
+      return entry;
+    }).toList();
+    return didUpdate ? updated : null;
+  }
+
+  List<dynamic>? _updateModulesConversation(
+    dynamic rawModules,
+    String activityId,
+    List<Comment> comments,
+    Map<String, int> reactionCounts,
+  ) {
+    if (rawModules is! List) {
+      return null;
+    }
+    var didUpdate = false;
+    final updatedModules = rawModules.map((entry) {
+      if (entry is Map) {
+        final moduleMap = Map<String, dynamic>.from(entry);
+        final updatedActivities = _updateActivitiesConversation(
+          moduleMap['activities'],
+          activityId,
+          comments,
+          reactionCounts,
+        );
+        if (updatedActivities != null) {
+          moduleMap['activities'] = updatedActivities;
+          didUpdate = true;
+          debugPrint(
+            '[CourseRepository] updateModulesConversation updated module for activityId=$activityId',
+          );
+        }
+        return moduleMap;
+      }
+      return entry;
+    }).toList();
+    return didUpdate ? updatedModules : null;
+  }
+
+  bool _matchesActivity(Map<String, dynamic> activityMap, String activityId) {
+    final idValue = (activityMap['id'] as String?) ?? '';
+    final titleValue = (activityMap['title'] as String?) ?? '';
+    final nameValue = (activityMap['name'] as String?) ?? '';
+    final activityIdValue = (activityMap['activityId'] as String?) ?? '';
+    final normalizedActivityId = activityId.trim().toLowerCase();
+    if (idValue.trim().toLowerCase() == normalizedActivityId) {
+      return true;
+    }
+    if (titleValue.trim().toLowerCase() == normalizedActivityId) {
+      return true;
+    }
+    if (nameValue.trim().toLowerCase() == normalizedActivityId) {
+      return true;
+    }
+    if (activityIdValue.trim().toLowerCase() == normalizedActivityId) {
+      return true;
+    }
+    return false;
+  }
+
+  void _applyConversation(
+    Map<String, dynamic> activityMap,
+    List<Comment> comments,
+    Map<String, int> reactionCounts,
+  ) {
+    activityMap['comments'] = comments
+        .map((comment) => {
+              'author': comment.userId,
+              'message': comment.text,
+              'timestamp': comment.timestamp,
+            })
+        .toList();
+    activityMap['reactionCounts'] = reactionCounts;
+    activityMap['reactions'] = reactionCounts.entries
+        .map((entry) => {
+              'type': entry.key,
+              'count': entry.value,
+            })
+        .toList();
+    debugPrint(
+      '[CourseRepository] applyConversation comments=${comments.length} reactions=$reactionCounts',
+    );
   }
 
   Course _courseFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
