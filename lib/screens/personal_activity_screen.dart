@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/activity.dart';
 import '../models/course.dart';
 import '../models/enrollment_activity_progress.dart';
 import '../models/user.dart';
@@ -226,8 +227,13 @@ class _PersonalActivityData {
     for (final course in courses) {
       courseTitleById[course.id] = course.title;
       for (final module in course.modules) {
-        for (final activity in module.activities) {
-          activityNameById[activity.id] = activity.name;
+        for (final entry in module.activities.asMap().entries) {
+          final activityKey = resolveActivityKey(
+            entry.value,
+            courseId: course.id,
+            activityIndex: entry.key,
+          );
+          activityNameById[activityKey] = entry.value.name;
         }
       }
     }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'models/activity.dart';
 import 'models/course.dart';
 import 'models/module.dart';
 import 'models/enrollment_activity_progress.dart';
@@ -152,10 +153,17 @@ class CourseActivitiesScreen extends StatelessWidget {
                   _ProgressRow(progress: moduleProgress),
                 ],
               ),
-              children: module.activities.map((activity) {
-                final isHighlighted = activity.id == highlightActivityId;
+              children: module.activities.asMap().entries.map((entry) {
+                final activityIndex = entry.key;
+                final activity = entry.value;
+                final activityKey = resolveActivityKey(
+                  activity,
+                  courseId: course.id,
+                  activityIndex: activityIndex,
+                );
+                final isHighlighted = activityKey == highlightActivityId;
                 final activityProgress =
-                    progressByActivity[activity.id] ?? 0.0;
+                    progressByActivity[activityKey] ?? 0.0;
                 return ListTile(
                   leading: Icon(
                     isHighlighted ? Icons.star : Icons.play_circle,
@@ -178,6 +186,7 @@ class CourseActivitiesScreen extends StatelessWidget {
                         'activity': activity,
                         'courseId': course.id,
                         'user': user,
+                        'activityIndex': activityIndex,
                       },
                     );
                   },
@@ -194,9 +203,15 @@ class CourseActivitiesScreen extends StatelessWidget {
     if (module.activities.isEmpty) {
       return 0.0;
     }
-    final total = module.activities
-        .map((activity) => progressByActivity[activity.id] ?? 0.0)
-        .fold<double>(0.0, (sum, value) => sum + value);
+    var total = 0.0;
+    for (final entry in module.activities.asMap().entries) {
+      final activityKey = resolveActivityKey(
+        entry.value,
+        courseId: course.id,
+        activityIndex: entry.key,
+      );
+      total += progressByActivity[activityKey] ?? 0.0;
+    }
     return (total / module.activities.length).clamp(0.0, 1.0);
   }
 }

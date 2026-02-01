@@ -24,6 +24,26 @@ class Activity {
   final List<ActivityComment> comments;
 }
 
+String resolveActivityKey(
+  Activity activity, {
+  String? courseId,
+  int? activityIndex,
+}) {
+  if (activity.id.isNotEmpty) {
+    return activity.id;
+  }
+  if (activity.name.isNotEmpty) {
+    return activity.name;
+  }
+  if (activityIndex != null) {
+    if (courseId != null && courseId.isNotEmpty) {
+      return '${courseId}_$activityIndex';
+    }
+    return activityIndex.toString();
+  }
+  return '';
+}
+
 class ActivityReaction {
   const ActivityReaction({
     required this.type,

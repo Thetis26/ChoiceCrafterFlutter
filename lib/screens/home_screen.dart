@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/activity.dart';
 import '../models/course.dart';
 import '../models/enrollment_activity_progress.dart';
 import '../models/user.dart';
@@ -135,15 +136,23 @@ class HomeScreen extends StatelessWidget {
   }
 
   double _courseProgress(Course course, Map<String, double> progressByActivity) {
-    final activities =
-        course.modules.expand((module) => module.activities).toList();
-    if (activities.isEmpty) {
+    var activityCount = 0;
+    var total = 0.0;
+    for (final module in course.modules) {
+      for (final entry in module.activities.asMap().entries) {
+        final activityKey = resolveActivityKey(
+          entry.value,
+          courseId: course.id,
+          activityIndex: entry.key,
+        );
+        total += progressByActivity[activityKey] ?? 0.0;
+        activityCount += 1;
+      }
+    }
+    if (activityCount == 0) {
       return 0.0;
     }
-    final total = activities
-        .map((activity) => progressByActivity[activity.id] ?? 0.0)
-        .fold<double>(0.0, (sum, value) => sum + value);
-    return (total / activities.length).clamp(0.0, 1.0);
+    return (total / activityCount).clamp(0.0, 1.0);
   }
 }
 
