@@ -1,3 +1,4 @@
+import 'recommendation.dart';
 import 'task.dart';
 
 class Activity {
@@ -9,6 +10,7 @@ class Activity {
     required this.content,
     this.estimatedMinutes = 15,
     this.tasks = const [],
+    this.recommendations = const [],
     this.reactions = const [],
     this.comments = const [],
   });
@@ -20,6 +22,7 @@ class Activity {
   final String content;
   final int estimatedMinutes;
   final List<Task> tasks;
+  final List<Recommendation> recommendations;
   final List<ActivityReaction> reactions;
   final List<ActivityComment> comments;
 }

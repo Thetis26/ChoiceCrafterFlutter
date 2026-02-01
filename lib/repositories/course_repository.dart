@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/activity.dart';
+import '../models/recommendation.dart';
 import '../models/course.dart';
 import '../models/module.dart';
 import '../models/task.dart';
@@ -256,10 +257,30 @@ class CourseRepository {
         content: (activityMap['content'] as String?) ?? '',
         estimatedMinutes: estimatedMinutes is num ? estimatedMinutes.round() : 15,
         tasks: _tasksFromData(activityMap['tasks']),
+        recommendations: _recommendationsFromData(
+          activityMap['recommendations'],
+        ),
         reactions: _reactionsFromData(activityMap['reactions']),
         comments: _commentsFromData(activityMap['comments']),
       );
     }).toList();
+  }
+
+  List<Recommendation> _recommendationsFromData(dynamic recommendationsData) {
+    if (recommendationsData is! List) {
+      return [];
+    }
+    return recommendationsData
+        .map((entry) {
+          if (entry is Map) {
+            return Recommendation.fromMap(
+              Map<String, dynamic>.from(entry),
+            );
+          }
+          return null;
+        })
+        .whereType<Recommendation>()
+        .toList();
   }
 
   List<ActivityReaction> _reactionsFromData(dynamic reactionsData) {

@@ -7,10 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'screens/message_thread_screen.dart';
 import 'models/activity.dart';
 import 'models/conversation_message.dart';
+import 'models/recommendation.dart';
 import 'models/task.dart';
 import 'models/task_stats.dart';
 import 'models/user.dart';
 import 'repositories/activity_progress_repository.dart';
+import 'services/open_ai_recommendations_service.dart';
 import 'widgets/activity/task_cards/coding_challenge_task_card.dart';
 import 'widgets/activity/task_cards/fill_in_the_blank_task_card.dart';
 import 'widgets/activity/task_cards/generic_task_card.dart';
@@ -39,6 +41,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final ActivityProgressRepository _activityProgressRepository =
       ActivityProgressRepository();
   final TextEditingController _commentController = TextEditingController();
+  final OpenAiRecommendationsService _openAiRecommendationsService =
+      OpenAiRecommendationsService();
   bool _progressInitialized = false;
   bool _completionDialogShown = false;
   String? _userKey;
@@ -48,6 +52,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
   List<ActivityComment> _comments = [];
   int _likeCount = 0;
   bool _liked = false;
+  String? _recommendationsActivityId;
+  List<Recommendation> _recommendations = [];
+  bool _recommendationsLoading = false;
+  String? _recommendationsError;
 
   @override
   void didChangeDependencies() {
@@ -155,7 +163,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   ? const Center(
                       child: Text('No tasks available for this activity yet.'),
                     )
-                  : _buildTaskCarousel(context, tasks, showRecommendations),
+                  : _buildTaskCarousel(
+                      context,
+                      activity,
+                      tasks,
+                      showRecommendations,
+                    ),
             ),
             if (tasks.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -173,6 +186,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Widget _buildTaskCarousel(
     BuildContext context,
+    Activity activity,
     List<Task> tasks,
     bool showRecommendations,
   ) {
@@ -194,7 +208,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: ConstrainedBox(
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
-                    child: _buildActivityOutroCard(context, tasks, index),
+                    child: _buildActivityOutroCard(
+                      context,
+                      activity,
+                      tasks,
+                      index,
+                    ),
                   ),
                 );
               },
@@ -225,11 +244,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Widget _buildActivityOutroCard(
     BuildContext context,
+    Activity activity,
     List<Task> tasks,
     int index,
   ) {
     if (index == tasks.length) {
-      return _buildRecommendationsCard(context);
+      return _buildRecommendationsCard(context, activity, tasks);
     }
     if (index == tasks.length + 1) {
       return _buildStatisticsCard(context, tasks);
@@ -313,8 +333,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return _taskCompleted[index] ?? false;
   }
 
-  Widget _buildRecommendationsCard(BuildContext context) {
-    final recommendations = _recommendationMaterials();
+  Widget _buildRecommendationsCard(
+    BuildContext context,
+    Activity activity,
+    List<Task> tasks,
+  ) {
+    _loadRecommendationsIfNeeded(activity, tasks);
+    final recommendations = _recommendations;
     return Card(
       elevation: 2,
       child: Padding(
@@ -338,48 +363,29 @@ class _ActivityScreenState extends State<ActivityScreen> {
               label: const Text('Chat with task assistant'),
             ),
             const SizedBox(height: 16),
-            ...recommendations.map(
-              (recommendation) => _RecommendationListTile(
-                recommendation: recommendation,
-                onTap: () => _openRecommendation(
-                  context,
-                  recommendation.url,
+            if (_recommendationsLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (_recommendationsError != null)
+              _buildRecommendationsError(context, _recommendationsError!)
+            else if (recommendations.isEmpty)
+              Text(
+                'No recommendations available yet.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              )
+            else
+              ...recommendations.map(
+                (recommendation) => _RecommendationListTile(
+                  recommendation: recommendation,
+                  onTap: () => _openRecommendation(
+                    context,
+                    recommendation.url,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
-  }
-
-  List<_RecommendationMaterial> _recommendationMaterials() {
-    return const [
-      _RecommendationMaterial(
-        title: 'Kotlin coroutines fundamentals',
-        url: 'https://www.w3schools.com/cpp/',
-        description: 'Website • Android Developers',
-        type: _RecommendationType.website,
-      ),
-      _RecommendationMaterial(
-        title: 'Async programming in Flutter',
-        url: 'https://www.youtube.com/watch?v=CzRQ9mnmh44',
-        description: 'YouTube • Flutter channel',
-        type: _RecommendationType.youtube,
-      ),
-      _RecommendationMaterial(
-        title: 'Mobile architecture checklist',
-        url: 'https://upb.ro/wp-content/uploads/2025/05/Structura-an-universitar-2025-2026.pdf',
-        description: 'PDF • Quick reference',
-        type: _RecommendationType.pdf,
-      ),
-      _RecommendationMaterial(
-        title: 'Reflection prompts worksheet',
-        url: 'https://example.org/reflection-prompts.docx',
-        description: 'Doc • Guided worksheet',
-        type: _RecommendationType.doc,
-      ),
-    ];
   }
 
   Future<void> _openRecommendation(
@@ -413,6 +419,109 @@ class _ActivityScreenState extends State<ActivityScreen> {
     } catch (_) {
       _showLaunchError(context);
     }
+  }
+
+  void _loadRecommendationsIfNeeded(Activity activity, List<Task> tasks) {
+    final activityKey = activity.id.isNotEmpty ? activity.id : activity.name;
+    if (_recommendationsActivityId == activityKey) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _recommendationsActivityId = activityKey;
+      final existing = activity.recommendations;
+      if (existing.isNotEmpty) {
+        setState(() {
+          _recommendations = existing;
+          _recommendationsLoading = false;
+          _recommendationsError = null;
+        });
+        return;
+      }
+      setState(() {
+        _recommendations = [];
+        _recommendationsLoading = true;
+        _recommendationsError = null;
+      });
+      _fetchAiRecommendations(activity, tasks);
+    });
+  }
+
+  Future<void> _fetchAiRecommendations(
+    Activity activity,
+    List<Task> tasks,
+  ) async {
+    try {
+      final results =
+          await _openAiRecommendationsService.generateRecommendations(
+        activityTitle: activity.name,
+        activityDescription: activity.description,
+        tasks: tasks,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _recommendations = results;
+        _recommendationsLoading = false;
+        _recommendationsError = null;
+      });
+    } on OpenAiMissingKeyException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _recommendationsLoading = false;
+        _recommendationsError =
+            'Add your OPEN_AI_KEY to generate AI recommendations.';
+      });
+    } on OpenAiRequestException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _recommendationsLoading = false;
+        _recommendationsError = error.message;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _recommendationsLoading = false;
+        _recommendationsError = 'Unable to load recommendations right now.';
+      });
+    }
+  }
+
+  Widget _buildRecommendationsError(BuildContext context, String message) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          message,
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: Colors.redAccent),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: () {
+            final activityId = _recommendationsActivityId;
+            if (activityId == null) {
+              return;
+            }
+            setState(() {
+              _recommendationsActivityId = null;
+            });
+          },
+          child: const Text('Retry'),
+        ),
+      ],
+    );
   }
 
   Future<void> _openTaskAssistant(BuildContext context) async {
@@ -1211,29 +1320,13 @@ class _ActivityStat {
   final String supportingText;
 }
 
-enum _RecommendationType { website, youtube, pdf, doc }
-
-class _RecommendationMaterial {
-  const _RecommendationMaterial({
-    required this.title,
-    required this.url,
-    required this.description,
-    required this.type,
-  });
-
-  final String title;
-  final String url;
-  final String description;
-  final _RecommendationType type;
-}
-
 class _RecommendationListTile extends StatelessWidget {
   const _RecommendationListTile({
     required this.recommendation,
     required this.onTap,
   });
 
-  final _RecommendationMaterial recommendation;
+  final Recommendation recommendation;
   final VoidCallback onTap;
 
   @override
@@ -1248,15 +1341,15 @@ class _RecommendationListTile extends StatelessWidget {
     );
   }
 
-  IconData _iconForType(_RecommendationType type) {
+  IconData _iconForType(RecommendationType type) {
     switch (type) {
-      case _RecommendationType.website:
+      case RecommendationType.website:
         return Icons.public;
-      case _RecommendationType.youtube:
+      case RecommendationType.youtube:
         return Icons.play_circle;
-      case _RecommendationType.pdf:
+      case RecommendationType.pdf:
         return Icons.picture_as_pdf;
-      case _RecommendationType.doc:
+      case RecommendationType.doc:
         return Icons.description;
     }
   }
