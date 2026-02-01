@@ -157,7 +157,11 @@ class _SpotTheErrorTaskCardState extends State<SpotTheErrorTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onHint: () => showTaskHintDialog(context, task: task),
+              onCheckAnswer: _checkAnswer,
+            ),
           ],
         ),
       ),

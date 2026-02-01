@@ -71,7 +71,10 @@ class GenericTaskCard extends StatelessWidget {
             ...detailLines,
             if (task is! InfoCardTask) ...[
               const SizedBox(height: 16),
-              buildTaskActions(context),
+              buildTaskActions(
+                context,
+                onHint: () => showTaskHintDialog(context, task: task),
+              ),
             ],
           ],
         ),

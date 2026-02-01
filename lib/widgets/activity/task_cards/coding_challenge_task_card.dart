@@ -259,9 +259,24 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildActionButton('Hint')),
+                Expanded(
+                  child: _buildActionButton(
+                    'Hint',
+                    onPressed: () =>
+                        showTaskHintDialog(context, task: task),
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildActionButton('Show solution')),
+                Expanded(
+                  child: _buildActionButton(
+                    'Show solution',
+                    onPressed: () => showTaskFinalAnswerDialog(
+                      context,
+                      task: task,
+                      preferredLanguage: _selectedLanguage,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildActionButton(
