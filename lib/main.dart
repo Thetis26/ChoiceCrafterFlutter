@@ -12,6 +12,7 @@ import 'models/user.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/course_repository.dart';
 import 'repositories/personal_statistics_repository.dart';
+import 'repositories/user_statistics_scheduler.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/colleagues_activity_screen.dart';
 import 'screens/feedback_screen.dart';
@@ -46,6 +47,7 @@ class _MyAppState extends State<MyApp> {
   late final Future<FirebaseApp> _firebaseInit;
   CourseRepository? _courseRepository;
   PersonalStatisticsRepository? _personalStatisticsRepository;
+  UserStatisticsScheduler? _userStatisticsScheduler;
   User? _currentUser;
   ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale('en');
@@ -56,6 +58,7 @@ class _MyAppState extends State<MyApp> {
     _firebaseInit = Firebase.initializeApp().then((app) async {
       _authRepository = AuthRepository();
       _currentUser = await _authRepository!.currentUser();
+      _userStatisticsScheduler = UserStatisticsScheduler()..start();
       return app;
     });
   }
@@ -83,6 +86,12 @@ class _MyAppState extends State<MyApp> {
       return;
     }
     setState(() => _currentUser = null);
+  }
+
+  @override
+  void dispose() {
+    _userStatisticsScheduler?.stop();
+    super.dispose();
   }
 
   Route<dynamic>? _onGenerateRoute(
