@@ -68,6 +68,7 @@ class ModuleScreen extends StatelessWidget {
                     '/activity',
                     arguments: {
                       'activity': activity,
+                      'activityIndex': index,
                     },
                   ),
                 ),

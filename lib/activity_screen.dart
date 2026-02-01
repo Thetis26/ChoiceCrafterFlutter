@@ -48,6 +48,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   String? _userKey;
   String? _courseId;
   String? _activityId;
+  int? _activityIndex;
   bool _conversationInitialized = false;
   List<ActivityComment> _comments = [];
   int _likeCount = 0;
@@ -81,16 +82,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
     final activityArg = arguments['activity'];
     final courseId = arguments['courseId'] as String?;
+    final activityIndex = arguments['activityIndex'] as int?;
     final userArg = arguments['user'];
     String? userKey;
     if (userArg is User) {
       userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
     }
     if (activityArg is Activity) {
-      final resolvedActivityId =
-          activityArg.id.isNotEmpty ? activityArg.id : activityArg.name;
-      _activityId = resolvedActivityId;
+      _activityId = resolveActivityKey(
+        activityArg,
+        courseId: courseId,
+        activityIndex: activityIndex,
+      );
     }
+    _activityIndex = activityIndex;
     _courseId = courseId;
     _userKey = userKey;
     _progressInitialized = true;
@@ -104,6 +109,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         userId: _userKey!,
         courseId: _courseId!,
         activityId: _activityId!,
+        activityIndex: _activityIndex,
       );
     }
   }
@@ -117,12 +123,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
     final Activity activity = arguments['activity'] as Activity;
     final String? courseId = arguments['courseId'] as String?;
+    final int? activityIndex = arguments['activityIndex'] as int?;
     final userArg = arguments['user'];
     if (userArg is User) {
       _userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
     }
     _courseId = courseId;
-    _activityId = activity.id.isNotEmpty ? activity.id : activity.name;
+    _activityIndex = activityIndex;
+    _activityId = resolveActivityKey(
+      activity,
+      courseId: courseId,
+      activityIndex: activityIndex,
+    );
     _initializeConversation(activity);
 
     final List<Task> tasks = activity.tasks;
@@ -756,15 +768,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
       completionRatio: isCorrect ? 1.0 : 0.0,
       scoreRatio: isCorrect ? 1.0 : 0.0,
     );
-    _taskStatsById[task.id] = stats;
+    final taskKey = _taskStatsKey(task, index);
+    _taskStatsById[taskKey] = stats;
     debugPrint(
-      '[ActivityScreen] task progress stats taskId=${task.id} attemptDateTime=${stats.attemptDateTime} timeSpent=${stats.timeSpent} retries=${stats.retries} success=${stats.success} hintsUsed=${stats.hintsUsed} completionRatio=${stats.completionRatio} scoreRatio=${stats.scoreRatio}',
+      '[ActivityScreen] task progress stats taskId=${task.id} taskIndex=$index taskKey=$taskKey attemptDateTime=${stats.attemptDateTime} timeSpent=${stats.timeSpent} retries=${stats.retries} success=${stats.success} hintsUsed=${stats.hintsUsed} completionRatio=${stats.completionRatio} scoreRatio=${stats.scoreRatio}',
     );
     _activityProgressRepository.addTaskStats(
       userId: userKey,
       courseId: courseId,
       activityId: activityId,
+      activityIndex: _activityIndex,
       taskId: task.id,
+      taskIndex: index,
       taskStats: stats,
     );
     if (_areTasksComplete(tasks)) {
@@ -773,6 +788,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         userId: userKey,
         courseId: courseId,
         activityId: activityId,
+        activityIndex: _activityIndex,
         score: score,
       );
     }
@@ -867,6 +883,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return tasks.where(_requiresCorrectAnswer).length;
   }
 
+  String _taskStatsKey(Task task, int index) {
+    if (task.id.isNotEmpty) {
+      return task.id;
+    }
+    return index.toString();
+  }
+
   int _correctTaskCount(List<Task> tasks) {
     return tasks.asMap().entries.where((entry) {
       final task = entry.value;
@@ -945,7 +968,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ...tasks.asMap().entries.map((entry) {
               final index = entry.key;
               final task = entry.value;
-              final stats = _taskStatsById[task.id];
+              final stats = _taskStatsById[_taskStatsKey(task, index)];
               final attemptDate = _formatAttemptDate(
                 context,
                 stats?.attemptDateTime,

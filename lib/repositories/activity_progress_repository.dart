@@ -20,11 +20,13 @@ class ActivityProgressRepository {
     required String userId,
     required String courseId,
     required String activityId,
+    int? activityIndex,
   }) async {
+    final activityKey = _resolveActivityKey(courseId, activityId, activityIndex);
     debugPrint(
-      '[ActivityProgressRepository] startActivity userId=$userId courseId=$courseId activityId=$activityId',
+      '[ActivityProgressRepository] startActivity userId=$userId courseId=$courseId activityKey=$activityKey activityId=$activityId activityIndex=$activityIndex',
     );
-    if (userId.isEmpty || courseId.isEmpty || activityId.isEmpty) {
+    if (userId.isEmpty || courseId.isEmpty || activityKey.isEmpty) {
       debugPrint(
         '[ActivityProgressRepository] startActivity aborted: missing identifiers.',
       );
@@ -53,7 +55,8 @@ class ActivityProgressRepository {
       activitySnapshots,
       userId,
       courseId,
-      activityId,
+      activityKey,
+      activityIndex,
     );
     debugPrint(
       '[ActivityProgressRepository] startActivity snapshot taskStats=${(snapshot['taskStats'] as Map?)?.length ?? 0}',
@@ -72,16 +75,20 @@ class ActivityProgressRepository {
     required String userId,
     required String courseId,
     required String activityId,
+    int? activityIndex,
     required String taskId,
+    int? taskIndex,
     required TaskStats taskStats,
   }) async {
+    final activityKey = _resolveActivityKey(courseId, activityId, activityIndex);
+    final taskKey = _resolveTaskKey(taskId, taskIndex);
     debugPrint(
-      '[ActivityProgressRepository] addTaskStats userId=$userId courseId=$courseId activityId=$activityId taskId=$taskId',
+      '[ActivityProgressRepository] addTaskStats userId=$userId courseId=$courseId activityKey=$activityKey activityId=$activityId activityIndex=$activityIndex taskKey=$taskKey taskId=$taskId taskIndex=$taskIndex',
     );
     if (userId.isEmpty ||
         courseId.isEmpty ||
-        activityId.isEmpty ||
-        taskId.isEmpty) {
+        activityKey.isEmpty ||
+        taskKey.isEmpty) {
       debugPrint(
         '[ActivityProgressRepository] addTaskStats aborted: missing identifiers.',
       );
@@ -115,7 +122,8 @@ class ActivityProgressRepository {
         activitySnapshots,
         userId,
         courseId,
-        activityId,
+        activityKey,
+        activityIndex,
       );
       debugPrint(
         '[ActivityProgressRepository] addTaskStats snapshot taskStats=${(snapshot['taskStats'] as Map?)?.length ?? 0}',
@@ -128,7 +136,7 @@ class ActivityProgressRepository {
       debugPrint(
         '[ActivityProgressRepository] addTaskStats taskStats details attemptDateTime=${taskStats.attemptDateTime} timeSpent=${taskStats.timeSpent} retries=${taskStats.retries} success=${taskStats.success} hintsUsed=${taskStats.hintsUsed} completionRatio=${taskStats.completionRatio} scoreRatio=${taskStats.scoreRatio}',
       );
-      taskStatsMap[taskId] = taskStats.toMap();
+      taskStatsMap[taskKey] = taskStats.toMap();
       snapshot['taskStats'] = taskStatsMap;
       debugPrint(
         '[ActivityProgressRepository] addTaskStats taskStatsMap after=${taskStatsMap.length}',
@@ -150,12 +158,14 @@ class ActivityProgressRepository {
     required String userId,
     required String courseId,
     required String activityId,
+    int? activityIndex,
     required int score,
   }) async {
+    final activityKey = _resolveActivityKey(courseId, activityId, activityIndex);
     debugPrint(
-      '[ActivityProgressRepository] updateHighestScoreIfGreater userId=$userId courseId=$courseId activityId=$activityId score=$score',
+      '[ActivityProgressRepository] updateHighestScoreIfGreater userId=$userId courseId=$courseId activityKey=$activityKey activityId=$activityId activityIndex=$activityIndex score=$score',
     );
-    if (userId.isEmpty || courseId.isEmpty || activityId.isEmpty) {
+    if (userId.isEmpty || courseId.isEmpty || activityKey.isEmpty) {
       debugPrint(
         '[ActivityProgressRepository] updateHighestScoreIfGreater aborted: missing identifiers.',
       );
@@ -184,7 +194,8 @@ class ActivityProgressRepository {
       activitySnapshots,
       userId,
       courseId,
-      activityId,
+      activityKey,
+      activityIndex,
     );
     final highestScore = snapshot['highestScore'];
     final currentScore =
@@ -240,26 +251,31 @@ class ActivityProgressRepository {
     List<Map<String, dynamic>> activitySnapshots,
     String userId,
     String courseId,
-    String activityId,
+    String activityKey,
+    int? activityIndex,
   ) {
     for (final snapshot in activitySnapshots) {
       final snapshotId = snapshot['activityId'];
-      if (snapshotId != null && snapshotId.toString() == activityId) {
+      if (snapshotId != null && snapshotId.toString() == activityKey) {
         _ensureSnapshotIdentifiers(
           snapshot,
           userId,
           courseId,
-          activityId,
+          activityKey,
+          activityIndex,
         );
         return snapshot;
       }
     }
     final snapshot = <String, dynamic>{
-      'activityId': activityId,
+      'activityId': activityKey,
       'courseId': courseId,
       'userId': userId,
       'taskStats': <String, dynamic>{},
     };
+    if (activityIndex != null) {
+      snapshot['activityIndex'] = activityIndex;
+    }
     activitySnapshots.add(snapshot);
     return snapshot;
   }
@@ -268,11 +284,15 @@ class ActivityProgressRepository {
     Map<String, dynamic> snapshot,
     String userId,
     String courseId,
-    String activityId,
+    String activityKey,
+    int? activityIndex,
   ) {
     snapshot['userId'] = userId;
     snapshot['courseId'] = courseId;
-    snapshot['activityId'] = activityId;
+    snapshot['activityId'] = activityKey;
+    if (activityIndex != null) {
+      snapshot['activityIndex'] = activityIndex;
+    }
     if (snapshot['taskStats'] is! Map) {
       snapshot['taskStats'] = <String, dynamic>{};
     }
@@ -294,5 +314,32 @@ class ActivityProgressRepository {
     Map<String, dynamic> progressSummary,
   ) {
     return {'progressSummary': progressSummary};
+  }
+
+  String _resolveTaskKey(String taskId, int? taskIndex) {
+    if (taskId.isNotEmpty) {
+      return taskId;
+    }
+    if (taskIndex != null) {
+      return taskIndex.toString();
+    }
+    return '';
+  }
+
+  String _resolveActivityKey(
+    String courseId,
+    String activityId,
+    int? activityIndex,
+  ) {
+    if (activityId.isNotEmpty) {
+      return activityId;
+    }
+    if (activityIndex != null) {
+      if (courseId.isNotEmpty) {
+        return '${courseId}_$activityIndex';
+      }
+      return activityIndex.toString();
+    }
+    return '';
   }
 }

@@ -136,6 +136,7 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
                                     arguments: {
                                       'activity': activity.activity,
                                       'courseId': activity.courseId,
+                                      'activityIndex': activity.activityIndex,
                                     },
                                   )
                               : null,
@@ -155,9 +156,23 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
     final lookup = <String, Activity>{};
     for (final course in courses) {
       for (final module in course.modules) {
-        for (final activity in module.activities) {
-          lookup[activity.id] = activity;
-          lookup[activity.name.toLowerCase()] = activity;
+        for (final entry in module.activities.asMap().entries) {
+          final activity = entry.value;
+          final activityKey = resolveActivityKey(
+            activity,
+            courseId: course.id,
+            activityIndex: entry.key,
+          );
+          if (activityKey.isNotEmpty) {
+            lookup[activityKey] = activity;
+            lookup[activityKey.toLowerCase()] = activity;
+          }
+          if (activity.id.isNotEmpty) {
+            lookup[activity.id] = activity;
+          }
+          if (activity.name.isNotEmpty) {
+            lookup[activity.name.toLowerCase()] = activity;
+          }
         }
       }
     }
@@ -261,6 +276,8 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
         if (activityId == null || activityId.isEmpty) {
           continue;
         }
+        final activityIndex =
+            _extractActivityIndex(snapshotMap);
         final activity =
             activityLookup[activityId] ?? activityLookup[activityId.toLowerCase()];
         final courseId = (snapshotMap['courseId'] as String?) ??
@@ -282,6 +299,7 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
             activityId: activityId,
             activity: activity,
             courseId: courseId,
+            activityIndex: activityIndex,
             activityTitle: activity?.name ?? activityId,
             activityDescription:
                 activity?.description ?? 'Recently worked on this activity.',
@@ -308,6 +326,20 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
       if (value is String && value.trim().isNotEmpty) {
         return value.trim();
       }
+    }
+    return null;
+  }
+
+  int? _extractActivityIndex(Map<String, dynamic> snapshotMap) {
+    final value = snapshotMap['activityIndex'];
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
     }
     return null;
   }
@@ -686,6 +718,7 @@ class _ColleagueActivity {
     required this.timestamp,
     required this.courseId,
     this.activity,
+    this.activityIndex,
   });
 
   final _ColleagueUser user;
@@ -695,6 +728,7 @@ class _ColleagueActivity {
   final DateTime timestamp;
   final String courseId;
   final Activity? activity;
+  final int? activityIndex;
 
   String get relativeTimestamp {
     final now = DateTime.now();

@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'activity_screen.dart';
 import 'course_activities_screen.dart';
+import 'models/activity.dart';
 import 'models/course.dart';
 import 'models/user.dart';
 import 'repositories/auth_repository.dart';
@@ -310,10 +311,15 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
   }
 
   void _openCourse(Course course) {
-    final highlightActivityId = course.modules.isNotEmpty &&
-            course.modules.first.activities.isNotEmpty
-        ? course.modules.first.activities.first.id
-        : null;
+    String? highlightActivityId;
+    if (course.modules.isNotEmpty &&
+        course.modules.first.activities.isNotEmpty) {
+      highlightActivityId = resolveActivityKey(
+        course.modules.first.activities.first,
+        courseId: course.id,
+        activityIndex: 0,
+      );
+    }
     Navigator.of(context).pushNamed(
       '/courseActivities',
       arguments: {
