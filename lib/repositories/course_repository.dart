@@ -391,9 +391,17 @@ class CourseRepository {
               'author': comment.userId,
               'message': comment.text,
               'timestamp': comment.timestamp,
+              if ((comment.anonymousAvatarName ?? '').trim().isNotEmpty ||
+                  (comment.anonymousAvatarImageUrl ?? '').trim().isNotEmpty)
+                'anonymousAvatar': {
+                  if ((comment.anonymousAvatarName ?? '').trim().isNotEmpty)
+                    'name': comment.anonymousAvatarName,
+                  if ((comment.anonymousAvatarImageUrl ?? '').trim().isNotEmpty)
+                    'imageUrl': comment.anonymousAvatarImageUrl,
+                },
             })
         .toList();
-    activityMap['reactionCounts'] = reactionCounts;
+    activityMap.remove('reactionCounts');
     activityMap['reactions'] = reactionCounts.entries
         .map((entry) => {
               'type': entry.key,
@@ -584,6 +592,8 @@ class CourseRepository {
               (data['user'] as String?) ??
               'Anonymous',
           text: message,
+          anonymousAvatarName: _commentAvatarName(data),
+          anonymousAvatarImageUrl: _commentAvatarImageUrl(data),
           timestamp: _parseCommentTimestamp(
             data['timestamp'] ?? data['createdAt'],
           ),
@@ -608,6 +618,35 @@ class CourseRepository {
           .toIso8601String();
     }
     return DateTime.now().toIso8601String();
+  }
+
+  String? _commentAvatarName(Map<String, dynamic> data) {
+    final anonymousAvatar = data['anonymousAvatar'];
+    final avatarName = anonymousAvatar is Map ? anonymousAvatar['name'] : null;
+    final trimmed = avatarName?.toString().trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      return trimmed;
+    }
+    final directName = (data['anonymousAvatarName'] as String?)?.trim();
+    if (directName != null && directName.isNotEmpty) {
+      return directName;
+    }
+    return null;
+  }
+
+  String? _commentAvatarImageUrl(Map<String, dynamic> data) {
+    final anonymousAvatar = data['anonymousAvatar'];
+    final avatarUrl =
+        anonymousAvatar is Map ? anonymousAvatar['imageUrl'] : null;
+    final trimmed = avatarUrl?.toString().trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      return trimmed;
+    }
+    final directUrl = (data['anonymousAvatarImageUrl'] as String?)?.trim();
+    if (directUrl != null && directUrl.isNotEmpty) {
+      return directUrl;
+    }
+    return null;
   }
 
   List<Task> _tasksFromData(dynamic tasksData) {

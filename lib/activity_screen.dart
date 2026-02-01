@@ -54,6 +54,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   bool _shouldPromptRetake = false;
   bool _forceShowCompletionPages = false;
   String? _userKey;
+  String? _anonymousAvatarName;
+  String? _anonymousAvatarImageUrl;
   String? _courseId;
   String? _activityId;
   int? _activityIndex;
@@ -96,6 +98,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
     String? userKey;
     if (userArg is User) {
       userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
+      _anonymousAvatarName = userArg.anonymousAvatarName?.trim();
+      _anonymousAvatarImageUrl = userArg.anonymousAvatarImageUrl?.trim();
     }
     Activity? activity;
     if (activityArg is Activity) {
@@ -154,6 +158,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final userArg = arguments['user'];
     if (userArg is User) {
       _userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
+      _anonymousAvatarName = userArg.anonymousAvatarName?.trim();
+      _anonymousAvatarImageUrl = userArg.anonymousAvatarImageUrl?.trim();
     }
     _courseId = courseId;
     _activityIndex = activityIndex;
@@ -363,9 +369,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
     setState(() {
       _comments.add(
         Comment(
-          userId: 'You',
+          userId: _userKey ?? 'Anonymous',
           text: message,
           timestamp: DateTime.now().toIso8601String(),
+          anonymousAvatarName: _anonymousAvatarName,
+          anonymousAvatarImageUrl: _anonymousAvatarImageUrl,
         ),
       );
     });
@@ -1353,11 +1361,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              child: Text(
-                                comment.userId.isNotEmpty
-                                    ? comment.userId[0].toUpperCase()
-                                    : '?',
-                              ),
+                              backgroundColor: const Color(0xFFE0E4FF),
+                              backgroundImage:
+                                  _commentAvatarImage(comment) != null
+                                      ? NetworkImage(
+                                          _commentAvatarImage(comment)!,
+                                        )
+                                      : null,
+                              child: _commentAvatarImage(comment) == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 18,
+                                      color: Color(0xFF4D59FF),
+                                    )
+                                  : null,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -1367,7 +1384,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        comment.userId,
+                                        _commentDisplayName(comment),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
                                           fontWeight: FontWeight.w600,
@@ -1436,6 +1453,33 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final month = parsed.month.toString().padLeft(2, '0');
     final day = parsed.day.toString().padLeft(2, '0');
     return '$month/$day $time';
+  }
+
+  String _commentDisplayName(Comment comment) {
+    final displayName =
+        (comment.anonymousAvatarName ?? '').trim().isNotEmpty
+            ? comment.anonymousAvatarName!.trim()
+            : 'Anonymous';
+    if (_isCurrentUserComment(comment)) {
+      return '$displayName (You)';
+    }
+    return displayName;
+  }
+
+  String? _commentAvatarImage(Comment comment) {
+    final avatarUrl = (comment.anonymousAvatarImageUrl ?? '').trim();
+    if (avatarUrl.isNotEmpty) {
+      return avatarUrl;
+    }
+    return null;
+  }
+
+  bool _isCurrentUserComment(Comment comment) {
+    final userKey = _userKey;
+    if (userKey == null || userKey.isEmpty) {
+      return comment.userId.toLowerCase() == 'you';
+    }
+    return comment.userId == userKey || comment.userId.toLowerCase() == 'you';
   }
 
   String _formatAttemptDate(BuildContext context, String? attemptDateTime) {
