@@ -1,5 +1,6 @@
 // lib/activity_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -348,6 +349,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
         'like': _likeCount,
       };
     });
+    debugPrint(
+      '[ActivityScreen] toggleLike liked=$_liked likeCount=$_likeCount',
+    );
     _persistConversationFeedback();
   }
 
@@ -365,6 +369,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ),
       );
     });
+    debugPrint('[ActivityScreen] addComment count=${_comments.length}');
     _commentController.clear();
     FocusScope.of(context).unfocus();
     _persistConversationFeedback();
@@ -377,6 +382,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
         courseId.isEmpty ||
         activityId == null ||
         activityId.isEmpty) {
+      debugPrint(
+        '[ActivityScreen] skip persist: courseId=$courseId activityId=$activityId',
+      );
+      return;
+    }
+    debugPrint(
+      '[ActivityScreen] persist conversation courseId=$courseId activityId=$activityId comments=${_comments.length} reactions=$_reactionCounts',
+    );
       return;
     }
     await _courseRepository.updateActivityConversation(
@@ -384,6 +397,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
       activityId: activityId,
       comments: _comments,
       reactionCounts: _reactionCounts,
+    );
+    debugPrint(
+      '[ActivityScreen] persist conversation complete activityId=$activityId',
     );
   }
 

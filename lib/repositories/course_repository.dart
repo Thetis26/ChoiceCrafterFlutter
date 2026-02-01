@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/activity.dart';
 import '../models/comment.dart';
@@ -211,15 +212,27 @@ class CourseRepository {
     required Map<String, int> reactionCounts,
   }) async {
     if (courseId.isEmpty || activityId.isEmpty) {
+      debugPrint(
+        '[CourseRepository] updateActivityConversation skipped courseId=$courseId activityId=$activityId',
+      );
       return;
     }
+    debugPrint(
+      '[CourseRepository] updateActivityConversation start courseId=$courseId activityId=$activityId comments=${comments.length} reactions=$reactionCounts',
+    );
     final courseDoc = await _resolveCourseDocument(courseId);
     if (courseDoc == null) {
+      debugPrint(
+        '[CourseRepository] updateActivityConversation no course doc for courseId=$courseId',
+      );
       return;
     }
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(courseDoc);
       if (!snapshot.exists) {
+        debugPrint(
+          '[CourseRepository] updateActivityConversation missing snapshot for courseId=$courseId',
+        );
         return;
       }
       final data = snapshot.data() ?? <String, dynamic>{};
@@ -244,6 +257,13 @@ class CourseRepository {
       }
       if (updates.isNotEmpty) {
         transaction.update(courseDoc, updates);
+        debugPrint(
+          '[CourseRepository] updateActivityConversation updated courseId=$courseId activityId=$activityId',
+        );
+      } else {
+        debugPrint(
+          '[CourseRepository] updateActivityConversation no matching activity for activityId=$activityId',
+        );
       }
     });
   }
@@ -261,13 +281,22 @@ class CourseRepository {
     final primaryDoc =
         await _firestore.collection(_coursesCollection).doc(courseId).get();
     if (primaryDoc.exists) {
+      debugPrint(
+        '[CourseRepository] resolveCourseDocument found primary courseId=$courseId',
+      );
       return primaryDoc.reference;
     }
     final legacyDoc =
         await _firestore.collection(_legacyCoursesCollection).doc(courseId).get();
     if (legacyDoc.exists) {
+      debugPrint(
+        '[CourseRepository] resolveCourseDocument found legacy courseId=$courseId',
+      );
       return legacyDoc.reference;
     }
+    debugPrint(
+      '[CourseRepository] resolveCourseDocument not found courseId=$courseId',
+    );
     return null;
   }
 
@@ -287,6 +316,9 @@ class CourseRepository {
         if (_matchesActivity(activityMap, activityId)) {
           _applyConversation(activityMap, comments, reactionCounts);
           didUpdate = true;
+          debugPrint(
+            '[CourseRepository] updateActivitiesConversation matched activityId=$activityId',
+          );
         }
         return activityMap;
       }
@@ -317,6 +349,9 @@ class CourseRepository {
         if (updatedActivities != null) {
           moduleMap['activities'] = updatedActivities;
           didUpdate = true;
+          debugPrint(
+            '[CourseRepository] updateModulesConversation updated module for activityId=$activityId',
+          );
         }
         return moduleMap;
       }
@@ -365,6 +400,9 @@ class CourseRepository {
               'count': entry.value,
             })
         .toList();
+    debugPrint(
+      '[CourseRepository] applyConversation comments=${comments.length} reactions=$reactionCounts',
+    );
   }
 
   Course _courseFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
