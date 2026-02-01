@@ -12,6 +12,7 @@ import 'models/recommendation.dart';
 import 'models/task.dart';
 import 'models/task_stats.dart';
 import 'models/user.dart';
+import 'models/enrollment_activity_progress.dart';
 import 'repositories/activity_progress_repository.dart';
 import 'repositories/course_repository.dart';
 import 'services/open_ai_recommendations_service.dart';
@@ -48,6 +49,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
       OpenAiRecommendationsService();
   bool _progressInitialized = false;
   bool _completionDialogShown = false;
+  bool _retakeDialogShown = false;
+  bool _shouldPromptRetake = false;
+  bool _forceShowCompletionPages = false;
   String? _userKey;
   String? _courseId;
   String? _activityId;
@@ -75,7 +79,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     super.dispose();
   }
 
-  void _initializeProgress() {
+  Future<void> _initializeProgress() async {
     if (_progressInitialized) {
       return;
     }
@@ -92,7 +96,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (userArg is User) {
       userKey = userArg.email.isNotEmpty ? userArg.email : userArg.id;
     }
+    Activity? activity;
     if (activityArg is Activity) {
+      activity = activityArg;
       _activityId = resolveActivityKey(
         activityArg,
         courseId: courseId,
@@ -109,12 +115,28 @@ class _ActivityScreenState extends State<ActivityScreen> {
         _courseId!.isNotEmpty &&
         _activityId != null &&
         _activityId!.isNotEmpty) {
-      _activityProgressRepository.startActivity(
+      final snapshot = await _activityProgressRepository.startActivity(
         userId: _userKey!,
         courseId: _courseId!,
         activityId: _activityId!,
         activityIndex: _activityIndex,
       );
+      if (!mounted) {
+        return;
+      }
+      if (snapshot != null) {
+        if (_taskStatsById.isEmpty) {
+          for (final entry in snapshot.taskStats.entries) {
+            _taskStatsById[entry.key] = entry.value;
+          }
+        }
+        if (activity != null &&
+            _isActivityPreviouslyCompleted(activity, snapshot)) {
+          setState(() {
+            _shouldPromptRetake = true;
+          });
+        }
+      }
     }
   }
 
@@ -142,7 +164,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
     _initializeConversation(activity);
 
     final List<Task> tasks = activity.tasks;
-    final bool showRecommendations = _areTasksComplete(tasks);
+    final bool showRecommendations = _shouldShowCompletionPages(tasks);
+
+    if (_shouldPromptRetake && !_retakeDialogShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showRetakePrompt(activity, tasks);
+        }
+      });
+    }
 
     if (tasks.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -364,6 +394,150 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return tasks.asMap().entries.every(
           (entry) => _isTaskSatisfied(entry.value, entry.key),
         );
+  }
+
+  bool _shouldShowCompletionPages(List<Task> tasks) {
+    if (_forceShowCompletionPages) {
+      return true;
+    }
+    return _areTasksComplete(tasks);
+  }
+
+  bool _isActivityPreviouslyCompleted(
+    Activity activity,
+    EnrollmentActivityProgress snapshot,
+  ) {
+    if (activity.tasks.isEmpty) {
+      return false;
+    }
+    for (final entry in activity.tasks.asMap().entries) {
+      final task = entry.value;
+      final stats = snapshot.taskStats[_taskStatsKey(task, entry.key)];
+      if (stats == null) {
+        return false;
+      }
+      if (_requiresCorrectAnswer(task)) {
+        if (!stats.isFullyCorrect()) {
+          return false;
+        }
+      } else if (!stats.isCompleted()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _showRetakePrompt(
+    Activity activity,
+    List<Task> tasks,
+  ) async {
+    _retakeDialogShown = true;
+    _shouldPromptRetake = false;
+    final result = await showDialog<_CompletionChoice>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Welcome back!'),
+        content: const Text(
+          'You have already completed this activity. Would you like to retake it or review your statistics?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_CompletionChoice.stats),
+            child: const Text('See statistics'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(_CompletionChoice.retake),
+            child: const Text('Retake activity'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result == _CompletionChoice.stats) {
+      setState(() {
+        _forceShowCompletionPages = true;
+      });
+      _jumpToStatistics(tasks.length);
+      return;
+    }
+
+    if (result == _CompletionChoice.retake) {
+      await _beginRetakeSession();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _forceShowCompletionPages = false;
+      });
+      _resetRetakeState();
+      _jumpToTaskStart();
+    }
+  }
+
+  void _jumpToStatistics(int taskCount) {
+    final statsIndex = taskCount + 1;
+    if (_controller.hasClients) {
+      _controller.jumpToPage(statsIndex);
+      setState(() => _currentIndex = statsIndex);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_controller.hasClients) {
+        return;
+      }
+      _controller.jumpToPage(statsIndex);
+      setState(() => _currentIndex = statsIndex);
+    });
+  }
+
+  void _jumpToTaskStart() {
+    if (_controller.hasClients) {
+      _controller.jumpToPage(0);
+      setState(() => _currentIndex = 0);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_controller.hasClients) {
+        return;
+      }
+      _controller.jumpToPage(0);
+      setState(() => _currentIndex = 0);
+    });
+  }
+
+  Future<void> _beginRetakeSession() async {
+    final userKey = _userKey;
+    final courseId = _courseId;
+    final activityId = _activityId;
+    if (userKey == null ||
+        userKey.isEmpty ||
+        courseId == null ||
+        courseId.isEmpty ||
+        activityId == null ||
+        activityId.isEmpty) {
+      return;
+    }
+    await _activityProgressRepository.startActivity(
+      userId: userKey,
+      courseId: courseId,
+      activityId: activityId,
+      activityIndex: _activityIndex,
+    );
+  }
+
+  void _resetRetakeState() {
+    setState(() {
+      _taskCorrect.clear();
+      _taskCompleted.clear();
+      _taskAttempts.clear();
+      _taskStatsById.clear();
+      _completionDialogShown = false;
+    });
   }
 
   bool _isTaskMarkedComplete(Task task) {
@@ -772,7 +946,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       isCorrect: isCorrect,
       tasks: tasks,
     );
-    final bool showCompletionPages = _areTasksComplete(tasks);
+    final bool showCompletionPages = _shouldShowCompletionPages(tasks);
     final int totalPages = totalTasks + (showCompletionPages ? 2 : 0);
     if (isCorrect && !wasCorrect && index < totalPages - 1) {
       _controller.nextPage(
@@ -1373,6 +1547,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
         .toList();
   }
 }
+
+enum _CompletionChoice { retake, stats }
 
 class _ActivityStat {
   const _ActivityStat({
