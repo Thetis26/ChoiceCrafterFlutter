@@ -293,21 +293,15 @@ class ActivityProgressRepository {
     if (activityIndex != null) {
       snapshot['activityIndex'] = activityIndex;
     }
-    if (snapshot['taskStats'] is! Map) {
-      snapshot['taskStats'] = <String, dynamic>{};
-    }
+    snapshot['taskStats'] = _normalizeTaskStats(snapshot['taskStats']);
   }
 
   Map<String, dynamic> _ensureTaskStatsMap(
     Map<String, dynamic> snapshot,
   ) {
-    final stats = snapshot['taskStats'];
-    if (stats is Map) {
-      return Map<String, dynamic>.from(stats);
-    }
-    final empty = <String, dynamic>{};
-    snapshot['taskStats'] = empty;
-    return empty;
+    final normalized = _normalizeTaskStats(snapshot['taskStats']);
+    snapshot['taskStats'] = normalized;
+    return normalized;
   }
 
   Map<String, dynamic> _buildProgressUpdate(
@@ -341,5 +335,26 @@ class ActivityProgressRepository {
       return activityIndex.toString();
     }
     return '';
+  }
+
+  Map<String, dynamic> _normalizeTaskStats(Object? stats) {
+    if (stats is Map) {
+      return Map<String, dynamic>.from(stats);
+    }
+    if (stats is List) {
+      final normalized = <String, dynamic>{};
+      for (var i = 0; i < stats.length; i += 1) {
+        final entry = stats[i];
+        if (entry is Map) {
+          final entryMap = Map<String, dynamic>.from(entry);
+          final key = entryMap['taskId']?.toString() ??
+              entryMap['id']?.toString() ??
+              i.toString();
+          normalized[key] = entryMap;
+        }
+      }
+      return normalized;
+    }
+    return <String, dynamic>{};
   }
 }

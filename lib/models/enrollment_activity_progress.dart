@@ -28,19 +28,7 @@ class EnrollmentActivityProgress {
       return EnrollmentActivityProgress.empty();
     }
     final rawTaskStats = map['taskStats'];
-    final parsedTaskStats = <String, TaskStats>{};
-    if (rawTaskStats is Map) {
-      for (final entry in rawTaskStats.entries) {
-        final key = entry.key?.toString();
-        if (key == null) {
-          continue;
-        }
-        if (entry.value is Map) {
-          parsedTaskStats[key] =
-              TaskStats.fromMap(Map<String, dynamic>.from(entry.value as Map));
-        }
-      }
-    }
+    final parsedTaskStats = _parseTaskStats(rawTaskStats);
     final highestScore = map['highestScore'];
     return EnrollmentActivityProgress(
       activityId: (map['activityId'] as String?) ?? '',
@@ -104,5 +92,33 @@ class EnrollmentActivityProgress {
 
   int completedTaskCount() {
     return taskStats.values.where((stats) => stats.isCompleted()).length;
+  }
+
+  static Map<String, TaskStats> _parseTaskStats(Object? rawTaskStats) {
+    final parsedTaskStats = <String, TaskStats>{};
+    if (rawTaskStats is Map) {
+      for (final entry in rawTaskStats.entries) {
+        final key = entry.key?.toString();
+        if (key == null) {
+          continue;
+        }
+        if (entry.value is Map) {
+          parsedTaskStats[key] =
+              TaskStats.fromMap(Map<String, dynamic>.from(entry.value as Map));
+        }
+      }
+    } else if (rawTaskStats is List) {
+      for (var index = 0; index < rawTaskStats.length; index += 1) {
+        final entry = rawTaskStats[index];
+        if (entry is Map) {
+          final entryMap = Map<String, dynamic>.from(entry);
+          final key = entryMap['taskId']?.toString() ??
+              entryMap['id']?.toString() ??
+              index.toString();
+          parsedTaskStats[key] = TaskStats.fromMap(entryMap);
+        }
+      }
+    }
+    return parsedTaskStats;
   }
 }

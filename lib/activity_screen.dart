@@ -412,7 +412,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
     for (final entry in activity.tasks.asMap().entries) {
       final task = entry.value;
-      final stats = snapshot.taskStats[_taskStatsKey(task, entry.key)];
+      final stats = _lookupTaskStats(snapshot.taskStats, task, entry.key);
       if (stats == null) {
         return false;
       }
@@ -1103,6 +1103,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return index.toString();
   }
 
+  TaskStats? _lookupTaskStats(
+    Map<String, TaskStats> taskStats,
+    Task task,
+    int index,
+  ) {
+    if (task.id.isNotEmpty) {
+      final stats = taskStats[task.id];
+      if (stats != null) {
+        return stats;
+      }
+    }
+    return taskStats[index.toString()];
+  }
+
   int _correctTaskCount(List<Task> tasks) {
     return tasks.asMap().entries.where((entry) {
       final task = entry.value;
@@ -1181,7 +1195,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ...tasks.asMap().entries.map((entry) {
               final index = entry.key;
               final task = entry.value;
-              final stats = _taskStatsById[_taskStatsKey(task, index)];
+              final stats = _lookupTaskStats(_taskStatsById, task, index);
               final attemptDate = _formatAttemptDate(
                 context,
                 stats?.attemptDateTime,
