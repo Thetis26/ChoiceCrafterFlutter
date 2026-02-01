@@ -82,7 +82,9 @@ class _OrderingTaskCardState extends State<OrderingTaskCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildTaskHeader(style, rewardText, background: Colors.white),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            buildAiHelperBanner(context, task),
+            const SizedBox(height: 16),
             Text(
               task.title.isNotEmpty ? task.title : 'Order the items',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -168,7 +170,11 @@ class _OrderingTaskCardState extends State<OrderingTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onCheckAnswer: _checkAnswer,
+              showHintButton: false,
+            ),
           ],
         ),
       ),

@@ -129,7 +129,9 @@ class _TrueFalseTaskCardState extends State<TrueFalseTaskCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            buildAiHelperBanner(context, task),
+            const SizedBox(height: 16),
             Text(
               titleText,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -171,7 +173,11 @@ class _TrueFalseTaskCardState extends State<TrueFalseTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            buildTaskActions(context, onCheckAnswer: _checkAnswer),
+            buildTaskActions(
+              context,
+              onCheckAnswer: _checkAnswer,
+              showHintButton: false,
+            ),
           ],
         ),
       ),

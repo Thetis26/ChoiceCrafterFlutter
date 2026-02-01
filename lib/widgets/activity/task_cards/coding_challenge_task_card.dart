@@ -103,7 +103,9 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildTaskHeader(style, rewardText, background: Colors.white),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            buildAiHelperBanner(context, task),
+            const SizedBox(height: 16),
             Text(
               task.title.isNotEmpty ? task.title : 'Coding challenge',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -257,19 +259,10 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
                   ?.copyWith(color: Colors.blueGrey.shade500),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildActionButton('Hint')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildActionButton('Show solution')),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    'Check Answer',
-                    onPressed: _checkAnswer,
-                  ),
-                ),
-              ],
+            buildTaskActions(
+              context,
+              onCheckAnswer: _checkAnswer,
+              showHintButton: false,
             ),
           ],
         ),
@@ -314,22 +307,6 @@ class _CodingChallengeTaskCardState extends State<CodingChallengeTaskCard> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildActionButton(String label, {VoidCallback? onPressed}) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF6E7BF2),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-      ),
-      child: Text(label, textAlign: TextAlign.center),
     );
   }
 
