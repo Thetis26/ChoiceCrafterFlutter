@@ -4,10 +4,11 @@ import '../models/activity.dart';
 import '../models/course.dart';
 import '../models/enrollment_activity_progress.dart';
 import '../models/user.dart';
+import '../navigation/app_route_observer.dart';
 import '../repositories/course_repository.dart';
 import '../repositories/personal_statistics_repository.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.user,
@@ -22,13 +23,52 @@ class HomeScreen extends StatelessWidget {
   final String? highlightCourseId;
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
+  late Future<_HomeScreenData> _homeDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _homeDataFuture = _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _refreshData();
+  }
+
+  void _refreshData() {
+    setState(() {
+      _homeDataFuture = _loadData();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    debugPrint('HomeScreen.build - user: ${user.fullName}');
+    debugPrint('HomeScreen.build - user: ${widget.user.fullName}');
     return FutureBuilder<_HomeScreenData>(
-      future: _loadData(),
+      future: _homeDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          debugPrint('HomeScreen: loading courses for ${user.fullName}...');
+          debugPrint('HomeScreen: loading courses for ${widget.user.fullName}...');
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
@@ -37,7 +77,9 @@ class HomeScreen extends StatelessWidget {
 
         final data = snapshot.data ?? _HomeScreenData.empty();
         final courses = data.courses;
-        debugPrint('HomeScreen: loaded ${courses.length} courses for ${user.fullName}');
+        debugPrint(
+          'HomeScreen: loaded ${courses.length} courses for ${widget.user.fullName}',
+        );
         if (courses.isEmpty) {
           return const Center(child: Text('No enrolled courses yet.'));
         }
@@ -48,7 +90,10 @@ class HomeScreen extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Welcome, ${user.fullName}', style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Welcome, ${widget.user.fullName}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 4),
             Text(
               'Your enrolled courses mirror the Android experience so testing matches across platforms.',
@@ -57,7 +102,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             ...courses.map(
               (course) {
-                final isHighlighted = course.id == highlightCourseId;
+                final isHighlighted = course.id == widget.highlightCourseId;
                 final courseProgress =
                     _courseProgress(course, activityProgressById);
                 return Card(
@@ -90,7 +135,7 @@ class HomeScreen extends StatelessWidget {
                               ],
                             ),
                             TextButton(
-                              onPressed: () => onCourseSelected(course),
+                              onPressed: () => widget.onCourseSelected(course),
                               child: const Text('Open'),
                             ),
                           ],
@@ -108,8 +153,9 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<_HomeScreenData> _loadData() async {
-    final courses = await courseRepository.getEnrolledCourses(user);
-    final userKey = user.email.isNotEmpty ? user.email : user.id;
+    final courses = await widget.courseRepository.getEnrolledCourses(widget.user);
+    final userKey =
+        widget.user.email.isNotEmpty ? widget.user.email : widget.user.id;
     final activitySnapshots = await PersonalStatisticsRepository()
         .fetchActivitySnapshotsForUser(userKey);
     return _HomeScreenData(

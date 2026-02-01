@@ -7,10 +7,11 @@ import 'models/course.dart';
 import 'models/module.dart';
 import 'models/enrollment_activity_progress.dart';
 import 'models/user.dart';
+import 'navigation/app_route_observer.dart';
 import 'repositories/course_repository.dart';
 import 'repositories/personal_statistics_repository.dart';
 
-class CourseActivitiesLoader extends StatelessWidget {
+class CourseActivitiesLoader extends StatefulWidget {
   const CourseActivitiesLoader({
     super.key,
     required this.courseRepository,
@@ -27,20 +28,66 @@ class CourseActivitiesLoader extends StatelessWidget {
   final String? highlightActivityId;
 
   @override
+  State<CourseActivitiesLoader> createState() => _CourseActivitiesLoaderState();
+}
+
+class _CourseActivitiesLoaderState extends State<CourseActivitiesLoader>
+    with RouteAware {
+  late Future<List<EnrollmentActivityProgress>> _progressFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _progressFuture = _loadProgress();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _refreshProgress();
+  }
+
+  void _refreshProgress() {
+    setState(() {
+      _progressFuture = _loadProgress();
+    });
+  }
+
+  Future<List<EnrollmentActivityProgress>> _loadProgress() {
+    final userKey =
+        widget.user.email.isNotEmpty ? widget.user.email : widget.user.id;
+    return PersonalStatisticsRepository().fetchActivitySnapshotsForUser(userKey);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final resolvedCourse = course;
+    final resolvedCourse = widget.course;
     if (resolvedCourse != null) {
       return _buildCourseScreen(context, resolvedCourse);
     }
 
-    if (courseId == null) {
+    if (widget.courseId == null) {
       return const Scaffold(
         body: Center(child: Text('No course data available.')),
       );
     }
 
     return FutureBuilder<Course?>(
-      future: courseRepository.getCourseById(courseId!),
+      future: widget.courseRepository.getCourseById(widget.courseId!),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -58,10 +105,8 @@ class CourseActivitiesLoader extends StatelessWidget {
   }
 
   Widget _buildCourseScreen(BuildContext context, Course course) {
-    final userKey = user.email.isNotEmpty ? user.email : user.id;
     return FutureBuilder<List<EnrollmentActivityProgress>>(
-      future:
-          PersonalStatisticsRepository().fetchActivitySnapshotsForUser(userKey),
+      future: _progressFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -77,8 +122,8 @@ class CourseActivitiesLoader extends StatelessWidget {
             _buildProgressLookup(snapshot.data ?? const []);
         return CourseActivitiesScreen(
           course: course,
-          user: user,
-          highlightActivityId: highlightActivityId,
+          user: widget.user,
+          highlightActivityId: widget.highlightActivityId,
           progressByActivity: progressByActivity,
         );
       },
