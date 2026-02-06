@@ -481,6 +481,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
 
     if (result == _CompletionChoice.stats) {
+      debugPrint(
+        '[ActivityScreen] completed activity stats requested '
+        'tasks=${tasks.length} statsCache=${_taskStatsById.length} '
+        'taskIds=${tasks.map((task) => task.id).toList()}',
+      );
       setState(() {
         _forceShowCompletionPages = true;
       });
@@ -1218,6 +1223,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
               final index = entry.key;
               final task = entry.value;
               final stats = _lookupTaskStats(_taskStatsById, task, index);
+              if (stats == null) {
+                debugPrint(
+                  '[ActivityScreen] statistics missing for task '
+                  'taskId=${task.id} taskIndex=$index taskKey=${_taskStatsKey(task, index)}',
+                );
+              } else {
+                debugPrint(
+                  '[ActivityScreen] statistics detail taskId=${task.id} '
+                  'taskIndex=$index attemptDateTime=${stats.attemptDateTime} '
+                  'timeSpent=${stats.timeSpent} retries=${stats.retries} '
+                  'success=${stats.success} hintsUsed=${stats.hintsUsed} '
+                  'completionRatio=${stats.completionRatio} scoreRatio=${stats.scoreRatio}',
+                );
+              }
               final attemptDate = _formatAttemptDate(
                 context,
                 stats?.attemptDateTime,
