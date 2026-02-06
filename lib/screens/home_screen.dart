@@ -27,12 +27,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  late Future<_HomeScreenData> _homeDataFuture;
+  late final PersonalStatisticsRepository _personalStatisticsRepository;
+  late Stream<_HomeScreenData> _homeDataStream;
 
   @override
   void initState() {
     super.initState();
-    _homeDataFuture = _loadData();
+    _personalStatisticsRepository = PersonalStatisticsRepository();
+    _homeDataStream = _loadData();
   }
 
   @override
@@ -57,15 +59,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   void _refreshData() {
     setState(() {
-      _homeDataFuture = _loadData();
+      _homeDataStream = _loadData();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     debugPrint('HomeScreen.build - user: ${widget.user.fullName}');
-    return FutureBuilder<_HomeScreenData>(
-      future: _homeDataFuture,
+    return StreamBuilder<_HomeScreenData>(
+      stream: _homeDataStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           debugPrint('HomeScreen: loading courses for ${widget.user.fullName}...');
@@ -152,16 +154,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
-  Future<_HomeScreenData> _loadData() async {
-    final courses = await widget.courseRepository.getEnrolledCourses(widget.user);
+  Stream<_HomeScreenData> _loadData() async* {
+    final courses =
+        await widget.courseRepository.getEnrolledCourses(widget.user);
     final userKey =
         widget.user.email.isNotEmpty ? widget.user.email : widget.user.id;
-    final activitySnapshots = await PersonalStatisticsRepository()
-        .fetchActivitySnapshotsForUser(userKey);
-    return _HomeScreenData(
-      courses: courses,
-      activitySnapshots: activitySnapshots,
-    );
+    yield* _personalStatisticsRepository
+        .streamActivitySnapshotsForUser(userKey)
+        .map(
+          (activitySnapshots) => _HomeScreenData(
+            courses: courses,
+            activitySnapshots: activitySnapshots,
+          ),
+        );
   }
 
   Map<String, double> _buildActivityProgressLookup(
