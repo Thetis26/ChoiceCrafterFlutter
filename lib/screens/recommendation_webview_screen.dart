@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,11 +25,17 @@ class RecommendationWebViewScreen extends StatelessWidget {
       ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          debugPrint(
+            '[RecommendationWebViewScreen] failed to load recommendation: ${snapshot.error}',
+          );
           return const Scaffold(
             body: Center(child: Text('Unable to load recommendation.')),
           );
         }
         if (!snapshot.hasData) {
+          debugPrint(
+            '[RecommendationWebViewScreen] loading recommendation data',
+          );
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -36,10 +43,14 @@ class RecommendationWebViewScreen extends StatelessWidget {
 
         final recommendation = snapshot.data;
         if (recommendation == null) {
+          debugPrint('[RecommendationWebViewScreen] no recommendation available');
           return const Scaffold(
             body: Center(child: Text('No recommendation available.')),
           );
         }
+        debugPrint(
+          '[RecommendationWebViewScreen] display recommendation id=${recommendation.id} title=${recommendation.title}',
+        );
 
         return Scaffold(
           appBar: AppBar(
@@ -102,31 +113,49 @@ Future<_RecommendationData?> _loadRecommendation(
   String? activityId,
   String? recommendationId,
 ) async {
+  debugPrint(
+    '[RecommendationWebViewScreen] loadRecommendation courseId=$courseId moduleId=$moduleId activityId=$activityId recommendationId=$recommendationId',
+  );
   final firestore = FirebaseFirestore.instance;
   final courseDoc = await _loadCourseDocument(firestore, courseId);
   if (courseDoc == null) {
+    debugPrint('[RecommendationWebViewScreen] course document not found');
     return null;
   }
   final data = courseDoc.data();
   if (data == null) {
+    debugPrint('[RecommendationWebViewScreen] course document has no data');
     return null;
   }
   final modules = _listFromData(data['modules']);
+  debugPrint('[RecommendationWebViewScreen] mapped modules=${modules.length}');
   final moduleMap = _findById(modules, moduleId);
   final activities = _listFromData(moduleMap?['activities']);
+  debugPrint(
+    '[RecommendationWebViewScreen] mapped activities=${activities.length}',
+  );
   final activityMap = _findById(activities, activityId);
   final recommendations =
       _recommendationsFromData(activityMap?['recommendations']);
+  debugPrint(
+    '[RecommendationWebViewScreen] mapped recommendations=${recommendations.length}',
+  );
   if (recommendations.isEmpty) {
     return null;
   }
   if (recommendationId != null && recommendationId.trim().isNotEmpty) {
     for (final rec in recommendations) {
       if (rec.id == recommendationId) {
+        debugPrint(
+          '[RecommendationWebViewScreen] found requested recommendation id=${rec.id}',
+        );
         return rec;
       }
     }
   }
+  debugPrint(
+    '[RecommendationWebViewScreen] using first recommendation id=${recommendations.first.id}',
+  );
   return recommendations.first;
 }
 
@@ -138,30 +167,41 @@ Future<DocumentSnapshot<Map<String, dynamic>>?> _loadCourseDocument(
   const legacyCollection = 'courses';
 
   if (courseId != null && courseId.trim().isNotEmpty) {
+    debugPrint(
+      '[RecommendationWebViewScreen] fetching course document for courseId=$courseId',
+    );
     final primaryDoc =
         await firestore.collection(primaryCollection).doc(courseId).get();
     if (primaryDoc.exists) {
+      debugPrint('[RecommendationWebViewScreen] found primary course document');
       return primaryDoc;
     }
     final legacyDoc =
         await firestore.collection(legacyCollection).doc(courseId).get();
     if (legacyDoc.exists) {
+      debugPrint('[RecommendationWebViewScreen] found legacy course document');
       return legacyDoc;
     }
   }
 
+  debugPrint('[RecommendationWebViewScreen] fetching fallback course document');
   final primarySnapshot =
       await firestore.collection(primaryCollection).limit(1).get();
   if (primarySnapshot.docs.isNotEmpty) {
+    debugPrint(
+      '[RecommendationWebViewScreen] found fallback primary document',
+    );
     return primarySnapshot.docs.first;
   }
 
   final legacySnapshot =
       await firestore.collection(legacyCollection).limit(1).get();
   if (legacySnapshot.docs.isNotEmpty) {
+    debugPrint('[RecommendationWebViewScreen] found fallback legacy document');
     return legacySnapshot.docs.first;
   }
 
+  debugPrint('[RecommendationWebViewScreen] no course documents available');
   return null;
 }
 
