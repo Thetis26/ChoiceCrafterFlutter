@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class LearningPathScreen extends StatelessWidget {
@@ -16,11 +17,15 @@ class LearningPathScreen extends StatelessWidget {
       future: _loadLearningPath(courseId, moduleId, activityId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          debugPrint(
+            '[LearningPathScreen] failed to load learning path: ${snapshot.error}',
+          );
           return const Scaffold(
             body: Center(child: Text('Unable to load learning path.')),
           );
         }
         if (!snapshot.hasData) {
+          debugPrint('[LearningPathScreen] loading learning path data');
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -28,12 +33,16 @@ class LearningPathScreen extends StatelessWidget {
 
         final learningPath = snapshot.data;
         if (learningPath == null) {
+          debugPrint('[LearningPathScreen] no learning path available');
           return const Scaffold(
             body: Center(child: Text('No learning path available.')),
           );
         }
 
         final recommendation = learningPath.recommendation;
+        debugPrint(
+          '[LearningPathScreen] display learning path title=${learningPath.title} topics=${learningPath.topics.length} recommendation=${recommendation?.id ?? 'none'}',
+        );
 
         return Scaffold(
           appBar: AppBar(
@@ -123,22 +132,29 @@ Future<_LearningPathData?> _loadLearningPath(
   String? moduleId,
   String? activityId,
 ) async {
+  debugPrint(
+    '[LearningPathScreen] loadLearningPath courseId=$courseId moduleId=$moduleId activityId=$activityId',
+  );
   final firestore = FirebaseFirestore.instance;
   final courseDoc = await _loadCourseDocument(firestore, courseId);
   if (courseDoc == null) {
+    debugPrint('[LearningPathScreen] course document not found');
     return null;
   }
 
   final courseData = courseDoc.data();
   if (courseData == null) {
+    debugPrint('[LearningPathScreen] course document has no data');
     return null;
   }
 
   final modulesData = _listFromData(courseData['modules']);
+  debugPrint('[LearningPathScreen] mapped modules=${modulesData.length}');
   final moduleMap = _findById(modulesData, moduleId);
   final moduleIdValue = (moduleMap?['id'] as String?) ?? '';
   final moduleTitle = (moduleMap?['title'] as String?)?.trim() ?? '';
   final activitiesData = _listFromData(moduleMap?['activities']);
+  debugPrint('[LearningPathScreen] mapped activities=${activitiesData.length}');
   final activityMap = _findById(activitiesData, activityId);
   final activityIdValue = (activityMap?['id'] as String?) ?? '';
   final topics =
@@ -156,6 +172,9 @@ Future<_LearningPathData?> _loadLearningPath(
   final recommendation = recommendations.isNotEmpty
       ? recommendations.first
       : null;
+  debugPrint(
+    '[LearningPathScreen] mapped recommendations=${recommendations.length} selected=${recommendation?.id ?? 'none'}',
+  );
 
   return _LearningPathData(
     courseId: courseDoc.id,
@@ -177,30 +196,39 @@ Future<DocumentSnapshot<Map<String, dynamic>>?> _loadCourseDocument(
   const legacyCollection = 'courses';
 
   if (courseId != null && courseId.trim().isNotEmpty) {
+    debugPrint(
+      '[LearningPathScreen] fetching course document for courseId=$courseId',
+    );
     final primaryDoc =
         await firestore.collection(primaryCollection).doc(courseId).get();
     if (primaryDoc.exists) {
+      debugPrint('[LearningPathScreen] found primary course document');
       return primaryDoc;
     }
     final legacyDoc =
         await firestore.collection(legacyCollection).doc(courseId).get();
     if (legacyDoc.exists) {
+      debugPrint('[LearningPathScreen] found legacy course document');
       return legacyDoc;
     }
   }
 
+  debugPrint('[LearningPathScreen] fetching fallback course document');
   final primarySnapshot =
       await firestore.collection(primaryCollection).limit(1).get();
   if (primarySnapshot.docs.isNotEmpty) {
+    debugPrint('[LearningPathScreen] found fallback primary document');
     return primarySnapshot.docs.first;
   }
 
   final legacySnapshot =
       await firestore.collection(legacyCollection).limit(1).get();
   if (legacySnapshot.docs.isNotEmpty) {
+    debugPrint('[LearningPathScreen] found fallback legacy document');
     return legacySnapshot.docs.first;
   }
 
+  debugPrint('[LearningPathScreen] no course documents available');
   return null;
 }
 

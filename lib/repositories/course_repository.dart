@@ -28,34 +28,53 @@ class CourseRepository {
 
   Future<List<Course>> getAllCourses() async {
     if (_courses.isNotEmpty) {
+      debugPrint(
+        '[CourseRepository] getAllCourses using cached courses=${_courses.length}',
+      );
       return _courses;
     }
+    debugPrint('[CourseRepository] getAllCourses loading from firestore');
     return _loadCourses();
   }
 
   Future<List<Course>> refreshCourses() async {
+    debugPrint('[CourseRepository] refreshCourses');
     return _loadCourses();
   }
 
   Future<List<Course>> _loadCourses() async {
+    debugPrint('[CourseRepository] loadCourses start');
     final snapshot = await _firestore.collection(_coursesCollection).get();
     if (snapshot.docs.isNotEmpty) {
+      debugPrint(
+        '[CourseRepository] loadCourses mapping primary courses=${snapshot.docs.length}',
+      );
       _courses = snapshot.docs.map(_courseFromDoc).toList();
       return _courses;
     }
 
     final legacySnapshot =
         await _firestore.collection(_legacyCoursesCollection).get();
+    debugPrint(
+      '[CourseRepository] loadCourses mapping legacy courses=${legacySnapshot.docs.length}',
+    );
     _courses = legacySnapshot.docs.map(_courseFromDoc).toList();
     return _courses;
   }
 
   Future<List<Course>> getEnrolledCourses(User user) async {
+    debugPrint(
+      '[CourseRepository] getEnrolledCourses user=${user.id} email=${user.email}',
+    );
     final enrolledCourseIds = await _loadEnrolledCourseIds(user);
     if (enrolledCourseIds.isEmpty) {
+      debugPrint('[CourseRepository] getEnrolledCourses empty enrollments');
       return [];
     }
     final courses = await getAllCourses();
+    debugPrint(
+      '[CourseRepository] getEnrolledCourses filtering courses=${courses.length}',
+    );
     return courses
         .where((course) => enrolledCourseIds.contains(course.id))
         .toList();
@@ -64,37 +83,53 @@ class CourseRepository {
   Future<Course?> getCourseById(String id) async {
     if (_courses.isNotEmpty) {
       try {
+        debugPrint(
+          '[CourseRepository] getCourseById using cached courses id=$id',
+        );
         return _courses.firstWhere((course) => course.id == id);
       } catch (_) {
+        debugPrint('[CourseRepository] getCourseById cache miss id=$id');
         return null;
       }
     }
 
+    debugPrint('[CourseRepository] getCourseById fetching id=$id');
     final doc = await _firestore.collection(_coursesCollection).doc(id).get();
     if (doc.exists) {
+      debugPrint('[CourseRepository] getCourseById found primary id=$id');
       return _courseFromDoc(doc);
     }
 
     final legacyDoc =
         await _firestore.collection(_legacyCoursesCollection).doc(id).get();
     if (!legacyDoc.exists) {
+      debugPrint('[CourseRepository] getCourseById not found id=$id');
       return null;
     }
+    debugPrint('[CourseRepository] getCourseById found legacy id=$id');
     return _courseFromDoc(legacyDoc);
   }
 
   Future<List<Course>> getAvailableCourses(User user) async {
+    debugPrint(
+      '[CourseRepository] getAvailableCourses user=${user.id} email=${user.email}',
+    );
     final availableCourseIds = await _loadAvailableCourseIds(user);
     if (availableCourseIds.isEmpty) {
+      debugPrint('[CourseRepository] getAvailableCourses empty');
       return [];
     }
     final courses = await getAllCourses();
+    debugPrint(
+      '[CourseRepository] getAvailableCourses filtering courses=${courses.length}',
+    );
     return courses
         .where((course) => availableCourseIds.contains(course.id))
         .toList();
   }
 
   Future<Module?> getModuleById(String moduleId) async {
+    debugPrint('[CourseRepository] getModuleById moduleId=$moduleId');
     final courses = await getAllCourses();
     for (final course in courses) {
       for (final module in course.modules) {
@@ -108,6 +143,9 @@ class CourseRepository {
 
   Future<List<Activity>> getAllActivities() async {
     final courses = await getAllCourses();
+    debugPrint(
+      '[CourseRepository] getAllActivities from courses=${courses.length}',
+    );
     return courses
         .expand((course) => course.modules)
         .expand((module) => module.activities)
@@ -116,21 +154,36 @@ class CourseRepository {
 
   Future<List<String>> _loadEnrolledCourseIds(User user) async {
     final userKey = user.email.isNotEmpty ? user.email : user.id;
+    debugPrint(
+      '[CourseRepository] loadEnrolledCourseIds userKey=$userKey',
+    );
     final courseIds = await _fetchEnrollmentCourseIds(userKey);
 
     if (courseIds.isNotEmpty) {
+      debugPrint(
+        '[CourseRepository] loadEnrolledCourseIds from firestore count=${courseIds.length}',
+      );
       return courseIds;
     }
+    debugPrint(
+      '[CourseRepository] loadEnrolledCourseIds fallback to user model',
+    );
     return user.enrolledCourseIds;
   }
 
   Future<List<String>> _loadAvailableCourseIds(User user) async {
     final userKey = user.email.isNotEmpty ? user.email : user.id;
+    debugPrint(
+      '[CourseRepository] loadAvailableCourseIds userKey=$userKey',
+    );
     final globalDoc = await _firestore
         .collection(_newsAvailableCoursesCollection)
         .doc(_globalAvailableCoursesDoc)
         .get();
     final globalIds = _courseIdsFromDoc(globalDoc);
+    debugPrint(
+      '[CourseRepository] loadAvailableCourseIds globalIds=${globalIds.length}',
+    );
 
     if (userKey.isEmpty) {
       return globalIds;
@@ -141,6 +194,9 @@ class CourseRepository {
         .doc(userKey)
         .get();
     final userIds = _courseIdsFromDoc(userDoc);
+    debugPrint(
+      '[CourseRepository] loadAvailableCourseIds userIds=${userIds.length}',
+    );
 
     return {...globalIds, ...userIds}.toList();
   }
@@ -158,8 +214,12 @@ class CourseRepository {
 
   Future<List<String>> _fetchEnrollmentCourseIds(String userKey) async {
     if (userKey.isEmpty) {
+      debugPrint('[CourseRepository] fetchEnrollmentCourseIds empty userKey');
       return [];
     }
+    debugPrint(
+      '[CourseRepository] fetchEnrollmentCourseIds userKey=$userKey',
+    );
     final snapshots = await Future.wait([
       _firestore
           .collection(_enrollmentsCollection)
@@ -183,14 +243,21 @@ class CourseRepository {
         }
       }
     }
+    debugPrint(
+      '[CourseRepository] fetchEnrollmentCourseIds resolved=${courseIds.length}',
+    );
     return courseIds.toList();
   }
 
   Future<void> enrollInCourse(User user, Course course) async {
     final userKey = user.email.isNotEmpty ? user.email : user.id;
     if (userKey.isEmpty) {
+      debugPrint('[CourseRepository] enrollInCourse skipped empty userKey');
       return;
     }
+    debugPrint(
+      '[CourseRepository] enrollInCourse userKey=$userKey courseId=${course.id}',
+    );
     final enrollmentDocId = '${userKey}_${course.id}';
     await _firestore
         .collection(_enrollmentsCollection)
@@ -415,6 +482,9 @@ class CourseRepository {
 
   Course _courseFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
+    debugPrint(
+      '[CourseRepository] courseFromDoc id=${doc.id} modules=${(data['modules'] as List?)?.length ?? 0}',
+    );
     return Course(
       id: (data['id'] as String?) ?? doc.id,
       title: (data['title'] as String?) ?? 'Untitled course',
@@ -433,6 +503,9 @@ class CourseRepository {
       return [];
     }
 
+    debugPrint(
+      '[CourseRepository] modulesFromData count=${modulesData.length}',
+    );
     return modulesData.map((moduleData) {
       final moduleMap = moduleData is Map
           ? Map<String, dynamic>.from(moduleData as Map)
@@ -457,6 +530,9 @@ class CourseRepository {
       return [];
     }
 
+    debugPrint(
+      '[CourseRepository] activitiesFromData count=${activitiesData.length}',
+    );
     return activitiesData.map((activityData) {
       final activityMap = activityData is Map
           ? Map<String, dynamic>.from(activityData as Map)
@@ -491,6 +567,9 @@ class CourseRepository {
     if (recommendationsData is! List) {
       return [];
     }
+    debugPrint(
+      '[CourseRepository] recommendationsFromData count=${recommendationsData.length}',
+    );
     return recommendationsData
         .map((entry) {
           if (entry is Map) {

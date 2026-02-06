@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/activity.dart';
@@ -31,6 +32,7 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
   void initState() {
     super.initState();
     _coursesFuture = widget.courseRepository.getAllCourses();
+    debugPrint('[ColleaguesActivityScreen] loading courses');
   }
 
   @override
@@ -39,29 +41,44 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
       future: _coursesFuture,
       builder: (context, courseSnapshot) {
         if (courseSnapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('[ColleaguesActivityScreen] waiting for courses');
           return const Center(child: CircularProgressIndicator());
         }
         if (courseSnapshot.hasError) {
+          debugPrint(
+            '[ColleaguesActivityScreen] error loading courses: ${courseSnapshot.error}',
+          );
           return const Center(child: Text('Unable to load activity feed.'));
         }
         final courses = courseSnapshot.data ?? [];
         if (courses.isEmpty) {
+          debugPrint('[ColleaguesActivityScreen] no courses available');
           return const Center(child: Text('No activities yet.'));
         }
 
         final activityLookup = _buildActivityLookup(courses);
         final defaultCourseId = courses.first.id;
+        debugPrint(
+          '[ColleaguesActivityScreen] loaded courses=${courses.length} lookup=${activityLookup.length}',
+        );
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: _firestore.collection('users').snapshots(),
           builder: (context, usersSnapshot) {
             if (usersSnapshot.connectionState == ConnectionState.waiting) {
+              debugPrint('[ColleaguesActivityScreen] waiting for users');
               return const Center(child: CircularProgressIndicator());
             }
             if (usersSnapshot.hasError) {
+              debugPrint(
+                '[ColleaguesActivityScreen] error loading users: ${usersSnapshot.error}',
+              );
               return const Center(child: Text('Unable to load activity feed.'));
             }
 
             final users = _parseUsers(usersSnapshot.data);
+            debugPrint(
+              '[ColleaguesActivityScreen] mapped users=${users.length}',
+            );
             final usersByEmail = {
               for (final user in users)
                 if (user.email.isNotEmpty) user.email: user,
@@ -88,9 +105,15 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
               builder: (context, enrollmentsSnapshot) {
                 if (enrollmentsSnapshot.connectionState ==
                     ConnectionState.waiting) {
+                  debugPrint(
+                    '[ColleaguesActivityScreen] waiting for enrollments',
+                  );
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (enrollmentsSnapshot.hasError) {
+                  debugPrint(
+                    '[ColleaguesActivityScreen] error loading enrollments: ${enrollmentsSnapshot.error}',
+                  );
                   return const Center(
                     child: Text('Unable to load activity feed.'),
                   );
@@ -102,6 +125,9 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
                   activityLookup,
                   currentEmail,
                   defaultCourseId,
+                );
+                debugPrint(
+                  '[ColleaguesActivityScreen] mapped activities=${activities.length}',
                 );
 
                 return ListView(
@@ -128,19 +154,30 @@ class _ColleaguesActivityScreenState extends State<ColleaguesActivityScreen> {
                       const Text('No colleague activity yet.')
                     else
                       ...activities.map(
-                        (activity) => _ColleagueActivityCard(
-                          activity: activity,
-                          onTap: activity.activity != null
-                              ? () => Navigator.of(context).pushNamed(
-                                    '/activity',
-                                    arguments: {
-                                      'activity': activity.activity,
-                                      'courseId': activity.courseId,
-                                      'activityIndex': activity.activityIndex,
-                                    },
-                                  )
-                              : null,
-                        ),
+                        (activity) {
+                          debugPrint(
+                            '[ColleaguesActivityScreen] display activity card id=${activity.activity?.id ?? 'unknown'}',
+                          );
+                          return _ColleagueActivityCard(
+                            activity: activity,
+                            onTap: activity.activity != null
+                                ? () {
+                                    debugPrint(
+                                      '[ColleaguesActivityScreen] tap activity=${activity.activity?.id}',
+                                    );
+                                    Navigator.of(context).pushNamed(
+                                      '/activity',
+                                      arguments: {
+                                        'activity': activity.activity,
+                                        'courseId': activity.courseId,
+                                        'activityIndex':
+                                            activity.activityIndex,
+                                      },
+                                    );
+                                  }
+                                : null,
+                          );
+                        },
                       ),
                   ],
                 );

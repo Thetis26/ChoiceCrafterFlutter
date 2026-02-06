@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 
-
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
@@ -69,6 +68,10 @@ class InboxScreen extends StatelessWidget {
             if (docs.isEmpty) {
               return _buildLocalInbox(context);
             }
+            developer.log(
+              'Mapping ${docs.length} notification documents',
+              name: 'inbox.mapping',
+            );
 
             return _buildScaffold(
               context,
@@ -99,7 +102,6 @@ class InboxScreen extends StatelessWidget {
       },
     );
   }
-
 
   Widget _buildScaffold(BuildContext context, Widget child) {
     return Scaffold(
@@ -218,34 +220,53 @@ class InboxScreen extends StatelessWidget {
     );
 
     final usersCollection =
-    FirebaseFirestore.instance.collection(_usersCollection);
+        FirebaseFirestore.instance.collection(_usersCollection);
 
     if (email.isNotEmpty) {
-      developer.log('Querying users by email: $email', name: 'inbox._resolveUserId');
+      developer.log(
+        'Querying users by email: $email',
+        name: 'inbox._resolveUserId',
+      );
       final query = await usersCollection
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
-      developer.log('Email query returned ${query.docs.length} documents',
-          name: 'inbox._resolveUserId');
+      developer.log(
+        'Email query returned ${query.docs.length} documents',
+        name: 'inbox._resolveUserId',
+      );
       if (query.docs.isNotEmpty) {
         final foundId = query.docs.first.id;
-        developer.log('Found user doc by email: $foundId', name: 'inbox._resolveUserId');
+        developer.log(
+          'Found user doc by email: $foundId',
+          name: 'inbox._resolveUserId',
+        );
         return foundId;
       }
     } else {
-      developer.log('Email empty; skipping email query', name: 'inbox._resolveUserId');
+      developer.log(
+        'Email empty; skipping email query',
+        name: 'inbox._resolveUserId',
+      );
     }
 
-    developer.log('Checking fallback doc for uid: $uid', name: 'inbox._resolveUserId');
+    developer.log(
+      'Checking fallback doc for uid: $uid',
+      name: 'inbox._resolveUserId',
+    );
     final fallbackDoc = await usersCollection.doc(uid).get();
-    developer.log('Fallback doc exists=${fallbackDoc.exists} id=${fallbackDoc.id}',
-        name: 'inbox._resolveUserId');
+    developer.log(
+      'Fallback doc exists=${fallbackDoc.exists} id=${fallbackDoc.id}',
+      name: 'inbox._resolveUserId',
+    );
     if (fallbackDoc.exists) {
       return fallbackDoc.id;
     }
 
-    developer.log('No matching user document found for uid=$uid', name: 'inbox._resolveUserId');
+    developer.log(
+      'No matching user document found for uid=$uid',
+      name: 'inbox._resolveUserId',
+    );
     return null;
   }
 
@@ -260,6 +281,10 @@ class InboxScreen extends StatelessWidget {
     BuildContext context,
     List<_InboxEntry> entries,
   ) {
+    developer.log(
+      'Rendering notification list entries=${entries.length}',
+      name: 'inbox.render',
+    );
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: entries.length,
@@ -267,6 +292,10 @@ class InboxScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final entry = entries[index];
         final timestampLabel = _formatTimestamp(entry.timestamp);
+        developer.log(
+          'Displaying notification index=$index title=${entry.title}',
+          name: 'inbox.render',
+        );
 
         return _buildNotificationCard(
           context,
@@ -277,7 +306,6 @@ class InboxScreen extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _InboxEntry {
