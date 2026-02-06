@@ -33,12 +33,14 @@ class CourseActivitiesLoader extends StatefulWidget {
 
 class _CourseActivitiesLoaderState extends State<CourseActivitiesLoader>
     with RouteAware {
-  late Future<List<EnrollmentActivityProgress>> _progressFuture;
+  late final PersonalStatisticsRepository _personalStatisticsRepository;
+  late Stream<List<EnrollmentActivityProgress>> _progressStream;
 
   @override
   void initState() {
     super.initState();
-    _progressFuture = _loadProgress();
+    _personalStatisticsRepository = PersonalStatisticsRepository();
+    _progressStream = _loadProgress();
   }
 
   @override
@@ -63,14 +65,14 @@ class _CourseActivitiesLoaderState extends State<CourseActivitiesLoader>
 
   void _refreshProgress() {
     setState(() {
-      _progressFuture = _loadProgress();
+      _progressStream = _loadProgress();
     });
   }
 
-  Future<List<EnrollmentActivityProgress>> _loadProgress() {
+  Stream<List<EnrollmentActivityProgress>> _loadProgress() {
     final userKey =
         widget.user.email.isNotEmpty ? widget.user.email : widget.user.id;
-    return PersonalStatisticsRepository().fetchActivitySnapshotsForUser(userKey);
+    return _personalStatisticsRepository.streamActivitySnapshotsForUser(userKey);
   }
 
   @override
@@ -105,8 +107,8 @@ class _CourseActivitiesLoaderState extends State<CourseActivitiesLoader>
   }
 
   Widget _buildCourseScreen(BuildContext context, Course course) {
-    return FutureBuilder<List<EnrollmentActivityProgress>>(
-      future: _progressFuture,
+    return StreamBuilder<List<EnrollmentActivityProgress>>(
+      stream: _progressStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
